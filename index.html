@@ -814,7 +814,16 @@ function _toRow(p) {
 
 async function savePurchase(p) {
   if (!_currentUser) return;
-  await _sb.from('purchases').upsert(_toRow(p), { onConflict: 'user_id,burser_id' });
+  const row = _toRow(p);
+  const { data: existing } = await _sb.from('purchases')
+    .select('id').eq('user_id', _currentUser.id).eq('burser_id', p.id).maybeSingle();
+  let result;
+  if (existing) {
+    result = await _sb.from('purchases').update(row).eq('user_id', _currentUser.id).eq('burser_id', p.id);
+  } else {
+    result = await _sb.from('purchases').insert(row);
+  }
+  if (result.error) console.error('savePurchase error:', result.error);
 }
 
 async function deletePurchase(id) {
@@ -824,27 +833,27 @@ async function deletePurchase(id) {
 
 async function saveBudgetEntry(cat, monthKey, amount) {
   if (!_currentUser) return;
-  await _sb.from('budgets').upsert(
-    { user_id: _currentUser.id, cat, month_key: monthKey, amount },
-    { onConflict: 'user_id,cat,month_key' }
-  );
+  const { data: existing } = await _sb.from('budgets')
+    .select('id').eq('user_id', _currentUser.id).eq('cat', cat).eq('month_key', monthKey).maybeSingle();
+  let result;
+  if (existing) {
+    result = await _sb.from('budgets').update({ amount }).eq('user_id', _currentUser.id).eq('cat', cat).eq('month_key', monthKey);
+  } else {
+    result = await _sb.from('budgets').insert({ user_id: _currentUser.id, cat, month_key: monthKey, amount });
+  }
+  if (result.error) console.error('saveBudgetEntry error:', result.error);
 }
 
-// Legacy sync save — calls Supabase for every dirty purchase
 async function save() {
   if (!_currentUser) return;
-  // Persist all purchases (upsert is idempotent)
-  const rows = data.purchases.map(_toRow);
-  if (rows.length) {
-    await _sb.from('purchases').upsert(rows, { onConflict: 'user_id,burser_id' });
+  for (const p of data.purchases) {
+    await savePurchase(p);
   }
-  // Persist budgets
-  const budgetRows = Object.entries(data.budgets).map(([key, amount]) => {
-    const [cat, ...rest] = key.split('_');
-    return { user_id: _currentUser.id, cat, month_key: rest.join('_'), amount };
-  });
-  if (budgetRows.length) {
-    await _sb.from('budgets').upsert(budgetRows, { onConflict: 'user_id,cat,month_key' });
+  for (const [key, amount] of Object.entries(data.budgets)) {
+    const parts = key.split('_');
+    const cat = parts[0];
+    const monthKey = parts.slice(1).join('_');
+    await saveBudgetEntry(cat, monthKey, amount);
   }
 }
 
