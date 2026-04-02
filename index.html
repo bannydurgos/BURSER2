@@ -70,7 +70,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
 .header-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .header-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .wordmark{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:10px;flex-shrink:0;text-transform:uppercase}
-.wordmark-icon{width:28px;height:28px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wordmark-icon{width:36px;height:36px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 .hdr-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.03em;text-transform:uppercase}
 .hdr-btn:hover{background:var(--text);color:var(--bg2)}
@@ -298,8 +298,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   main{padding:20px 14px 100px}
   header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}
   .wordmark{font-size:20px;gap:10px}
-  .wordmark-icon{width:40px;height:40px;border-radius:0}
-  .wordmark-icon svg{width:22px;height:22px}
+  .wordmark-icon{width:36px;height:36px;border-radius:0}
+  .wordmark-icon svg{width:20px;height:20px}
   .header-right{width:100%;justify-content:flex-start;gap:6px;flex-wrap:wrap}
   .hdr-btn{font-size:11px;padding:6px 10px}
   .view-btn{font-size:11px;padding:5px 11px}
@@ -396,7 +396,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 <header>
   <div class="wordmark">
     <div class="wordmark-icon">
-      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
         <circle cx="60" cy="60" r="36" fill="white" opacity="0.12"/>
         <circle cx="60" cy="60" r="36" stroke="white" stroke-width="3" stroke-opacity="0.3"/>
         <line x1="60" y1="28" x2="60" y2="36" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
@@ -408,17 +408,18 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     Burser
   </div>
   <div class="header-right">
-    <div class="header-row header-row-top">
-      <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
-      <button class="hdr-btn" id="btnPending">Receivables</button>
-      <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
+    <div class="header-row">
       <div id="userChip" class="user-chip" style="display:none">
         <img class="user-avatar" id="userAvatar" src="" alt="">
         <span class="user-email" id="userEmail"></span>
         <button id="btnSignOut">Sign out</button>
       </div>
     </div>
-
+    <div class="header-row">
+      <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
+      <button class="hdr-btn" id="btnPending">Receivables</button>
+      <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
+    </div>
   </div>
 </header>
 <div class="view-toggle">
@@ -433,7 +434,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
       <div class="month-scroll" id="monthScroll"></div>
       <button class="month-nav" id="monthNext">›</button>
       <button class="month-nav today-btn" id="monthToday">Today</button>
-      <select id="monthJump" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
+      <select id="monthJumpM" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
+      <select id="monthJumpY" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
     </div>
     <div class="summary-grid" id="summaryGrid"></div>
     <div class="tabs-row" id="tabsRow"></div>
@@ -957,11 +959,21 @@ function renderMonthBar(){
   scroll.querySelectorAll('.month-pill').forEach(btn=>{
     btn.addEventListener('click',()=>{activeLogMonth=btn.dataset.month;batchMode=false;batchSelected=new Set();render();});
   });
-  // Populate jump dropdown
-  const jump=document.getElementById('monthJump');
-  if(jump){
-    jump.innerHTML=range.map(k=>`<option value="${k}"${k===activeLogMonth?' selected':''}>${monthLabel(k)}</option>`).join('');
-    jump.onchange=function(){activeLogMonth=this.value;batchMode=false;batchSelected=new Set();render();};
+  // Populate month/year jump dropdowns
+  const jumpM=document.getElementById('monthJumpM');
+  const jumpY=document.getElementById('monthJumpY');
+  if(jumpM&&jumpY){
+    const{year:selYear,month:selMonth}=parseMonthKey(activeLogMonth);
+    const years=[...new Set(range.map(k=>parseMonthKey(k).year))];
+    jumpM.innerHTML=MS.map((name,i)=>`<option value="${i}"${i===selMonth?' selected':''}>${name}</option>`).join('');
+    jumpY.innerHTML=years.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
+    function applyJump(){
+      const m=String(parseInt(jumpM.value)+1).padStart(2,'0');
+      const y=jumpY.value;
+      activeLogMonth=y+'-'+m;batchMode=false;batchSelected=new Set();render();
+    }
+    jumpM.onchange=applyJump;
+    jumpY.onchange=applyJump;
   }
 }
 document.getElementById('monthPrev').addEventListener('click',()=>{
