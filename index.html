@@ -74,10 +74,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
 
 .hdr-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.03em;text-transform:uppercase}
 .hdr-btn:hover{background:var(--text);color:var(--bg2)}
-.view-toggle{display:flex;border:1px solid var(--border2)}
-.view-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 12px;border:none;background:none;color:var(--text2);cursor:pointer;letter-spacing:.03em;text-transform:uppercase}
-.view-btn.active{background:var(--text);color:var(--bg2)}
-#importFile{display:none}
+.view-toggle{display:flex;border-bottom:2px solid var(--border2);width:100%;justify-content:center;gap:0}
+.view-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:10px 28px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text2);cursor:pointer;letter-spacing:.05em;text-transform:uppercase;margin-bottom:-2px;transition:color .15s}
+.view-btn:hover{color:var(--text)}
+.view-btn.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:600}
 
 /* MAIN */
 main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
@@ -411,9 +411,6 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="header-row header-row-top">
       <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
       <button class="hdr-btn" id="btnPending">Receivables</button>
-      <button class="hdr-btn" id="btnExport">Export</button>
-      <button class="hdr-btn" id="btnImport">Load save</button>
-      <input type="file" id="importFile" accept=".json">
       <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
       <div id="userChip" class="user-chip" style="display:none">
         <img class="user-avatar" id="userAvatar" src="" alt="">
@@ -421,16 +418,14 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
         <button id="btnSignOut">Sign out</button>
       </div>
     </div>
-    <div class="header-row header-row-bottom">
-      <div class="view-toggle">
-        <button class="view-btn active" id="btnViewLog">Log</button>
-        <button class="view-btn" id="btnViewHistory">History</button>
-        <button class="view-btn" id="btnViewReceipts">Receipts</button>
-      </div>
-    </div>
+
   </div>
 </header>
-
+<div class="view-toggle">
+  <button class="view-btn active" id="btnViewLog">Log</button>
+  <button class="view-btn" id="btnViewHistory">History</button>
+  <button class="view-btn" id="btnViewReceipts">Receipts</button>
+</div>
 <main>
   <div id="logView">
     <div class="month-bar">
@@ -2322,27 +2317,7 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
 
 document.getElementById('btnUndo').addEventListener('click', doUndo);
 
-document.getElementById('btnExport').addEventListener('click',()=>{
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');
-  const stamp=todayStr();a.href=url;a.download='burser-'+stamp+'.json';a.click();URL.revokeObjectURL(url);
-});
-document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('importFile').click());
-document.getElementById('importFile').addEventListener('change',function(){
-  const file=this.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const imported=JSON.parse(e.target.result);
-      if(!imported.purchases||!imported.budgets){alert('Invalid save file.');return;}
-      data=imported;save();
-      rolloverQueue=[];rolloverActive=false;answeredIds=new Set(data.answeredRollovers||[]);
-      render();
-      showSuccessToast('✓ Imported successfully');
-    }catch(err){alert('Could not read file.');}
-  };
-  reader.readAsText(file);this.value='';
-});
+
 
 // ── RENDER ────────────────────────────────────────────────
 function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();}
