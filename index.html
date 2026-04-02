@@ -13,7 +13,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, collection, getDocs, setDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, collection, getDocs, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -31,7 +31,6 @@
 
   window._fbAuth = auth;
   window._fbDb = db;
-  window._fbProvider = provider;
   window._fbSignIn = () => signInWithPopup(auth, provider);
   window._fbSignOut = () => signOut(auth);
   window._fbOnAuthChanged = (cb) => onAuthStateChanged(auth, cb);
@@ -40,8 +39,6 @@
   window._fbGetDocs = getDocs;
   window._fbSetDoc = setDoc;
   window._fbDeleteDoc = deleteDoc;
-  window._fbQuery = query;
-  window._fbWhere = where;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -69,10 +66,12 @@
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px}
 
 /* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:2px solid var(--text);position:sticky;top:0;background:var(--bg);z-index:10;gap:10px}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:2px solid var(--text);position:sticky;top:0;background:var(--bg);z-index:10;gap:10px}
+.header-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.header-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .wordmark{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:10px;flex-shrink:0;text-transform:uppercase}
 .wordmark-icon{width:28px;height:28px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
 .hdr-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.03em;text-transform:uppercase}
 .hdr-btn:hover{background:var(--text);color:var(--bg2)}
 .view-toggle{display:flex;border:1px solid var(--border2)}
@@ -181,13 +180,13 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .reimb-hint{font-family:var(--mono);font-size:10px;color:var(--hw);display:block;margin-top:2px}
 .rollover-desc{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em}
 /* Action buttons — 2×2 grid + red delete */
-.action-cell{display:flex;align-items:center;gap:8px;white-space:nowrap}
-.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;border:1px solid var(--border2);padding:3px;background:var(--bg3)}
-.action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:16px;padding:4px 5px;display:flex;align-items:center;justify-content:center;line-height:1;font-family:var(--mono);text-decoration:none}
-.action-btn:hover{color:var(--text);background:var(--bg4)}
+.action-cell{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:15px;padding:3px 5px;display:flex;align-items:center;justify-content:center;line-height:1;font-family:var(--mono);text-decoration:none;transition:color .12s}
+.action-btn:hover{color:var(--text)}
 .action-btn.receipt-linked{color:var(--hw)}
-.del-btn-red{background:none;border:1px solid var(--red-text);cursor:pointer;color:var(--red-text);font-size:16px;padding:4px 7px;font-family:var(--mono);line-height:1;font-weight:700}
-.del-btn-red:hover{background:var(--red-bg)}
+.del-btn-red{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px 6px;font-family:var(--mono);line-height:1;font-weight:400;transition:color .12s}
+.del-btn-red:hover{color:var(--red-text)}
 .dup-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 5px;font-family:var(--mono)}
 .dup-btn:hover{color:var(--tr)}
 .receipt-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:2px 5px;font-family:var(--mono);text-decoration:none;display:inline-block}
@@ -292,21 +291,6 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .rollover-no{background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 14px;font-family:var(--mono);font-size:11px;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
 .rollover-no:hover{background:var(--bg4);color:var(--text)}
 
-/* AUTH */
-#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
-#authOverlay.hidden{display:none!important}
-.auth-box{background:var(--bg2);border:2px solid var(--text);padding:40px 36px;width:340px;max-width:calc(100vw - 32px);text-align:center}
-.auth-logo{width:48px;height:48px;background:var(--text);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.auth-title{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
-.auth-sub{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:28px;line-height:1.6}
-.auth-google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:background .15s}
-.auth-google-btn:hover{background:var(--text);color:var(--bg2)}
-.auth-error{font-family:var(--mono);font-size:11px;color:var(--red-text);margin-top:12px;min-height:16px}
-.user-chip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text2)}
-.user-avatar{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2)}
-.user-email{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#btnSignOut{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;text-transform:uppercase;letter-spacing:.03em}
-#btnSignOut:hover{background:var(--text);color:var(--bg2);border-color:var(--text)}
 /* MOBILE */
 .mob-info{display:none;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;line-height:1.5}
 .mob-action{display:none;margin-top:6px}
@@ -367,9 +351,26 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
 }
+/* AUTH */
+#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:none;align-items:center;justify-content:center}
+#authOverlay.visible{display:flex!important}
+.auth-box{background:var(--bg2);border:2px solid var(--text);padding:40px 36px;width:340px;max-width:calc(100vw - 32px);text-align:center}
+.auth-logo{width:48px;height:48px;background:var(--text);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.auth-title{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.auth-sub{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:28px;line-height:1.6}
+.auth-google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.04em;text-transform:uppercase;transition:background .15s}
+.auth-google-btn:hover{background:var(--text);color:var(--bg2)}
+.auth-error{font-family:var(--mono);font-size:11px;color:var(--red-text);margin-top:12px;min-height:16px}
+.user-chip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text2)}
+.user-avatar{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2)}
+.user-email{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#btnSignOut{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;text-transform:uppercase;letter-spacing:.03em}
+#btnSignOut:hover{background:var(--text);color:var(--bg2);border-color:var(--text)}
 </style>
 </head>
 <body>
+
+<!-- AUTH OVERLAY -->
 <div id="authOverlay">
   <div class="auth-box">
     <div class="auth-logo">
@@ -407,20 +408,20 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     Burser
   </div>
   <div class="header-right">
-    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="hdr-btn" id="btnUndo" title="Undo last action">↩ Undo</button>
-        <button class="hdr-btn" id="btnPending" title="Submitted awaiting reimbursement">Receivables</button>
-        <button class="hdr-btn" id="btnExport">Export</button>
-        <button class="hdr-btn" id="btnImport">Load Save</button>
-        <input type="file" id="importFile" accept=".json">
-        <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
-        <div id="userChip" class="user-chip" style="display:none">
-          <img class="user-avatar" id="userAvatar" src="" alt="">
-          <span class="user-email" id="userEmail"></span>
-          <button id="btnSignOut">Sign out</button>
-        </div>
+    <div class="header-row header-row-top">
+      <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
+      <button class="hdr-btn" id="btnPending">Receivables</button>
+      <button class="hdr-btn" id="btnExport">Export</button>
+      <button class="hdr-btn" id="btnImport">Load save</button>
+      <input type="file" id="importFile" accept=".json">
+      <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
+      <div id="userChip" class="user-chip" style="display:none">
+        <img class="user-avatar" id="userAvatar" src="" alt="">
+        <span class="user-email" id="userEmail"></span>
+        <button id="btnSignOut">Sign out</button>
       </div>
+    </div>
+    <div class="header-row header-row-bottom">
       <div class="view-toggle">
         <button class="view-btn active" id="btnViewLog">Log</button>
         <button class="view-btn" id="btnViewHistory">History</button>
@@ -437,15 +438,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
       <div class="month-scroll" id="monthScroll"></div>
       <button class="month-nav" id="monthNext">›</button>
       <button class="month-nav today-btn" id="monthToday">Today</button>
-      <div style="display:flex;gap:4px;align-items:center">
-        <select id="jumpMonth" style="font-family:var(--mono);font-size:11px;padding:3px 6px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer">
-          <option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option>
-          <option value="3">Apr</option><option value="4">May</option><option value="5">Jun</option>
-          <option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option>
-          <option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option>
-        </select>
-        <select id="jumpYear" style="font-family:var(--mono);font-size:11px;padding:3px 6px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);cursor:pointer"></select>
-      </div>
+      <select id="monthJump" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
     </div>
     <div class="summary-grid" id="summaryGrid"></div>
     <div class="tabs-row" id="tabsRow"></div>
@@ -480,7 +473,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="form-row"><label>Vendor</label><input type="text" id="f-vendor" placeholder="e.g. CVS, Uber, Delta"></div>
     <div class="form-row">
       <label>Payment method</label>
-      <input type="text" id="f-payment" placeholder="e.g. Visa ···4321">
+      <input type="text" id="f-payment" placeholder="e.g. Visa 1234">
     </div>
     <div class="form-row"><label>Amount ($)</label><input type="number" id="f-amount" min="0" step="0.01" placeholder="0.00"></div>
     <div class="form-row"><label>Date expected</label><input type="date" id="f-expected"></div>
@@ -714,6 +707,18 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 <div class="success-toast" id="successToast"></div>
 <div id="printFrame" style="display:none"></div>
 
+<!-- DELETE CONFIRM MODAL -->
+<div class="edit-overlay" id="deleteConfirmOverlay">
+  <div class="edit-modal" style="width:320px;text-align:center">
+    <h3 style="margin-bottom:12px">Delete transaction?</h3>
+    <p id="deleteConfirmDesc" style="font-family:var(--mono);font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.6"></p>
+    <div class="popout-actions" style="justify-content:center">
+      <button class="btn-cancel" id="btnCancelDelete">Cancel</button>
+      <button class="btn-save" id="btnConfirmDelete" style="background:var(--red-text);flex:none;padding:10px 20px">Delete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ROLLOVER TOAST -->
 <div class="rollover-toast" id="rolloverToast">
   <div class="rollover-toast-title" id="rolloverTitle"></div>
@@ -735,124 +740,100 @@ const CAT_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// ── FIREBASE DATA LAYER ──────────────────────────────────
-let _currentUser = null;
-
 function loadData(){
   return{purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
 }
 let data=loadData();
+let _currentUser=null;
 
+// ── FIREBASE DATA LAYER ───────────────────────────────────
 async function save(){
-  if(!_currentUser) return;
-  const uid = _currentUser.uid;
-  const db = window._fbDb;
-  // Save all purchases
+  if(!_currentUser)return;
+  const uid=_currentUser.uid;const db=window._fbDb;
   for(const p of data.purchases){
-    const ref = window._fbDoc(db, 'users', uid, 'purchases', String(p.id));
-    await window._fbSetDoc(ref, p);
+    await window._fbSetDoc(window._fbDoc(db,'users',uid,'purchases',String(p.id)),p);
   }
-  // Save budgets
-  for(const [key, amount] of Object.entries(data.budgets)){
-    const ref = window._fbDoc(db, 'users', uid, 'budgets', key);
-    await window._fbSetDoc(ref, {amount});
+  for(const[key,amount] of Object.entries(data.budgets)){
+    await window._fbSetDoc(window._fbDoc(db,'users',uid,'budgets',key),{amount});
   }
 }
-
 async function savePurchase(p){
-  if(!_currentUser) return;
-  const ref = window._fbDoc(window._fbDb, 'users', _currentUser.uid, 'purchases', String(p.id));
-  await window._fbSetDoc(ref, p);
+  if(!_currentUser)return;
+  await window._fbSetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid,'purchases',String(p.id)),p);
 }
-
 async function deletePurchaseFromDb(id){
-  if(!_currentUser) return;
-  const ref = window._fbDoc(window._fbDb, 'users', _currentUser.uid, 'purchases', String(id));
-  await window._fbDeleteDoc(ref);
+  if(!_currentUser)return;
+  await window._fbDeleteDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid,'purchases',String(id)));
 }
-
 async function loadFromFirebase(){
-  if(!_currentUser) return;
-  const uid = _currentUser.uid;
-  const db = window._fbDb;
-  const [purchSnap, budgSnap] = await Promise.all([
-    window._fbGetDocs(window._fbCollection(db, 'users', uid, 'purchases')),
-    window._fbGetDocs(window._fbCollection(db, 'users', uid, 'budgets'))
+  if(!_currentUser)return;
+  const uid=_currentUser.uid;const db=window._fbDb;
+  const[ps,bs]=await Promise.all([
+    window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
+    window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))
   ]);
-  const purchases = purchSnap.docs.map(d => d.data());
-  const budgets = {};
-  budgSnap.docs.forEach(d => { budgets[d.id] = d.data().amount; });
-  let maxId = purchases.reduce((m,p) => Math.max(m, p.id||0), 0);
-  data = {purchases, budgets, nextId: maxId+1, answeredRollovers:[]};
-  answeredIds = new Set();
+  const purchases=ps.docs.map(d=>d.data());
+  const budgets={};bs.docs.forEach(d=>{budgets[d.id]=d.data().amount;});
+  const maxId=purchases.reduce((m,p)=>Math.max(m,p.id||0),0);
+  data={purchases,budgets,nextId:maxId+1,answeredRollovers:[]};
+  answeredIds=new Set();
 }
 
-// ── AUTH ──────────────────────────────────────────────────
-function initAuth(){
-  function waitForFirebase(cb){
-    if(window._firebaseReady) cb();
-    else window.addEventListener('firebaseReady', cb, {once:true});
-  }
-  waitForFirebase(() => {
-    window._fbOnAuthChanged(async (user) => {
-      if(user){
-        _currentUser = user;
-        document.getElementById('authOverlay').classList.add('hidden');
-        document.getElementById('userChip').style.display = 'flex';
-        document.getElementById('userEmail').textContent = user.email;
-        if(user.photoURL){
-          document.getElementById('userAvatar').src = user.photoURL;
-        } else {
-          document.getElementById('userAvatar').style.display = 'none';
-        }
-        await loadFromFirebase();
-        render();
-      } else {
-        _currentUser = null;
-        data = loadData();
-        document.getElementById('userChip').style.display = 'none';
-        document.getElementById('authOverlay').classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
-      document.getElementById('authError').textContent = '';
-      try {
-        await window._fbSignIn();
-      } catch(e) {
-        document.getElementById('authError').textContent = e.message;
-      }
-    });
-
-    document.getElementById('btnSignOut').addEventListener('click', async () => {
-      await window._fbSignOut();
-      data = loadData();
-      render();
-    });
-  });
-}
-
-// ── UNDO STACK ───────────────────────────────────────────
-let _undoStack = [];
-function pushUndo() {
-  _undoStack.push(JSON.stringify({purchases: data.purchases, budgets: data.budgets, nextId: data.nextId}));
-  if (_undoStack.length > 200) _undoStack.shift();
-}
-async function performUndo() {
-  if (!_undoStack.length) { showSuccessToast('Nothing to undo'); return; }
-  const prev = JSON.parse(_undoStack.pop());
-  // Figure out which purchases were deleted so we can remove from Firebase
-  const prevIds = new Set(prev.purchases.map(p => p.id));
-  const curIds = new Set(data.purchases.map(p => p.id));
-  const toDelete = [...curIds].filter(id => !prevIds.has(id));
-  data.purchases = prev.purchases;
-  data.budgets = prev.budgets;
-  data.nextId = prev.nextId;
-  // Sync to Firebase
-  for (const id of toDelete) await deletePurchaseFromDb(id);
+// ── UNDO ─────────────────────────────────────────────────
+let undoStack=[];
+async function doUndo(){
+  if(!undoStack.length)return;
+  const prev=JSON.parse(undoStack.pop());
+  const prevIds=new Set(prev.purchases.map(p=>p.id));
+  const curIds=new Set(data.purchases.map(p=>p.id));
+  const toDelete=[...curIds].filter(id=>!prevIds.has(id));
+  data=prev;
+  for(const id of toDelete)await deletePurchaseFromDb(id);
   await save();
+  if(!undoStack.length){const btn=document.getElementById('btnUndo');if(btn){btn.disabled=true;btn.style.opacity='.4';}}
   render();
   showSuccessToast('↩ Undone');
+}
+function snapshot(){
+  undoStack.push(JSON.stringify(data));
+  const btn=document.getElementById('btnUndo');
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+}
+
+// ── AUTH ─────────────────────────────────────────────────
+function initAuth(){
+  function waitForFirebase(cb){
+    if(window._firebaseReady)cb();
+    else window.addEventListener('firebaseReady',cb,{once:true});
+  }
+  waitForFirebase(()=>{
+    window._fbOnAuthChanged(async(user)=>{
+      if(user){
+        _currentUser=user;
+        document.getElementById('authOverlay').classList.remove('visible');
+        const chip=document.getElementById('userChip');chip.style.display='flex';
+        document.getElementById('userEmail').textContent=user.email;
+        if(user.photoURL)document.getElementById('userAvatar').src=user.photoURL;
+        else document.getElementById('userAvatar').style.display='none';
+        await loadFromFirebase();
+        render();
+      }else{
+        _currentUser=null;data=loadData();
+        document.getElementById('userChip').style.display='none';
+        document.getElementById('authOverlay').classList.add('visible');
+      }
+    });
+    document.getElementById('btnGoogleSignIn').addEventListener('click',async()=>{
+      document.getElementById('authError').textContent='';
+      try{await window._fbSignIn();}
+      catch(e){document.getElementById('authError').textContent=e.message;}
+    });
+    document.getElementById('btnSignOut').addEventListener('click',async()=>{
+      await window._fbSignOut();data=loadData();render();
+    });
+    // Show login screen initially
+    document.getElementById('authOverlay').classList.add('visible');
+  });
 }
 
 // ── STATE ─────────────────────────────────────────────────
@@ -862,6 +843,7 @@ let activeTab='hw';
 let selectedCat='hw';
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
+let pendingDeleteId=null;
 
 // ── HELPERS ───────────────────────────────────────────────
 function fmt(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -875,22 +857,16 @@ function daysBetween(d1,d2){if(!d1||!d2)return null;return Math.round((new Date(
 function todayStr(){return new Date().toISOString().slice(0,10);}
 
 function getMonthRange(){
-  // Include all months with data, plus 12 months back and 3 months forward from today
-  const keys=new Set();
-  const n=new Date();
-  const start=new Date(n.getFullYear()-2, 0, 1);
-  const end=new Date(n.getFullYear(), n.getMonth()+4, 1);
-  for(let d=new Date(start);d<end;d.setMonth(d.getMonth()+1))
-    keys.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
-  // Also include any months that have actual data
-  data.purchases.forEach(p=>{const mk=getPurchaseMonth(p);if(mk)keys.add(mk);});
-  return [...keys].sort();
+  const keys=[];const n=new Date();const thisYear=n.getFullYear();
+  for(let y=thisYear-2;y<=thisYear+2;y++)for(let m=0;m<12;m++)
+    keys.push(y+'-'+String(m+1).padStart(2,'0'));
+  return keys;
 }
 function allUsedMonths(){
   return[...new Set(data.purchases.map(p=>getPurchaseMonth(p)).filter(Boolean))].sort().reverse();
 }
-function getBudget(catId,mk){return data.budgets[catId+'_'+mk]||0;}
-function setBudget(catId,mk,val){data.budgets[catId+'_'+mk]=val;save();}
+function getBudget(catId,mk){return data.budgets[catId+':'+mk]||0;}
+function setBudget(catId,mk,val){data.budgets[catId+':'+mk]=val;save();}
 // For rollover entries, use rolloverMonth to determine which month they belong to
 function getPurchaseMonth(p){return p.isRollover&&p.rolloverMonth?p.rolloverMonth:getMonthKey(p.date);}
 
@@ -975,14 +951,6 @@ function statusBadge(s){
 }
 
 // ── MONTH BAR ─────────────────────────────────────────────
-function syncJumpSelects() {
-  const mSel = document.getElementById('jumpMonth');
-  const ySel = document.getElementById('jumpYear');
-  if (!mSel || !ySel) return;
-  const {year, month} = parseMonthKey(activeLogMonth);
-  mSel.value = month;
-  ySel.value = year;
-}
 function renderMonthBar(){
   const range=getMonthRange();const cur=currentMonthKey();
   const scroll=document.getElementById('monthScroll');
@@ -991,10 +959,15 @@ function renderMonthBar(){
     return '<button class="month-pill'+(isActive?' active':'')+(isCur?' current':'')+'" data-month="'+k+'">'+monthLabel(k)+'</button>';
   }).join('');
   setTimeout(()=>{const a=scroll.querySelector('.month-pill.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth',block:'nearest'});},50);
-  syncJumpSelects();
   scroll.querySelectorAll('.month-pill').forEach(btn=>{
     btn.addEventListener('click',()=>{activeLogMonth=btn.dataset.month;batchMode=false;batchSelected=new Set();render();});
   });
+  // Populate jump dropdown
+  const jump=document.getElementById('monthJump');
+  if(jump){
+    jump.innerHTML=range.map(k=>`<option value="${k}"${k===activeLogMonth?' selected':''}>${monthLabel(k)}</option>`).join('');
+    jump.onchange=function(){activeLogMonth=this.value;batchMode=false;batchSelected=new Set();render();};
+  }
 }
 document.getElementById('monthPrev').addEventListener('click',()=>{
   const{year,month}=parseMonthKey(activeLogMonth);
@@ -1164,8 +1137,8 @@ function makeRowsFull(rows,emptyMsg,showReimb){
         +'<div class="action-cell">'
           +'<div class="action-grid">'
             +(p.receiptUrl
-              ? '<a class="action-btn receipt-linked" href="'+p.receiptUrl+'" target="_blank" title="View receipt">📎</a>'
-              : '<button class="action-btn receipt-btn" data-id="'+p.id+'" title="Add receipt link">📎</button>')
+              ? '<a class="action-btn receipt-linked" href="'+p.receiptUrl+'" target="_blank" title="View receipt" style="font-size:13px;font-weight:700">↗</a>'
+              : '<button class="action-btn receipt-btn" data-id="'+p.id+'" title="Add receipt link" style="font-size:13px;opacity:.4">↗</button>')
             +'<button class="action-btn dup-btn" data-id="'+p.id+'" title="Duplicate">⧉</button>'
             +(p.isRecurring
               ? '<span class="action-btn" title="Recurring" style="cursor:default;color:var(--text3)">↻</span>'
@@ -1213,14 +1186,14 @@ function renderBatchBar(){
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='submitted';p.submittedDate=date;}
     });
-    save();batchMode=false;batchSelected=new Set();render();
+    snapshot();save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchMarkPending').addEventListener('click',()=>{
     batchSelected.forEach(id=>{
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='pending';p.submittedDate=null;p.receivedDate=null;}
     });
-    save();batchMode=false;batchSelected=new Set();render();
+    snapshot();save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchMarkReceived').addEventListener('click',()=>{
     const date=document.getElementById('batchDate').value||todayStr();
@@ -1228,7 +1201,7 @@ function renderBatchBar(){
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='received';p.receivedDate=date;if(!p.submittedDate)p.submittedDate=date;}
     });
-    save();batchMode=false;batchSelected=new Set();render();
+    snapshot();save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchEdit').addEventListener('click',()=>{
     openBatchEdit();
@@ -1237,7 +1210,7 @@ function renderBatchBar(){
     openExpenseReport([...batchSelected]);
   });
   document.getElementById('batchDelete').addEventListener('click',()=>{
-    data.purchases=data.purchases.filter(p=>!batchSelected.has(p.id));
+    snapshot();data.purchases=data.purchases.filter(p=>!batchSelected.has(p.id));
     save();batchMode=false;batchSelected=new Set();render();
   });
 }
@@ -1348,7 +1321,7 @@ function attachEvents(){
       } else if(p.status==='submitted'){
         openDatePicker('Date received', date=>{
           // Mark this transaction received
-          p.status='received'; p.receivedDate=date;
+          snapshot();p.status='received'; p.receivedDate=date;
           // Check if ALL descendants are now received — if so, clear ancestors too
           const ancestors = rolloverAncestors(p);
           if(ancestors.length > 0){
@@ -1407,18 +1380,16 @@ function attachEvents(){
     btn.addEventListener('click',()=>openEdit(parseInt(btn.dataset.id)));
   });
 
-  // Delete buttons
+  // Delete buttons — show confirmation modal
   document.querySelectorAll('.del-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const id=parseInt(btn.dataset.id);
       const p=data.purchases.find(x=>x.id===id);
-      if(!p) return;
-      if(!confirm('Delete "' + (p.desc||'this transaction') + '"? This cannot be undone.')) return;
-      pushUndo();
-      data.purchases=data.purchases.filter(x=>x.id!==id);
-      deletePurchaseFromDb(id);
-      render();
-      if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getMonthKey(p.date));
+      if(!p)return;
+      pendingDeleteId=id;
+      document.getElementById('deleteConfirmDesc').textContent=
+        '"'+(p.isRollover?rolloverLabel(p):p.desc)+'" — '+fmt(p.amount);
+      document.getElementById('deleteConfirmOverlay').classList.add('open');
     });
   });
 }
@@ -1428,7 +1399,7 @@ function commitBudget(catId){
   const btn=document.getElementById('bi-btn-'+catId);
   if(!inp)return;
   const v=parseFloat(inp.value);
-  if(!isNaN(v)&&v>=0)setBudget(catId,activeLogMonth,v);
+  if(!isNaN(v)&&v>=0){snapshot();setBudget(catId,activeLogMonth,v);}
   if(btn)btn.classList.remove('visible');
   renderPanels();renderSummary();
   scheduleRolloverCheck(catId,activeLogMonth);
@@ -1532,6 +1503,7 @@ function openAdd(){
   document.getElementById('f-desc').value='';
   document.getElementById('f-amount').value='';
   document.getElementById('f-expected').value='';
+  document.getElementById('f-payment').value='';
   document.getElementById('f-vendor').value='';
   document.getElementById('f-payment').value='';
   document.getElementById('f-recurring').checked=false;
@@ -1610,7 +1582,7 @@ function saveAdd(){
   }
 
   activeLogMonth=mk;activeTab=selectedCat;
-  pushUndo();save();closeAdd();render();
+  snapshot();save();closeAdd();render();
   if(CAT_MAP[selectedCat].hasBudget)scheduleRolloverCheck(selectedCat,mk);
 }
 
@@ -1690,7 +1662,7 @@ function saveEdit(){
       if (c.id !== p.id && c.status !== 'received') c.submittedDate = p.submittedDate;
     });
   }
-  pushUndo();save();closeEdit();render();
+  snapshot();save();closeEdit();render();
   scheduleRolloverCheck(oldCat,oldMk);
   if(getMonthKey(date)!==oldMk||p.cat!==oldCat)scheduleRolloverCheck(p.cat,getMonthKey(date));
 }
@@ -1782,7 +1754,7 @@ function processRolloverQueue(){
 }
 document.getElementById('rolloverYes').addEventListener('click',()=>{
   if(!rolloverQueue.length)return;
-  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];pushUndo();save();
+  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];save();
   const nextMk=nextMonthKey(item.mk);
   const src=data.purchases.find(p=>p.id===item.purchaseId);if(src)src.rolledOver=true;
   // Strip any existing "Rollover: " prefix to avoid doubling
@@ -1816,7 +1788,7 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
 });
 document.getElementById('rolloverNo').addEventListener('click',()=>{
   if(!rolloverQueue.length)return;
-  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];pushUndo();save();
+  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];save();
   if(rolloverQueue.length)processRolloverQueue();
   else{rolloverActive=false;document.getElementById('rolloverToast').classList.remove('open');}
 });
@@ -1876,7 +1848,7 @@ function saveBatchEdit() {
     });
   }
 
-  save();
+  snapshot();save();
   closeBatchEdit();
   batchMode = false;
   batchSelected = new Set();
@@ -2066,7 +2038,7 @@ function confirmRecurring() {
 
   entries.forEach(e => data.purchases.push(e));
   err.textContent = '';
-  save();
+  snapshot();save();
   closeRecurringModal();
   render();
 }
@@ -2172,7 +2144,7 @@ function wireReceiptRows() {
       if (!p) return;
       const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
       const url = row.querySelector('.receipt-url-input').value.trim() || null;
-      p.receiptUrl = url;
+      snapshot();p.receiptUrl = url;
       save();
       // Update the link area in place — no full re-render
       const linkArea = row.querySelector('.receipt-link-area');
@@ -2303,6 +2275,27 @@ function showSuccessToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
+
+// ── DELETE CONFIRMATION ───────────────────────────────────
+document.getElementById('btnCancelDelete').addEventListener('click', () => {
+  document.getElementById('deleteConfirmOverlay').classList.remove('open');
+  pendingDeleteId = null;
+});
+document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+  if (pendingDeleteId === null) return;
+  const p = data.purchases.find(x => x.id === pendingDeleteId);
+  snapshot();
+  data.purchases = data.purchases.filter(x => x.id !== pendingDeleteId);
+  await deletePurchaseFromDb(pendingDeleteId);
+  render();
+  if (p && CAT_MAP[p.cat] && CAT_MAP[p.cat].hasBudget) scheduleRolloverCheck(p.cat, getPurchaseMonth(p));
+  document.getElementById('deleteConfirmOverlay').classList.remove('open');
+  pendingDeleteId = null;
+});
+document.getElementById('deleteConfirmOverlay').addEventListener('click', function(e) {
+  if (e.target === this) { this.classList.remove('open'); pendingDeleteId = null; }
+});
+
 // ── EXPORT / IMPORT ───────────────────────────────────────
 document.getElementById('btnReset').addEventListener('click',()=>{
   document.getElementById('resetOverlay').classList.add('open');
@@ -2313,15 +2306,11 @@ document.getElementById('btnCancelReset').addEventListener('click',()=>{
 document.getElementById('resetOverlay').addEventListener('click',function(e){
   if(e.target===this) this.classList.remove('open');
 });
-document.getElementById('btnConfirmReset').addEventListener('click', async ()=>{
+document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
   if(_currentUser){
-    const uid = _currentUser.uid;
-    const db = window._fbDb;
-    const [ps, bs] = await Promise.all([
-      window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
-      window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))
-    ]);
-    await Promise.all([...ps.docs, ...bs.docs].map(d => window._fbDeleteDoc(d.ref)));
+    const uid=_currentUser.uid;const db=window._fbDb;
+    const[ps,bs]=await Promise.all([window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))]);
+    await Promise.all([...ps.docs,...bs.docs].map(d=>window._fbDeleteDoc(d.ref)));
   }
   data={purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
   rolloverQueue=[];rolloverActive=false;answeredIds=new Set();
@@ -2330,6 +2319,8 @@ document.getElementById('btnConfirmReset').addEventListener('click', async ()=>{
   document.getElementById('resetOverlay').classList.remove('open');
   render();
 });
+
+document.getElementById('btnUndo').addEventListener('click', doUndo);
 
 document.getElementById('btnExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
@@ -2352,44 +2343,6 @@ document.getElementById('importFile').addEventListener('change',function(){
   };
   reader.readAsText(file);this.value='';
 });
-
-// ── UNDO BUTTON ──────────────────────────────────────────
-document.getElementById('btnUndo').addEventListener('click', performUndo);
-
-// ── MONTH/YEAR JUMP ───────────────────────────────────────
-function populateYearSelect() {
-  const sel = document.getElementById('jumpYear');
-  if (!sel) return;
-  sel.innerHTML = '';
-  const curYear = new Date().getFullYear();
-  for (let y = curYear - 5; y <= curYear + 2; y++) {
-    const opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    if (y === curYear) opt.selected = true;
-    sel.appendChild(opt);
-  }
-}
-populateYearSelect();
-
-function wireJumpSelects() {
-  const mSel = document.getElementById('jumpMonth');
-  const ySel = document.getElementById('jumpYear');
-  if (!mSel || !ySel) return;
-  function jump() {
-    const m = String(parseInt(mSel.value) + 1).padStart(2, '0');
-    const y = ySel.value;
-    activeLogMonth = y + '-' + m;
-    batchMode = false; batchSelected = new Set();
-    render();
-  }
-  mSel.addEventListener('change', jump);
-  ySel.addEventListener('change', jump);
-}
-wireJumpSelects();
-
-// Sync jump selects to current month whenever render runs
-const _origRender = typeof render === 'undefined' ? null : null;
 
 // ── RENDER ────────────────────────────────────────────────
 function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();}
