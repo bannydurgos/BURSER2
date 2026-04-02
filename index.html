@@ -258,8 +258,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .rollover-no:hover{background:var(--bg4);color:var(--text)}
 
 /* AUTH */
-#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
-#authOverlay.hidden{display:none}
+#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;align-items:center;justify-content:center}
+#authOverlay.visible{display:flex}
 .auth-box{background:var(--bg2);border:2px solid var(--text);padding:40px 36px;width:340px;max-width:calc(100vw - 32px);text-align:center}
 .auth-logo{width:48px;height:48px;background:var(--text);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .auth-title{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
@@ -708,7 +708,9 @@ document.getElementById('btnSignOut').addEventListener('click', async () => {
   await _sb.auth.signOut();
   _currentUser = null;
   document.getElementById('userChip').style.display = 'none';
-  document.getElementById('authOverlay').classList.remove('hidden');
+  document.getElementById('authOverlay').classList.add('visible');
+  data = {purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
+  render();
 });
 
 async function initAuth() {
@@ -716,7 +718,7 @@ async function initAuth() {
   if (session) {
     await onSignedIn(session.user);
   } else {
-    document.getElementById('authOverlay').classList.remove('hidden');
+    document.getElementById('authOverlay').classList.add('visible');
   }
   _sb.auth.onAuthStateChange(async (_event, session) => {
     if (session) {
@@ -727,7 +729,7 @@ async function initAuth() {
 
 async function onSignedIn(user) {
   _currentUser = user;
-  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('authOverlay').classList.remove('visible');
   const chip = document.getElementById('userChip');
   chip.style.display = 'flex';
   document.getElementById('userEmail').textContent = user.email;
