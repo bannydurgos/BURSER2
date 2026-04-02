@@ -9,10 +9,45 @@
 <meta name="theme-color" content="#1a1a18">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Burser</title>
+<!-- Firebase SDKs -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, collection, getDocs, setDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
+    authDomain: "burser-81670.firebaseapp.com",
+    projectId: "burser-81670",
+    storageBucket: "burser-81670.firebasestorage.app",
+    messagingSenderId: "332983763453",
+    appId: "1:332983763453:web:98e38745c28dcc57169994"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  window._fbAuth = auth;
+  window._fbDb = db;
+  window._fbProvider = provider;
+  window._fbSignIn = () => signInWithPopup(auth, provider);
+  window._fbSignOut = () => signOut(auth);
+  window._fbOnAuthChanged = (cb) => onAuthStateChanged(auth, cb);
+  window._fbDoc = doc;
+  window._fbCollection = collection;
+  window._fbGetDocs = getDocs;
+  window._fbSetDoc = setDoc;
+  window._fbDeleteDoc = deleteDoc;
+  window._fbQuery = query;
+  window._fbWhere = where;
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xMiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz48bGluZSB4MT0iNjAiIHkxPSIyOCIgeDI9IjYwIiB5Mj0iMzYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48bGluZSB4MT0iNjAiIHkxPSI4NCIgeDI9IjYwIiB5Mj0iOTIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNNjAgMzggQzQ3IDM4IDM5IDQ0IDM5IDUyIEMzOSA2MCA0NyA2My41IDYwIDY3IEM3MyA3MC41IDgxIDc0LjUgODEgODMgQzgxIDkxIDczIDk3IDYwIDk3IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC45Ii8+PHBhdGggZD0iTTYwIDM4IEM3MyAzOCA4MSA0NCA4MSA1MiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOSIvPjwvc3ZnPg==">
 <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xMiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz48bGluZSB4MT0iNjAiIHkxPSIyOCIgeDI9IjYwIiB5Mj0iMzYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48bGluZSB4MT0iNjAiIHkxPSI4NCIgeDI9IjYwIiB5Mj0iOTIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNNjAgMzggQzQ3IDM4IDM5IDQ0IDM5IDUyIEMzOSA2MCA0NyA2My41IDYwIDY3IEM3MyA3MC41IDgxIDc0LjUgODEgODMgQzgxIDkxIDczIDk3IDYwIDk3IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC45Ii8+PHBhdGggZD0iTTYwIDM4IEM3MyAzOCA4MSA0NCA4MSA1MiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOSIvPjwvc3ZnPg==">
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQnVyc2VyIiwic2hvcnRfbmFtZSI6IkJ1cnNlciIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjdmNmYzIiwidGhlbWVfY29sb3IiOiIjMTExIn0=">
@@ -258,9 +293,9 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .rollover-no:hover{background:var(--bg4);color:var(--text)}
 
 /* AUTH */
-#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:none;align-items:center;justify-content:center}
-#authOverlay.visible{display:flex!important}
-.auth-box{background:var(--bg2);border:2px solid var(--text);padding:40px 36px;width:340px;max-width:calc(100vw - 32px);text-align:center;margin:auto;position:relative;top:0}
+#authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center}
+#authOverlay.hidden{display:none!important}
+.auth-box{background:var(--bg2);border:2px solid var(--text);padding:40px 36px;width:340px;max-width:calc(100vw - 32px);text-align:center}
 .auth-logo{width:48px;height:48px;background:var(--text);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .auth-title{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
 .auth-sub{font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:28px;line-height:1.6}
@@ -335,8 +370,6 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 </style>
 </head>
 <body>
-
-<!-- AUTH OVERLAY -->
 <div id="authOverlay">
   <div class="auth-box">
     <div class="auth-logo">
@@ -356,11 +389,6 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
       Sign in with Google
     </button>
     <div class="auth-error" id="authError"></div>
-    <div style="margin-top:16px">
-      <button class="auth-google-btn" id="btnCheckSession" style="font-size:10px;padding:8px;opacity:0.6">
-        Already signed in? Click here
-      </button>
-    </div>
   </div>
 </div>
 
@@ -692,231 +720,6 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 </div>
 
 <script>
-// ── SUPABASE SETUP ────────────────────────────────────────
-const SUPABASE_URL  = 'https://cvohtlpuimrlytqmlndf.supabase.co';   // e.g. https://abcxyz.supabase.co
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2b2h0bHB1aW1ybHl0cW1sbmRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTI5NjAsImV4cCI6MjA5MDYyODk2MH0.P6xm9wQn1zC6HorhwQp5LniX--YllaZrws2rGyrUDEo';
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: {
-    flowType: 'pkce',
-    detectSessionInUrl: true,
-    persistSession: true,
-    autoRefreshToken: true
-  }
-});
-
-let _currentUser = null;
-
-// ── AUTH ──────────────────────────────────────────────────
-document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
-  document.getElementById('authError').textContent = '';
-  // Use the exact origin + pathname, no query strings or hashes
-  const redirectTo = (window.location.origin + window.location.pathname).replace(/\/+$/, '');
-  const { error } = await _sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectTo,
-      queryParams: { access_type: 'offline', prompt: 'consent' }
-    }
-  });
-  if (error) document.getElementById('authError').textContent = error.message;
-});
-
-document.getElementById('btnSignOut').addEventListener('click', async () => {
-  await _sb.auth.signOut();
-  _currentUser = null;
-  document.getElementById('userChip').style.display = 'none';
-  document.getElementById('authOverlay').classList.add('visible');
-  data = {purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
-  render();
-});
-
-async function initAuth() {
-  _sb.auth.onAuthStateChange(async (_event, session) => {
-    console.log('Auth state change:', _event, session?.user?.email);
-    if (_event === 'SIGNED_IN' && session && session.user && !_currentUser) {
-      window.history.replaceState(null, '', window.location.pathname);
-      await onSignedIn(session.user);
-    } else if (_event === 'SIGNED_OUT') {
-      _currentUser = null;
-      data = {purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
-      document.getElementById('userChip').style.display = 'none';
-      document.getElementById('authOverlay').classList.add('visible');
-      render();
-    }
-  });
-
-  // Restore query string if redirected through 404.html
-  const urlParams = new URLSearchParams(window.location.search);
-  const restored = urlParams.get('r');
-  if (restored) {
-    const restoredParams = new URLSearchParams(decodeURIComponent(restored));
-    const restoredCode = restoredParams.get('code');
-    if (restoredCode) {
-      window.history.replaceState(null, '', window.location.pathname);
-      console.log('Found restored PKCE code, exchanging...');
-      const { data: exchangeData, error } = await _sb.auth.exchangeCodeForSession(restoredCode);
-      console.log('Exchange result:', exchangeData?.session?.user?.email, error);
-      if (exchangeData?.session?.user) {
-        await onSignedIn(exchangeData.session.user);
-        return;
-      }
-    }
-  }
-
-  // Direct PKCE code in URL
-  const code = urlParams.get('code');
-  if (code) {
-    console.log('Found PKCE code, exchanging...');
-    const { data: exchangeData, error } = await _sb.auth.exchangeCodeForSession(code);
-    console.log('Exchange result:', exchangeData?.session?.user?.email, error);
-    if (exchangeData?.session?.user) {
-      window.history.replaceState(null, '', window.location.pathname);
-      await onSignedIn(exchangeData.session.user);
-      return;
-    }
-  }
-
-  const { data: { session } } = await _sb.auth.getSession();
-  console.log('getSession result:', session?.user?.email);
-  if (session && session.user) {
-    await onSignedIn(session.user);
-  } else {
-    document.getElementById('authOverlay').classList.add('visible');
-  }
-}
-
-async function onSignedIn(user) {
-  _currentUser = user;
-  document.getElementById('authOverlay').classList.remove('visible');
-  const chip = document.getElementById('userChip');
-  chip.style.display = 'flex';
-  document.getElementById('userEmail').textContent = user.email;
-  if (user.user_metadata?.avatar_url) {
-    document.getElementById('userAvatar').src = user.user_metadata.avatar_url;
-  } else {
-    document.getElementById('userAvatar').style.display = 'none';
-  }
-  await loadDataFromSupabase();
-  render();
-}
-
-// ── DATA LAYER ────────────────────────────────────────────
-async function loadDataFromSupabase() {
-  if (!_currentUser) return;
-  const uid = _currentUser.id;
-
-  const [{ data: purchases }, { data: budgets }] = await Promise.all([
-    _sb.from('purchases').select('*').eq('user_id', uid),
-    _sb.from('budgets').select('*').eq('user_id', uid)
-  ]);
-
-  const budgetMap = {};
-  (budgets || []).forEach(b => { budgetMap[b.cat + '_' + b.month_key] = b.amount; });
-
-  let maxId = 0;
-  const mapped = (purchases || []).map(r => {
-    if (r.burser_id > maxId) maxId = r.burser_id;
-    return {
-      id: r.burser_id,
-      date: r.date,
-      serviceDate: r.service_date,
-      desc: r.desc,
-      vendor: r.vendor,
-      paymentMethod: r.payment_method,
-      cat: r.cat,
-      amount: r.amount,
-      status: r.status,
-      submittedDate: r.submitted_date,
-      expectedDate: r.expected_date,
-      receivedDate: r.received_date,
-      receiptUrl: r.receipt_url,
-      isRollover: r.is_rollover,
-      rolloverSourceId: r.rollover_source_id,
-      rolloverFrom: r.rollover_from,
-      rolloverBaseDesc: r.rollover_base_desc,
-      rolloverMonth: r.rollover_month || null,
-      rolledOver: r.rolled_over || false,
-      isRecurring: r.is_recurring || false,
-      recurringSourceId: r.recurring_source_id || null
-    };
-  });
-
-  data = { purchases: mapped, budgets: budgetMap, nextId: maxId + 1, answeredRollovers: [] };
-  answeredIds = new Set();
-}
-
-function _toRow(p) {
-  return {
-    user_id:            _currentUser.id,
-    burser_id:          p.id,
-    date:               p.date,
-    service_date:       p.serviceDate || null,
-    desc:               p.desc,
-    vendor:             p.vendor || null,
-    payment_method:     p.paymentMethod || null,
-    cat:                p.cat,
-    amount:             p.amount,
-    status:             p.status,
-    submitted_date:     p.submittedDate || null,
-    expected_date:      p.expectedDate || null,
-    received_date:      p.receivedDate || null,
-    receipt_url:        p.receiptUrl || null,
-    is_rollover:        p.isRollover || false,
-    rollover_source_id: p.rolloverSourceId || null,
-    rollover_from:      p.rolloverFrom || null,
-    rollover_base_desc: p.rolloverBaseDesc || null,
-    rollover_month:     p.rolloverMonth || null,
-    rolled_over:        p.rolledOver || false,
-    is_recurring:       p.isRecurring || false,
-    recurring_source_id: p.recurringSourceId || null
-  };
-}
-
-async function savePurchase(p) {
-  if (!_currentUser) return;
-  const row = _toRow(p);
-  const { data: existing } = await _sb.from('purchases')
-    .select('id').eq('user_id', _currentUser.id).eq('burser_id', p.id).maybeSingle();
-  let result;
-  if (existing) {
-    result = await _sb.from('purchases').update(row).eq('user_id', _currentUser.id).eq('burser_id', p.id);
-  } else {
-    result = await _sb.from('purchases').insert(row);
-  }
-  if (result.error) console.error('savePurchase error:', result.error);
-}
-
-async function deletePurchase(id) {
-  if (!_currentUser) return;
-  await _sb.from('purchases').delete().eq('user_id', _currentUser.id).eq('burser_id', id);
-}
-
-async function saveBudgetEntry(cat, monthKey, amount) {
-  if (!_currentUser) return;
-  const { data: existing } = await _sb.from('budgets')
-    .select('id').eq('user_id', _currentUser.id).eq('cat', cat).eq('month_key', monthKey).maybeSingle();
-  let result;
-  if (existing) {
-    result = await _sb.from('budgets').update({ amount }).eq('user_id', _currentUser.id).eq('cat', cat).eq('month_key', monthKey);
-  } else {
-    result = await _sb.from('budgets').insert({ user_id: _currentUser.id, cat, month_key: monthKey, amount });
-  }
-  if (result.error) console.error('saveBudgetEntry error:', result.error);
-}
-
-async function save() {
-  if (!_currentUser) return;
-  for (const p of data.purchases) {
-    await savePurchase(p);
-  }
-  for (const [key, amount] of Object.entries(data.budgets)) {
-    const parts = key.split('_');
-    const cat = parts[0];
-    const monthKey = parts.slice(1).join('_');
-    await saveBudgetEntry(cat, monthKey, amount);
-  }
-}
-
 // ── DATA ─────────────────────────────────────────────────
 const CATS=[
   {id:'hw',label:'Health & Wellness',hasBudget:true},
@@ -927,11 +730,102 @@ const CAT_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+// ── FIREBASE DATA LAYER ──────────────────────────────────
+let _currentUser = null;
+
 function loadData(){
   return{purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
 }
 let data=loadData();
-function saveSync(){} // no-op: all saves go through async save()
+
+async function save(){
+  if(!_currentUser) return;
+  const uid = _currentUser.uid;
+  const db = window._fbDb;
+  // Save all purchases
+  for(const p of data.purchases){
+    const ref = window._fbDoc(db, 'users', uid, 'purchases', String(p.id));
+    await window._fbSetDoc(ref, p);
+  }
+  // Save budgets
+  for(const [key, amount] of Object.entries(data.budgets)){
+    const ref = window._fbDoc(db, 'users', uid, 'budgets', key);
+    await window._fbSetDoc(ref, {amount});
+  }
+}
+
+async function savePurchase(p){
+  if(!_currentUser) return;
+  const ref = window._fbDoc(window._fbDb, 'users', _currentUser.uid, 'purchases', String(p.id));
+  await window._fbSetDoc(ref, p);
+}
+
+async function deletePurchaseFromDb(id){
+  if(!_currentUser) return;
+  const ref = window._fbDoc(window._fbDb, 'users', _currentUser.uid, 'purchases', String(id));
+  await window._fbDeleteDoc(ref);
+}
+
+async function loadFromFirebase(){
+  if(!_currentUser) return;
+  const uid = _currentUser.uid;
+  const db = window._fbDb;
+  const [purchSnap, budgSnap] = await Promise.all([
+    window._fbGetDocs(window._fbCollection(db, 'users', uid, 'purchases')),
+    window._fbGetDocs(window._fbCollection(db, 'users', uid, 'budgets'))
+  ]);
+  const purchases = purchSnap.docs.map(d => d.data());
+  const budgets = {};
+  budgSnap.docs.forEach(d => { budgets[d.id] = d.data().amount; });
+  let maxId = purchases.reduce((m,p) => Math.max(m, p.id||0), 0);
+  data = {purchases, budgets, nextId: maxId+1, answeredRollovers:[]};
+  answeredIds = new Set();
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+function initAuth(){
+  function waitForFirebase(cb){
+    if(window._firebaseReady) cb();
+    else window.addEventListener('firebaseReady', cb, {once:true});
+  }
+  waitForFirebase(() => {
+    window._fbOnAuthChanged(async (user) => {
+      if(user){
+        _currentUser = user;
+        document.getElementById('authOverlay').classList.add('hidden');
+        document.getElementById('userChip').style.display = 'flex';
+        document.getElementById('userEmail').textContent = user.email;
+        if(user.photoURL){
+          document.getElementById('userAvatar').src = user.photoURL;
+        } else {
+          document.getElementById('userAvatar').style.display = 'none';
+        }
+        await loadFromFirebase();
+        render();
+      } else {
+        _currentUser = null;
+        data = loadData();
+        document.getElementById('userChip').style.display = 'none';
+        document.getElementById('authOverlay').classList.remove('hidden');
+      }
+    });
+
+    document.getElementById('btnGoogleSignIn').addEventListener('click', async () => {
+      document.getElementById('authError').textContent = '';
+      try {
+        await window._fbSignIn();
+      } catch(e) {
+        document.getElementById('authError').textContent = e.message;
+      }
+    });
+
+    document.getElementById('btnSignOut').addEventListener('click', async () => {
+      await window._fbSignOut();
+      data = loadData();
+      render();
+    });
+  });
+}
 
 // ── STATE ─────────────────────────────────────────────────
 const now=new Date();
@@ -1476,7 +1370,7 @@ function attachEvents(){
       const id=parseInt(btn.dataset.id);
       const p=data.purchases.find(x=>x.id===id);
       data.purchases=data.purchases.filter(x=>x.id!==id);
-      deletePurchase(id);
+      deletePurchaseFromDb(id);
       render();
       if(p&&CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getMonthKey(p.date));
     });
@@ -2373,10 +2267,15 @@ document.getElementById('btnCancelReset').addEventListener('click',()=>{
 document.getElementById('resetOverlay').addEventListener('click',function(e){
   if(e.target===this) this.classList.remove('open');
 });
-document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
+document.getElementById('btnConfirmReset').addEventListener('click', async ()=>{
   if(_currentUser){
-    await _sb.from('purchases').delete().eq('user_id',_currentUser.id);
-    await _sb.from('budgets').delete().eq('user_id',_currentUser.id);
+    const uid = _currentUser.uid;
+    const db = window._fbDb;
+    const [ps, bs] = await Promise.all([
+      window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
+      window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))
+    ]);
+    await Promise.all([...ps.docs, ...bs.docs].map(d => window._fbDeleteDoc(d.ref)));
   }
   data={purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
   rolloverQueue=[];rolloverActive=false;answeredIds=new Set();
@@ -2406,17 +2305,6 @@ document.getElementById('importFile').addEventListener('change',function(){
     }catch(err){alert('Could not read file.');}
   };
   reader.readAsText(file);this.value='';
-});
-
-// ── MANUAL SESSION CHECK ─────────────────────────────────
-document.getElementById('btnCheckSession').addEventListener('click', async () => {
-  const { data: { session } } = await _sb.auth.getSession();
-  console.log('Manual check:', session?.user?.email);
-  if (session && session.user) {
-    await onSignedIn(session.user);
-  } else {
-    document.getElementById('authError').textContent = 'No active session found. Please sign in again.';
-  }
 });
 
 // ── RENDER ────────────────────────────────────────────────
