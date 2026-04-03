@@ -13,7 +13,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, collection, getDocs, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, collection, getDocs, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -38,6 +38,7 @@
   window._fbCollection = collection;
   window._fbGetDocs = getDocs;
   window._fbSetDoc = setDoc;
+  window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
@@ -84,18 +85,11 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 
 /* MONTH BAR */
 .month-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border2);padding:10px 14px}
-.month-bar-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
-.month-nav{background:none;border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:14px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
-.month-nav:hover{background:var(--text);color:var(--bg2)}
-.month-scroll{display:flex;gap:4px;overflow-x:auto;flex:1;padding-bottom:2px}
-.month-scroll::-webkit-scrollbar{height:2px}
-.month-scroll::-webkit-scrollbar-thumb{background:var(--border2)}
-.month-pill{font-family:var(--mono);font-size:11px;font-weight:500;padding:4px 12px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.03em}
-.month-pill:hover{border-color:var(--border2);color:var(--text)}
-.month-pill.active{background:var(--text);border-color:var(--text);color:var(--bg2)}
-.month-pill.current{border-color:var(--hw);color:var(--hw)}
-.month-pill.current.active{background:var(--hw);border-color:var(--hw);color:#fff}
-.today-btn{font-size:10px;font-weight:600;padding:0 8px;height:28px;letter-spacing:.02em;text-transform:uppercase;flex-shrink:0;white-space:nowrap;min-width:44px}
+.month-bar-fill{flex:1}
+.month-bar-right{flex:1;display:flex;justify-content:flex-end}
+.month-select{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px}
+.today-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:0 10px;height:28px;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0;white-space:nowrap;border:1px solid var(--hw);background:none;color:var(--hw);cursor:pointer}
+.today-btn:hover{background:var(--hw);color:#fff}
 
 /* SUMMARY */
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-bottom:20px;border:1px solid var(--border2);background:var(--border2)}
@@ -363,7 +357,9 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .auth-error{font-family:var(--mono);font-size:11px;color:var(--red-text);margin-top:12px;min-height:16px}
 .user-chip{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text2)}
 .user-avatar{width:22px;height:22px;border-radius:50%;border:1px solid var(--border2)}
-.user-email{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-email{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;border-bottom:1px dashed transparent;transition:border-color .15s}
+.user-email:hover{border-bottom-color:var(--border2)}
+.user-name-input{font-family:var(--mono);font-size:11px;background:none;border:none;border-bottom:1px solid var(--text);outline:none;color:var(--text);width:110px;padding:0 2px}
 #btnSignOut{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;text-transform:uppercase;letter-spacing:.03em}
 #btnSignOut:hover{background:var(--text);color:var(--bg2);border-color:var(--text)}
 </style>
@@ -411,13 +407,13 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="header-row">
       <div id="userChip" class="user-chip" style="display:none">
         <img class="user-avatar" id="userAvatar" src="" alt="">
-        <span class="user-email" id="userEmail"></span>
+        <span class="user-email" id="userEmail" title="Click to edit name"></span>
+        <input class="user-name-input" id="userNameInput" type="text" maxlength="30" style="display:none" placeholder="Your name">
         <button id="btnSignOut">Sign out</button>
       </div>
     </div>
     <div class="header-row">
       <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
-      <button class="hdr-btn" id="btnPending">Receivables</button>
       <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
     </div>
   </div>
@@ -426,16 +422,17 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   <button class="view-btn active" id="btnViewLog">Log</button>
   <button class="view-btn" id="btnViewHistory">History</button>
   <button class="view-btn" id="btnViewReceipts">Receipts</button>
+  <button class="view-btn" id="btnViewReceivables">Receivables</button>
 </div>
 <main>
   <div id="logView">
     <div class="month-bar">
-      <button class="month-nav" id="monthPrev">‹</button>
-      <div class="month-scroll" id="monthScroll"></div>
-      <button class="month-nav" id="monthNext">›</button>
-      <button class="month-nav today-btn" id="monthToday">Today</button>
-      <select id="monthJumpM" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
-      <select id="monthJumpY" style="font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px"></select>
+      <div class="month-bar-fill"></div>
+      <select id="monthJumpM" class="month-select"></select>
+      <select id="monthJumpY" class="month-select"></select>
+      <div class="month-bar-right">
+        <button class="today-btn" id="monthToday">Today</button>
+      </div>
     </div>
     <div class="summary-grid" id="summaryGrid"></div>
     <div class="tabs-row" id="tabsRow"></div>
@@ -797,6 +794,19 @@ function snapshot(){
   if(btn){btn.disabled=false;btn.style.opacity='1';}
 }
 
+// ── DISPLAY NAME ─────────────────────────────────────────
+async function loadDisplayName(){
+  if(!_currentUser)return null;
+  try{
+    const snap=await window._fbGetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid));
+    return snap.exists()&&snap.data().displayName?snap.data().displayName:null;
+  }catch(e){return null;}
+}
+async function saveDisplayName(name){
+  if(!_currentUser)return;
+  await window._fbSetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid),{displayName:name},{merge:true});
+}
+
 // ── AUTH ─────────────────────────────────────────────────
 function initAuth(){
   function waitForFirebase(cb){
@@ -809,10 +819,11 @@ function initAuth(){
         _currentUser=user;
         document.getElementById('authOverlay').classList.remove('visible');
         const chip=document.getElementById('userChip');chip.style.display='flex';
-        document.getElementById('userEmail').textContent=user.email;
         if(user.photoURL)document.getElementById('userAvatar').src=user.photoURL;
         else document.getElementById('userAvatar').style.display='none';
         await loadFromFirebase();
+        const dn=await loadDisplayName();
+        document.getElementById('userEmail').textContent=dn||user.email;
         render();switchView(activeView);
       }else{
         _currentUser=null;data=loadData();
@@ -832,6 +843,32 @@ function initAuth(){
     document.getElementById('authOverlay').classList.add('visible');
   });
 }
+
+// ── USERNAME EDITING ─────────────────────────────────────
+(function(){
+  const span=document.getElementById('userEmail');
+  const inp=document.getElementById('userNameInput');
+  function startEdit(){
+    inp.value=span.textContent;
+    span.style.display='none';
+    inp.style.display='inline';
+    inp.focus();inp.select();
+  }
+  async function commitEdit(){
+    const v=inp.value.trim();
+    inp.style.display='none';
+    span.style.display='';
+    if(!v)return;
+    span.textContent=v;
+    await saveDisplayName(v);
+  }
+  span.addEventListener('click',startEdit);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();commitEdit();}
+    if(e.key==='Escape'){inp.style.display='none';span.style.display='';}
+  });
+  inp.addEventListener('blur',commitEdit);
+})();
 
 // ── STATE ─────────────────────────────────────────────────
 const now=new Date();
@@ -950,45 +987,21 @@ function statusBadge(s){
 
 // ── MONTH BAR ─────────────────────────────────────────────
 function renderMonthBar(){
-  const range=getMonthRange();const cur=currentMonthKey();
-  const scroll=document.getElementById('monthScroll');
-  scroll.innerHTML=range.map(k=>{
-    const isActive=k===activeLogMonth;const isCur=k===cur&&!isActive;
-    return '<button class="month-pill'+(isActive?' active':'')+(isCur?' current':'')+'" data-month="'+k+'">'+monthLabel(k)+'</button>';
-  }).join('');
-  setTimeout(()=>{const a=scroll.querySelector('.month-pill.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth',block:'nearest'});},50);
-  scroll.querySelectorAll('.month-pill').forEach(btn=>{
-    btn.addEventListener('click',()=>{activeLogMonth=btn.dataset.month;batchMode=false;batchSelected=new Set();render();});
-  });
-  // Populate month/year jump dropdowns
+  const range=getMonthRange();
   const jumpM=document.getElementById('monthJumpM');
   const jumpY=document.getElementById('monthJumpY');
-  if(jumpM&&jumpY){
-    const{year:selYear,month:selMonth}=parseMonthKey(activeLogMonth);
-    const years=[...new Set(range.map(k=>parseMonthKey(k).year))];
-    jumpM.innerHTML=MS.map((name,i)=>`<option value="${i}"${i===selMonth?' selected':''}>${name}</option>`).join('');
-    jumpY.innerHTML=years.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
-    function applyJump(){
-      const m=String(parseInt(jumpM.value)+1).padStart(2,'0');
-      const y=jumpY.value;
-      activeLogMonth=y+'-'+m;batchMode=false;batchSelected=new Set();render();
-    }
-    jumpM.onchange=applyJump;
-    jumpY.onchange=applyJump;
+  const{year:selYear,month:selMonth}=parseMonthKey(activeLogMonth);
+  const years=[...new Set(range.map(k=>parseMonthKey(k).year))];
+  jumpM.innerHTML=MS.map((name,i)=>`<option value="${i}"${i===selMonth?' selected':''}>${name}</option>`).join('');
+  jumpY.innerHTML=years.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
+  function applyJump(){
+    const m=String(parseInt(jumpM.value)+1).padStart(2,'0');
+    const y=jumpY.value;
+    activeLogMonth=y+'-'+m;batchMode=false;batchSelected=new Set();render();
   }
+  jumpM.onchange=applyJump;
+  jumpY.onchange=applyJump;
 }
-document.getElementById('monthPrev').addEventListener('click',()=>{
-  const{year,month}=parseMonthKey(activeLogMonth);
-  const d=new Date(year,month-1,1);
-  activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  batchMode=false;batchSelected=new Set();render();
-});
-document.getElementById('monthNext').addEventListener('click',()=>{
-  const{year,month}=parseMonthKey(activeLogMonth);
-  const d=new Date(year,month+1,1);
-  activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  batchMode=false;batchSelected=new Set();render();
-});
 document.getElementById('monthToday').addEventListener('click',()=>{
   activeLogMonth=currentMonthKey();batchMode=false;batchSelected=new Set();render();
 });
@@ -1710,7 +1723,7 @@ function openPendingSheet(){
     +'<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value">'+fmt(grandReimb)+'</span></div>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
-document.getElementById('btnPending').addEventListener('click',openPendingSheet);
+document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
 document.getElementById('pendingOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 
 // ── ROLLOVER ──────────────────────────────────────────────
