@@ -813,7 +813,7 @@ function initAuth(){
         if(user.photoURL)document.getElementById('userAvatar').src=user.photoURL;
         else document.getElementById('userAvatar').style.display='none';
         await loadFromFirebase();
-        render();
+        render();switchView(activeView);
       }else{
         _currentUser=null;data=loadData();
         document.getElementById('userChip').style.display='none';
@@ -835,8 +835,9 @@ function initAuth(){
 
 // ── STATE ─────────────────────────────────────────────────
 const now=new Date();
-let activeLogMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-let activeTab='hw';
+let activeLogMonth=sessionStorage.getItem('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+let activeTab=sessionStorage.getItem('activeTab')||'hw';
+let activeView=sessionStorage.getItem('activeView')||'log';
 let selectedCat='hw';
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
@@ -1017,7 +1018,7 @@ function renderTabs(){
     '<button class="tab '+c.id+(activeTab===c.id?' active':'')+'" data-tab="'+c.id+'">'+c.label+'</button>'
   ).join('');
   document.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{activeTab=btn.dataset.tab;batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();});
+    btn.addEventListener('click',()=>{activeTab=btn.dataset.tab;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();});
   });
 }
 
@@ -1460,35 +1461,22 @@ function renderHistory(){
 }
 
 // ── VIEW TOGGLE ───────────────────────────────────────────
-document.getElementById('btnViewLog').addEventListener('click',()=>{
-  document.getElementById('logView').style.display='block';
-  document.getElementById('historyView').classList.remove('active');
-  document.getElementById('receiptsView').classList.remove('active');
-  document.getElementById('btnViewLog').classList.add('active');
-  document.getElementById('btnViewHistory').classList.remove('active');
-  document.getElementById('btnViewReceipts').classList.remove('active');
-  document.getElementById('fab').style.display='flex';
-});
-document.getElementById('btnViewHistory').addEventListener('click',()=>{
-  document.getElementById('logView').style.display='none';
-  document.getElementById('historyView').classList.add('active');
-  document.getElementById('receiptsView').classList.remove('active');
-  document.getElementById('btnViewLog').classList.remove('active');
-  document.getElementById('btnViewHistory').classList.add('active');
-  document.getElementById('btnViewReceipts').classList.remove('active');
-  document.getElementById('fab').style.display='none';
-  renderHistory();
-});
-document.getElementById('btnViewReceipts').addEventListener('click',()=>{
-  document.getElementById('logView').style.display='none';
-  document.getElementById('historyView').classList.remove('active');
-  document.getElementById('receiptsView').classList.add('active');
-  document.getElementById('btnViewLog').classList.remove('active');
-  document.getElementById('btnViewHistory').classList.remove('active');
-  document.getElementById('btnViewReceipts').classList.add('active');
-  document.getElementById('fab').style.display='none';
-  renderReceipts();
-});
+function switchView(v){
+  activeView=v;sessionStorage.setItem('activeView',v);
+  const isLog=v==='log',isHist=v==='history',isRec=v==='receipts';
+  document.getElementById('logView').style.display=isLog?'block':'none';
+  document.getElementById('historyView').classList.toggle('active',isHist);
+  document.getElementById('receiptsView').classList.toggle('active',isRec);
+  document.getElementById('btnViewLog').classList.toggle('active',isLog);
+  document.getElementById('btnViewHistory').classList.toggle('active',isHist);
+  document.getElementById('btnViewReceipts').classList.toggle('active',isRec);
+  document.getElementById('fab').style.display=isLog?'flex':'none';
+  if(isHist)renderHistory();
+  if(isRec)renderReceipts();
+}
+document.getElementById('btnViewLog').addEventListener('click',()=>switchView('log'));
+document.getElementById('btnViewHistory').addEventListener('click',()=>switchView('history'));
+document.getElementById('btnViewReceipts').addEventListener('click',()=>switchView('receipts'));
 
 // ── ADD PURCHASE MODAL ────────────────────────────────────
 function updateAddFields(){
@@ -2322,9 +2310,10 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
   data={purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
   rolloverQueue=[];rolloverActive=false;answeredIds=new Set();
   batchMode=false;batchSelected=new Set();
-  activeLogMonth=currentMonthKey();activeTab='hw';
+  activeLogMonth=currentMonthKey();activeTab='hw';activeView='log';
+  sessionStorage.removeItem('activeLogMonth');sessionStorage.removeItem('activeTab');sessionStorage.removeItem('activeView');
   document.getElementById('resetOverlay').classList.remove('open');
-  render();
+  render();switchView('log');
 });
 
 document.getElementById('btnUndo').addEventListener('click', doUndo);
@@ -2332,7 +2321,7 @@ document.getElementById('btnUndo').addEventListener('click', doUndo);
 
 
 // ── RENDER ────────────────────────────────────────────────
-function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();}
+function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();sessionStorage.setItem('activeLogMonth',activeLogMonth);sessionStorage.setItem('activeTab',activeTab);}
 initAuth();
 </script>
 </body>
