@@ -93,6 +93,28 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 .month-nav{font-family:var(--mono);font-size:14px;font-weight:600;width:28px;height:28px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
 .month-nav:hover{background:var(--bg3,var(--bg2));border-color:var(--text2)}
 
+.month-bar-left{flex:1;display:flex;align-items:center}
+.info-btn{font-family:var(--mono);font-size:15px;background:none;border:1px solid var(--border2);color:var(--text3);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1}
+.info-btn:hover{color:var(--text);border-color:var(--text2);background:var(--bg3)}
+.info-popup{position:fixed;z-index:210;background:var(--bg2);border:2px solid var(--text);box-shadow:4px 4px 0 rgba(0,0,0,.15);min-width:260px;max-width:360px;display:flex;flex-direction:column}
+.info-popup-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--bg3);border-bottom:1px solid var(--border2)}
+.info-popup-title{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.info-popup-x{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text2);padding:0;line-height:1;font-family:var(--mono)}
+.info-popup-x:hover{color:var(--text)}
+.info-filter-bar{display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border2);background:var(--bg3);flex-wrap:wrap}
+.info-filter-label{font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.info-filter-select{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:26px}
+.info-filter-chip{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 8px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;letter-spacing:.04em;text-transform:uppercase}
+.info-filter-chip.active{background:var(--text);color:var(--bg2);border-color:var(--text)}
+.info-popup-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.info-stat-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.info-stat-label{font-family:var(--mono);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+.info-stat-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text)}
+.info-stat-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px}
+.info-divider{height:1px;background:var(--border2)}
+.info-cat-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.info-cat-label{font-family:var(--mono);font-size:10px;color:var(--text2)}
+.info-cat-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)}
 /* SUMMARY */
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-bottom:20px;border:1px solid var(--border2);background:var(--border2)}
 .metric{background:var(--bg2);padding:16px 18px}
@@ -106,10 +128,30 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 .tab:last-child{border-right:none}
 .tab:hover{color:var(--text);background:var(--bg4)}
 .tab.active{background:var(--bg2);color:var(--text);font-weight:600}
-.tab.active.hw{border-top:2px solid var(--hw)}
-.tab.active.mh{border-top:2px solid var(--mh)}
-.tab.active.tr{border-top:2px solid var(--tr)}
 .tab-panel{display:none}.tab-panel.active{display:block}
+.tab-add-btn{font-family:var(--mono);font-size:16px;font-weight:400;padding:10px 14px;border:none;border-left:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;line-height:1;flex-shrink:0}
+.tab-add-btn:hover{background:var(--bg4);color:var(--text)}
+.tab-rename-input{flex:1;font-family:var(--mono);font-size:11px;font-weight:600;border:none;border-right:1px solid var(--border2);outline:none;background:var(--bg2);color:var(--text);text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:10px 8px;min-width:0}
+.cat-btn-selected{background:var(--bg4)!important;font-weight:600}
+.tab{position:relative}
+.tab-close{position:absolute;top:3px;right:4px;background:none;border:none;cursor:pointer;color:var(--red-text);font-size:10px;font-weight:700;line-height:1;padding:1px 3px;opacity:0;transition:opacity .15s;font-family:var(--mono)}
+.tab:hover .tab-close,.tab.active .tab-close{opacity:.55}
+.tab-close:hover{opacity:1!important}
+.metric-sub-btn{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:.02em;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;display:block;text-align:left;width:100%}
+.metric-sub-btn:hover{color:var(--text2)}
+.metric-popup{position:fixed;z-index:210;background:var(--bg2);border:2px solid var(--text);box-shadow:4px 4px 0 rgba(0,0,0,.15);min-width:280px;max-width:400px;max-height:360px;display:flex;flex-direction:column}
+.metric-popup-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--bg3);border-bottom:1px solid var(--border2);flex-shrink:0}
+.metric-popup-title{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.metric-popup-x{background:none;border:none;cursor:pointer;font-size:16px;color:var(--text2);padding:0;line-height:1;font-family:var(--mono)}
+.metric-popup-x:hover{color:var(--text)}
+.metric-popup-body{overflow-y:auto;flex:1}
+.metric-popup-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer;text-align:left;width:100%;background:none;border-left:none;border-right:none;border-top:none;font-family:var(--sans)}
+.metric-popup-row:last-child{border-bottom:none}
+.metric-popup-row:hover{background:var(--bg3)}
+.metric-popup-desc{font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.metric-popup-meta{font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0;text-align:right;line-height:1.5}
+@keyframes rowPulse{0%,20%{background:var(--blue-bg)}100%{background:transparent}}
+.row-highlight td{animation:rowPulse 2s ease-out!important}
 
 /* BUDGET */
 .panel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
@@ -175,13 +217,16 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px}
 .reimb-hint{font-family:var(--mono);font-size:10px;color:var(--hw);display:block;margin-top:2px}
 .rollover-desc{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em}
+.rollover-desc-link{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-align:left}
+.rollover-desc-link:hover{color:var(--text)}
 /* Action buttons — 2×2 grid + red delete */
 .action-cell{display:flex;align-items:center;gap:10px;white-space:nowrap}
 .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
-.action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:15px;padding:3px 5px;display:flex;align-items:center;justify-content:center;line-height:1;font-family:var(--mono);text-decoration:none;transition:color .12s}
+.action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 6px;display:flex;align-items:center;justify-content:center;line-height:1;font-family:var(--mono);text-decoration:none;transition:color .12s}
 .action-btn:hover{color:var(--text)}
 .action-btn.receipt-linked{color:var(--hw)}
-.del-btn-red{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px 6px;font-family:var(--mono);line-height:1;font-weight:400;transition:color .12s}
+.action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.del-btn-red{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:4px 6px;font-family:var(--mono);line-height:1;font-weight:400;transition:color .12s}
 .del-btn-red:hover{color:var(--red-text)}
 .dup-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 5px;font-family:var(--mono)}
 .dup-btn:hover{color:var(--tr)}
@@ -432,7 +477,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 <main>
   <div id="logView">
     <div class="month-bar">
-      <div class="month-bar-fill"></div>
+      <div class="month-bar-left"><button class="info-btn" id="btnInfo" title="Reimbursement stats">&#9432;</button></div>
       <button class="month-nav" id="monthPrev">&#8249;</button>
       <select id="monthJumpM" class="month-select"></select>
       <select id="monthJumpY" class="month-select"></select>
@@ -458,11 +503,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <h3 id="addTitle">New purchase</h3>
     <div class="form-row">
       <label>Category</label>
-      <div class="cat-grid">
-        <button class="cat-btn" data-cat="hw">Health &amp; Wellness</button>
-        <button class="cat-btn" data-cat="mh">Mental Health</button>
-        <button class="cat-btn" data-cat="tr">Travel</button>
-      </div>
+      <div class="cat-grid" id="catGrid"></div>
     </div>
     <div class="form-row" id="f-serviceDateRow" style="display:none"><label>Date of service / travel</label><input type="date" id="f-serviceDate"></div>
     <div class="form-row"><label>Date of purchase</label><input type="date" id="f-purchaseDate"></div>
@@ -720,6 +761,39 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   </div>
 </div>
 
+<!-- CAT DELETE CONFIRM -->
+<div class="edit-overlay" id="catDeleteOverlay">
+  <div class="edit-modal" style="width:320px;text-align:center">
+    <h3 style="margin-bottom:12px">Delete category?</h3>
+    <p id="catDeleteDesc" style="font-family:var(--mono);font-size:12px;color:var(--text2);margin-bottom:20px;line-height:1.6"></p>
+    <div class="popout-actions" style="justify-content:center">
+      <button class="btn-cancel" id="btnCancelCatDelete">Cancel</button>
+      <button class="btn-save" id="btnConfirmCatDelete" style="background:var(--red-text);flex:none;padding:10px 20px">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- INFO POPUP -->
+<div class="info-popup" id="infoPopup" style="display:none">
+  <div class="info-popup-hdr">
+    <span class="info-popup-title">Reimbursement Stats</span>
+    <button class="info-popup-x" id="infoPopupClose">×</button>
+  </div>
+  <div class="info-filter-bar" id="infoFilterBar"></div>
+  <div class="info-popup-body" id="infoPopupBody"></div>
+</div>
+<div id="infoPopupBackdrop" style="display:none;position:fixed;inset:0;z-index:209"></div>
+
+<!-- METRIC POPUP -->
+<div class="metric-popup" id="metricPopup" style="display:none">
+  <div class="metric-popup-hdr">
+    <span class="metric-popup-title" id="metricPopupTitle"></span>
+    <button class="metric-popup-x" id="metricPopupClose">×</button>
+  </div>
+  <div class="metric-popup-body" id="metricPopupBody"></div>
+</div>
+<div id="metricPopupBackdrop" style="display:none;position:fixed;inset:0;z-index:209"></div>
+
 <!-- ROLLOVER TOAST -->
 <div class="rollover-toast" id="rolloverToast">
   <div class="rollover-toast-title" id="rolloverTitle"></div>
@@ -732,12 +806,20 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 
 <script>
 // ── DATA ─────────────────────────────────────────────────
-const CATS=[
-  {id:'hw',label:'Health & Wellness',hasBudget:true},
-  {id:'mh',label:'Mental Health',hasBudget:true},
-  {id:'tr',label:'Travel',hasBudget:false},
+const DEFAULT_CATS=[
+  {id:'hw',label:'Health & Wellness',hasBudget:true,color:'#1D9E75'},
+  {id:'mh',label:'Mental Health',hasBudget:true,color:'#c44b73'},
+  {id:'tr',label:'Travel',hasBudget:false,color:'#2f7fd4'},
 ];
-const CAT_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
+let CATS=[...DEFAULT_CATS];
+let CAT_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));
+function rebuildCatMap(){CAT_MAP=Object.fromEntries(CATS.map(c=>[c.id,c]));}
+const CAT_COLOR_PALETTE=['#9b59b6','#e67e22','#27ae60','#e74c3c','#16a085','#d35400','#8e44ad','#c0392b'];
+function nextCatColor(){const used=new Set(CATS.map(c=>c.color));return CAT_COLOR_PALETTE.find(c=>!used.has(c))||CAT_COLOR_PALETTE[CATS.length%CAT_COLOR_PALETTE.length];}
+async function saveCats(){
+  if(!_currentUser)return;
+  await window._fbSetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid),{cats:CATS},{merge:true});
+}
 const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -769,15 +851,21 @@ async function deletePurchaseFromDb(id){
 async function loadFromFirebase(){
   if(!_currentUser)return;
   const uid=_currentUser.uid;const db=window._fbDb;
-  const[ps,bs]=await Promise.all([
+  const[ps,bs,userSnap]=await Promise.all([
     window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
-    window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))
+    window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets')),
+    window._fbGetDoc(window._fbDoc(db,'users',uid))
   ]);
   const purchases=ps.docs.map(d=>d.data());
   const budgets={};bs.docs.forEach(d=>{budgets[d.id]=d.data().amount;});
   const maxId=purchases.reduce((m,p)=>Math.max(m,p.id||0),0);
   data={purchases,budgets,nextId:maxId+1,answeredRollovers:[]};
   answeredIds=new Set();
+  if(userSnap.exists()&&userSnap.data().cats&&userSnap.data().cats.length){
+    CATS=userSnap.data().cats;
+    rebuildCatMap();
+    if(!CAT_MAP[activeTab])activeTab=CATS[0].id;
+  }
 }
 
 // ── UNDO ─────────────────────────────────────────────────
@@ -880,9 +968,9 @@ function initAuth(){
 // ── STATE ─────────────────────────────────────────────────
 const now=new Date();
 let activeLogMonth=sessionStorage.getItem('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
-let activeTab=sessionStorage.getItem('activeTab')||'hw';
+let activeTab=sessionStorage.getItem('activeTab')||CATS[0].id;
 let activeView=sessionStorage.getItem('activeView')||'log';
-let selectedCat='hw';
+let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
 let pendingDeleteId=null;
@@ -1038,20 +1126,240 @@ function renderSummary(){
   const total=mp.filter(p=>!p.isRollover).reduce((s,p)=>s+p.amount,0);
   const open=mp.filter(p=>p.status!=='received'&&p.status!=='oop').length;
   const paid=mp.filter(p=>p.status==='received').length;
+  const openItems=mp.filter(p=>p.status!=='received'&&p.status!=='oop');
+  const paidItems=mp.filter(p=>p.status==='received');
+  const allItems=mp.filter(p=>!p.isRollover);
   document.getElementById('summaryGrid').innerHTML=
-    '<div class="metric"><div class="metric-label">Awaiting</div><div class="metric-value">'+fmt(awaiting)+'</div><div class="metric-sub">'+open+' open</div></div>'+
-    '<div class="metric"><div class="metric-label">Received</div><div class="metric-value">'+fmt(received)+'</div><div class="metric-sub">'+paid+' paid</div></div>'+
-    '<div class="metric"><div class="metric-label">This month</div><div class="metric-value">'+fmt(total)+'</div><div class="metric-sub">'+mp.length+' purchases</div></div>';
+    '<div class="metric"><div class="metric-label">Awaiting</div><div class="metric-value">'+fmt(awaiting)+'</div>'+(openItems.length?'<button class="metric-sub-btn" data-metric="open">'+open+' open</button>':'<div class="metric-sub">'+open+' open</div>')+'</div>'+
+    '<div class="metric"><div class="metric-label">Received</div><div class="metric-value">'+fmt(received)+'</div>'+(paidItems.length?'<button class="metric-sub-btn" data-metric="paid">'+paid+' paid</button>':'<div class="metric-sub">'+paid+' paid</div>')+'</div>'+
+    '<div class="metric"><div class="metric-label">This month</div><div class="metric-value">'+fmt(total)+'</div>'+(allItems.length?'<button class="metric-sub-btn" data-metric="all">'+mp.length+' purchases</button>':'<div class="metric-sub">'+mp.length+' purchases</div>')+'</div>';
+  document.querySelectorAll('.metric-sub-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const metric=btn.dataset.metric;
+      let items,title;
+      if(metric==='open'){items=openItems;title=open+' open';}
+      else if(metric==='paid'){items=paidItems;title=paid+' paid';}
+      else{items=allItems;title=mp.length+' purchases';}
+      openMetricPopup(items,title,btn);
+    });
+  });
+}
+function openMetricPopup(items,title,anchor){
+  const popup=document.getElementById('metricPopup');
+  const backdrop=document.getElementById('metricPopupBackdrop');
+  document.getElementById('metricPopupTitle').textContent=title;
+  document.getElementById('metricPopupBody').innerHTML=items.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
+    const badge=p.status==='received'?'Received':p.status==='submitted'?'Submitted':p.status==='oop'?'OOP':'Pending';
+    return '<button class="metric-popup-row" data-pid="'+p.id+'">'
+      +'<div class="metric-popup-desc">'+(p.desc||'—')+'</div>'
+      +'<div class="metric-popup-meta">'+p.date+'<br>'+fmt(p.amount)+'<br>'+badge+'</div>'
+      +'</button>';
+  }).join('');
+  // Position popup near anchor
+  const rect=anchor.getBoundingClientRect();
+  const pw=400,ph=360;
+  let left=rect.left,top=rect.bottom+6;
+  if(left+pw>window.innerWidth-8)left=window.innerWidth-pw-8;
+  if(left<8)left=8;
+  if(top+ph>window.innerHeight-8)top=rect.top-ph-6;
+  popup.style.left=left+'px';popup.style.top=top+'px';
+  popup.style.display='flex';backdrop.style.display='block';
+  document.getElementById('metricPopupBody').querySelectorAll('.metric-popup-row').forEach(row=>{
+    row.addEventListener('click',()=>{
+      closeMetricPopup();
+      navigateToTransaction(parseInt(row.dataset.pid));
+    });
+  });
+}
+function closeMetricPopup(){
+  document.getElementById('metricPopup').style.display='none';
+  document.getElementById('metricPopupBackdrop').style.display='none';
+}
+let _infoFilterMode='ytd'; // 'ytd' | 'month'
+let _infoFilterMonth=new Date().getMonth()+1;
+let _infoFilterYear=new Date().getFullYear();
+
+function openInfoPopup(anchor){
+  _infoFilterMode='ytd';
+  _infoFilterYear=new Date().getFullYear();
+  _infoFilterMonth=new Date().getMonth()+1;
+  const popup=document.getElementById('infoPopup');
+  const backdrop=document.getElementById('infoPopupBackdrop');
+  renderInfoFilter();
+  renderInfoBody();
+  const rect=anchor.getBoundingClientRect();
+  const pw=360;
+  let left=rect.left,top=rect.bottom+6;
+  if(left+pw>window.innerWidth-8)left=window.innerWidth-pw-8;
+  if(left<8)left=8;
+  popup.style.left=left+'px';popup.style.top=top+'px';
+  popup.style.display='flex';backdrop.style.display='block';
+}
+function renderInfoFilter(){
+  const allYears=[...new Set(data.purchases
+    .filter(p=>p.status==='received'&&p.receivedDate)
+    .map(p=>p.receivedDate.slice(0,4)))].sort().reverse();
+  if(!allYears.length)allYears.push(String(new Date().getFullYear()));
+  const yearOpts=allYears.map(y=>'<option value="'+y+'"'+(String(_infoFilterYear)===y?' selected':'')+'>'+y+'</option>').join('');
+  const monthOpts=MS.map((name,i)=>'<option value="'+(i+1)+'"'+((i+1)===_infoFilterMonth?' selected':'')+'>'+name+'</option>').join('');
+  document.getElementById('infoFilterBar').innerHTML=
+    '<span class="info-filter-chip'+(_infoFilterMode==='ytd'?' active':'')+'" id="infoChipYtd">YTD</span>'
+    +'<span class="info-filter-chip'+(_infoFilterMode==='month'?' active':'')+'" id="infoChipMonth">Month</span>'
+    +(_infoFilterMode==='month'
+      ?'<select class="info-filter-select" id="infoMonthSel">'+monthOpts+'</select>'
+       +'<select class="info-filter-select" id="infoYearSel">'+yearOpts+'</select>'
+      :'');
+  document.getElementById('infoChipYtd').addEventListener('click',()=>{_infoFilterMode='ytd';_infoFilterYear=new Date().getFullYear();renderInfoFilter();renderInfoBody();});
+  document.getElementById('infoChipMonth').addEventListener('click',()=>{_infoFilterMode='month';renderInfoFilter();renderInfoBody();});
+  const mSel=document.getElementById('infoMonthSel');
+  if(mSel)mSel.addEventListener('change',()=>{_infoFilterMonth=parseInt(mSel.value);renderInfoBody();});
+  const ySel=document.getElementById('infoYearSel');
+  if(ySel)ySel.addEventListener('change',()=>{_infoFilterYear=parseInt(ySel.value);renderInfoBody();});
+}
+function renderInfoBody(){
+  let received;
+  let rangeLabel;
+  if(_infoFilterMode==='ytd'){
+    const todayStr=new Date().toISOString().slice(0,10);
+    const janFirst=new Date().getFullYear()+'-01-01';
+    received=data.purchases.filter(p=>
+      p.status==='received'&&p.submittedDate&&p.receivedDate&&
+      p.receivedDate>=janFirst&&p.receivedDate<=todayStr
+    );
+    rangeLabel='YTD '+new Date().getFullYear();
+  } else {
+    const mm=String(_infoFilterMonth).padStart(2,'0');
+    const prefix=_infoFilterYear+'-'+mm;
+    received=data.purchases.filter(p=>
+      p.status==='received'&&p.submittedDate&&p.receivedDate&&
+      p.receivedDate.startsWith(prefix)
+    );
+    rangeLabel=MS[_infoFilterMonth-1]+' '+_infoFilterYear;
+  }
+  const days=received.map(p=>daysBetween(p.submittedDate,p.receivedDate)).filter(d=>d!==null&&d>=0);
+  const avg=days.length?Math.round(days.reduce((a,b)=>a+b,0)/days.length):null;
+  const min=days.length?Math.min(...days):null;
+  const max=days.length?Math.max(...days):null;
+  const catRows=CATS.map(c=>{
+    const cDays=received.filter(p=>p.cat===c.id).map(p=>daysBetween(p.submittedDate,p.receivedDate)).filter(d=>d!==null&&d>=0);
+    if(!cDays.length)return'';
+    const cAvg=Math.round(cDays.reduce((a,b)=>a+b,0)/cDays.length);
+    return '<div class="info-cat-row"><span class="info-cat-label" style="color:'+c.color+'">'+c.label+'</span><span class="info-cat-val">'+cAvg+' day'+(cAvg===1?'':'s')+' avg <span style="font-weight:400;color:var(--text3)">('+cDays.length+')</span></span></div>';
+  }).join('');
+  document.getElementById('infoPopupBody').innerHTML=
+    (avg===null
+      ?'<div style="font-family:var(--mono);font-size:11px;color:var(--text3);padding:4px 0">No received reimbursements for '+rangeLabel+'.</div>'
+      :'<div class="info-stat-row"><div><div class="info-stat-label">Avg days to receive</div><div class="info-stat-sub">'+received.length+' reimbursement'+(received.length===1?'':'s')+' · '+rangeLabel+'</div></div><div style="text-align:right"><div class="info-stat-val">'+avg+'<span style="font-size:12px;font-weight:400"> days</span></div><div class="info-stat-sub">'+min+'d min · '+max+'d max</div></div></div>'
+      +(catRows?'<div class="info-divider"></div>'+catRows:''));
+}
+function closeInfoPopup(){
+  document.getElementById('infoPopup').style.display='none';
+  document.getElementById('infoPopupBackdrop').style.display='none';
+}
+function navigateToTransaction(id){
+  const p=data.purchases.find(x=>x.id===id);if(!p)return;
+  activeTab=p.cat;activeLogMonth=getPurchaseMonth(p);
+  sessionStorage.setItem('activeTab',activeTab);sessionStorage.setItem('activeLogMonth',activeLogMonth);
+  batchMode=false;batchSelected=new Set();
+  render();switchView('log');
+  setTimeout(()=>{
+    const row=document.getElementById('prow-'+id);
+    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});row.classList.add('row-highlight');setTimeout(()=>row.classList.remove('row-highlight'),2100);}
+  },80);
 }
 
 // ── TABS ──────────────────────────────────────────────────
 function renderTabs(){
-  document.getElementById('tabsRow').innerHTML=CATS.map(c=>
-    '<button class="tab '+c.id+(activeTab===c.id?' active':'')+'" data-tab="'+c.id+'">'+c.label+'</button>'
-  ).join('');
+  document.getElementById('tabsRow').innerHTML=CATS.map(c=>{
+    const isActive=activeTab===c.id;
+    return '<button class="tab'+(isActive?' active':'')+'" data-tab="'+c.id+'" title="Double-click to rename" style="'+(isActive?'border-top:2px solid '+c.color+';':'')+'">'
+      +'<span class="tab-label" style="padding-right:6px">'+c.label+'</span>'
+      +'<span class="tab-close" data-close="'+c.id+'" title="Delete category">×</span>'
+      +'</button>';
+  }).join('')+'<button class="tab-add-btn" id="btnAddTab" title="Add tab">+</button>';
   document.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{activeTab=btn.dataset.tab;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();});
+    let _t=null;
+    btn.addEventListener('click',e=>{
+      if(e.target.classList.contains('tab-close'))return;
+      clearTimeout(_t);
+      const tabId=btn.dataset.tab;
+      _t=setTimeout(()=>{activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();},180);
+    });
+    btn.addEventListener('dblclick',e=>{
+      if(e.target.classList.contains('tab-close'))return;
+      clearTimeout(_t);
+      e.stopPropagation();
+      const tabId=btn.dataset.tab;
+      if(activeTab!==tabId){activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();}
+      const cur=document.querySelector('.tab[data-tab="'+tabId+'"]');
+      if(cur)startTabRename(tabId,cur);
+    });
   });
+  document.querySelectorAll('.tab-close').forEach(x=>{
+    x.addEventListener('click',e=>{e.stopPropagation();deleteTab(x.dataset.close);});
+  });
+  document.getElementById('btnAddTab').addEventListener('click',addNewTab);
+}
+let _pendingDeleteCat=null;
+function deleteTab(catId){
+  const cat=CAT_MAP[catId];if(!cat)return;
+  _pendingDeleteCat=catId;
+  const count=data.purchases.filter(p=>p.cat===catId).length;
+  document.getElementById('catDeleteDesc').textContent=
+    '"'+cat.label+'"'+(count?' has '+count+' purchase'+(count===1?'':'s')+' which will remain in your data but will no longer be visible.':' is empty.')+' This cannot be undone.';
+  document.getElementById('catDeleteOverlay').classList.add('open');
+}
+document.getElementById('btnCancelCatDelete').addEventListener('click',()=>{
+  document.getElementById('catDeleteOverlay').classList.remove('open');_pendingDeleteCat=null;
+});
+document.getElementById('btnConfirmCatDelete').addEventListener('click',async()=>{
+  if(!_pendingDeleteCat)return;
+  const id=_pendingDeleteCat;
+  CATS=CATS.filter(c=>c.id!==id);rebuildCatMap();
+  if(activeTab===id)activeTab=CATS[0]?.id||'';
+  await saveCats();
+  document.getElementById('catDeleteOverlay').classList.remove('open');_pendingDeleteCat=null;
+  renderTabs();renderPanels();renderSummary();
+});
+document.getElementById('catDeleteOverlay').addEventListener('click',function(e){
+  if(e.target===this){this.classList.remove('open');_pendingDeleteCat=null;}
+});
+function startTabRename(catId,tabBtn){
+  const cat=CAT_MAP[catId];if(!cat)return;
+  const inp=document.createElement('input');
+  inp.type='text';inp.value=cat.label;inp.className='tab-rename-input';
+  inp.style.borderTop='2px solid '+cat.color;
+  // Replace the button with the input directly in the tabs row
+  tabBtn.parentNode.replaceChild(inp,tabBtn);
+  inp.focus();inp.select();
+  let done=false;
+  async function commit(){
+    if(done)return;done=true;
+    document.removeEventListener('mousedown',outsideClick,true);
+    const v=inp.value.trim();
+    if(v&&v!==cat.label){cat.label=v;rebuildCatMap();await saveCats();}
+    renderTabs();renderPanels();renderSummary();
+  }
+  function outsideClick(e){
+    if(e.target!==inp)commit();
+  }
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();commit();}
+    if(e.key==='Escape'){done=true;document.removeEventListener('mousedown',outsideClick,true);renderTabs();renderPanels();}
+  });
+  document.addEventListener('mousedown',outsideClick,true);
+}
+async function addNewTab(){
+  const id='cat'+Date.now();
+  const color=nextCatColor();
+  const cat={id,label:'New Category',hasBudget:true,color};
+  CATS.push(cat);rebuildCatMap();
+  activeTab=id;
+  await saveCats();
+  renderTabs();renderPanels();renderSummary();
+  const tabBtn=document.querySelector('.tab[data-tab="'+id+'"]');
+  if(tabBtn)startTabRename(id,tabBtn);
 }
 
 // ── TABLE ROWS ────────────────────────────────────────────
@@ -1063,9 +1371,10 @@ function makeRows(rows,emptyMsg,showReimb){
     const ns=nextSt[p.status];
     const markBtn=ns?'<button class="mark-btn" data-id="'+p.id+'">'+nsLabel[ns]+'</button>':'';
     const reimb=reimbursableAmount(p);
-    const reimbCell=showReimb?'<td class="col-reimb" style="font-weight:600;color:'+(reimb<p.amount?'var(--hw)':'var(--text)')+'">'+fmt(reimb)+'</td>':'';
-    const reimbHint=(showReimb&&reimb<p.amount)?'<span class="reimb-hint">'+fmt(reimb)+' back</span>':'';
-    const desc=p.isRollover?'<span class="rollover-desc">'+rolloverLabel(p)+'</span>':p.desc;
+    const reimbColor=reimb===0?'var(--red-text)':reimb<p.amount?'var(--amber-text)':'var(--green-text)';
+    const reimbCell=showReimb?'<td class="col-reimb" style="font-weight:600;color:'+reimbColor+'" title="'+(reimb===0?'Out of pocket':reimb<p.amount?'Partially reimbursable (budget cap)':'Fully reimbursable')+'">'+fmt(reimb)+'</td>':'';
+    const reimbHint='';
+    const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
 
     // Date column: shows submitted/received info on desktop
     let dateCellContent='';
@@ -1129,9 +1438,10 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     const ns=nextSt[p.status];
     const markBtn=ns?'<button class="mark-btn" data-id="'+p.id+'">'+nsLabel[ns]+'</button>':'';
     const reimb=reimbursableAmount(p);
-    const reimbCell=showReimb?'<td class="col-reimb" style="font-weight:600;color:'+(reimb<p.amount?'var(--hw)':'var(--text)')+'">'+fmt(reimb)+'</td>':'';
-    const reimbHint=(showReimb&&reimb<p.amount)?'<span class="reimb-hint">'+fmt(reimb)+' back</span>':'';
-    const desc=p.isRollover?'<span class="rollover-desc">'+rolloverLabel(p)+'</span>':p.desc;
+    const reimbColor=reimb===0?'var(--red-text)':reimb<p.amount?'var(--amber-text)':'var(--green-text)';
+    const reimbCell=showReimb?'<td class="col-reimb" style="font-weight:600;color:'+reimbColor+'" title="'+(reimb===0?'Out of pocket':reimb<p.amount?'Partially reimbursable (budget cap)':'Fully reimbursable')+'">'+fmt(reimb)+'</td>':'';
+    const reimbHint='';
+    const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
 
     let dateCellContent='';
     if(p.status==='received'){
@@ -1177,13 +1487,13 @@ function makeRowsFull(rows,emptyMsg,showReimb){
         +'<div class="action-cell">'
           +'<div class="action-grid">'
             +(p.receiptUrl
-              ? '<a class="action-btn receipt-linked" href="'+p.receiptUrl+'" target="_blank" title="View receipt" style="font-size:13px;font-weight:700">↗</a>'
-              : '<button class="action-btn receipt-btn" data-id="'+p.id+'" title="Add receipt link" style="font-size:13px;opacity:.4">↗</button>')
-            +'<button class="action-btn dup-btn" data-id="'+p.id+'" title="Duplicate">⧉</button>'
+              ? '<a class="action-btn receipt-linked" href="'+p.receiptUrl+'" target="_blank" title="View receipt"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>'
+              : '<button class="action-btn receipt-btn" data-id="'+p.id+'" title="Add receipt link" style="opacity:.35"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>')
+            +'<button class="action-btn dup-btn" data-id="'+p.id+'" title="Duplicate"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'
             +(p.isRecurring
               ? '<span class="action-btn" title="Recurring" style="cursor:default;color:var(--text3)">↻</span>'
               : '<button class="action-btn recur-btn" data-id="'+p.id+'" title="Make recurring">↻</button>')
-            +'<button class="action-btn edit-btn" data-id="'+p.id+'" title="Edit">✎</button>'
+            +'<button class="action-btn edit-btn" data-id="'+p.id+'" title="Edit"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'
           +'</div>'
           +'<button class="del-btn-red del-btn" data-id="'+p.id+'" title="Delete">×</button>'
         +'</div>'
@@ -1259,7 +1569,7 @@ function renderBatchBar(){
 function renderPanels(){
   document.getElementById('tabPanels').innerHTML=CATS.map(cat=>
     '<div class="tab-panel'+(activeTab===cat.id?' active':'')+'">'+
-    (cat.hasBudget?renderBudgetPanel(cat):renderTravelPanel())+
+    (cat.hasBudget?renderBudgetPanel(cat):renderTravelPanel(cat))+
     '</div>'
   ).join('');
   attachEvents();
@@ -1282,7 +1592,10 @@ function renderBudgetPanel(cat){
       +'<div class="budget-input-wrap"><span>$</span><input class="budget-input" type="number" id="bi-'+cat.id+'" min="0" step="1" value="'+budget+'" placeholder="0"></div>'
       +'<button class="budget-set-btn" id="bi-btn-'+cat.id+'">Set</button>'
     +'</div>'
-    +(batchMode?'':'<button class="hdr-btn" id="batchToggle-'+cat.id+'">Select</button>')
+    +'<div style="display:flex;gap:6px">'
+      +'<button class="hdr-btn" id="batchToggle-'+cat.id+'">'+(batchMode?'Done':'Select')+'</button>'
+      +'<button class="hdr-btn" id="expenseBtn-'+cat.id+'">Expense Report</button>'
+    +'</div>'
   +'</div>'
   +(budget>0?
     '<div class="budget-bar-wrap">'
@@ -1300,21 +1613,25 @@ function renderBudgetPanel(cat){
   +'</table></div>';
 }
 
-function renderTravelPanel(){
-  const mp=data.purchases.filter(p=>p.cat==='tr'&&getPurchaseMonth(p)===activeLogMonth).sort((a,b)=>b.date.localeCompare(a.date));
+function renderTravelPanel(cat){
+  const mp=data.purchases.filter(p=>p.cat===cat.id&&getPurchaseMonth(p)===activeLogMonth).sort((a,b)=>b.date.localeCompare(a.date));
   const checkTh=batchMode?'<th class="check-cell"><input type="checkbox" class="select-all-check" title="Select all" style="width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)"></th>':'';
   return '<div class="panel-top">'
-    +(batchMode?'':'<button class="hdr-btn" id="batchToggle-tr">Select</button>')
+    +'<div style="display:flex;gap:6px">'
+      +'<button class="hdr-btn" id="batchToggle-'+cat.id+'">'+(batchMode?'Done':'Select')+'</button>'
+      +'<button class="hdr-btn" id="expenseBtn-'+cat.id+'">Expense Report</button>'
+    +'</div>'
   +'</div>'
   +'<div class="table-wrap"><table>'
     +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th class="col-subrcv">Dates</th><th></th></tr></thead>'
-    +'<tbody>'+makeRowsFull(mp,'No travel purchases for '+monthLabel(activeLogMonth)+' — hit + to add one.',false)+'</tbody>'
+    +'<tbody>'+makeRowsFull(mp,'No purchases for '+monthLabel(activeLogMonth)+' — hit + to add one.',false)+'</tbody>'
   +'</table></div>';
 }
 
 function attachEvents(){
   // Budget inputs
-  ['hw','mh'].forEach(id=>{
+  CATS.filter(c=>c.hasBudget).forEach(c=>{
+    const id=c.id;
     const inp=document.getElementById('bi-'+id);
     const btn=document.getElementById('bi-btn-'+id);
     if(!inp||!btn)return;
@@ -1325,7 +1642,19 @@ function attachEvents(){
 
   // Batch toggle buttons
   document.querySelectorAll('[id^="batchToggle-"]').forEach(btn=>{
-    btn.addEventListener('click',()=>{batchMode=true;batchSelected=new Set();renderPanels();renderBatchBar();});
+    btn.addEventListener('click',()=>{if(batchMode){batchMode=false;batchSelected=new Set();}else{batchMode=true;batchSelected=new Set();}renderPanels();renderBatchBar();});
+  });
+
+  // Expense report buttons (panel-top)
+  document.querySelectorAll('[id^="expenseBtn-"]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const catId=btn.id.replace('expenseBtn-','');
+      const visibleIds=data.purchases
+        .filter(p=>p.cat===catId&&getPurchaseMonth(p)===activeLogMonth)
+        .map(p=>p.id);
+      const selectedVisible=batchMode?[...batchSelected].filter(id=>visibleIds.includes(id)):[];
+      openExpenseReport(selectedVisible.length?selectedVisible:visibleIds);
+    });
   });
 
   // Checkboxes
@@ -1415,6 +1744,24 @@ function attachEvents(){
     });
   }
 
+  // Rollover parent links
+  document.querySelectorAll('.rollover-desc-link').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const parentId=parseInt(btn.dataset.parentid);
+      if(!parentId)return;
+      // Walk up the chain to the root parent
+      let cur=data.purchases.find(x=>x.id===parentId);
+      let safety=0;
+      while(cur&&cur.rolloverSourceId&&safety<10){
+        const up=data.purchases.find(x=>x.id===cur.rolloverSourceId);
+        if(!up)break;
+        cur=up;safety++;
+      }
+      if(cur)navigateToTransaction(cur.id);
+    });
+  });
+
   // Edit buttons
   document.querySelectorAll('.edit-btn').forEach(btn=>{
     btn.addEventListener('click',()=>openEdit(parseInt(btn.dataset.id)));
@@ -1458,7 +1805,7 @@ function renderHistory(){
       if(!t)return'';
       let txt=cat.label.split(' & ')[0].split(' ')[0]+': '+fmt(t);
       if(cat.hasBudget&&b>0)txt+=t>b?' <span style="color:var(--red-text);font-size:10px">('+fmt(t-b)+' over)</span>':' <span style="color:var(--green-text);font-size:10px">('+fmt(b-t)+' left)</span>';
-      return'<span class="history-chip chip-'+cat.id+'">'+txt+'</span>';
+      return'<span class="history-chip" style="background:'+cat.color+'22;color:'+cat.color+';border-color:'+cat.color+'">'+txt+'</span>';
     }).join('');
     const sections=CATS.map(cat=>{
       const rows=mp.filter(p=>p.cat===cat.id).sort((a,b)=>b.date.localeCompare(a.date));
@@ -1466,13 +1813,13 @@ function renderHistory(){
       const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
       const budgetLine=cat.hasBudget&&budget>0?'<span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:8px">Budget: '+fmt(budget)+' · Spent: '+fmt(spent)+'</span>':'';
       return'<div class="history-cat-section">'
-        +'<div class="history-cat-label"><span class="cat-dot dot-'+cat.id+'"></span>'+cat.label+budgetLine+'</div>'
+        +'<div class="history-cat-label"><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+budgetLine+'</div>'
         +'<div class="table-wrap"><table>'
           +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Dates</th></tr></thead>'
           +'<tbody>'+rows.map(p=>{
             const days=daysBetween(p.submittedDate,p.receivedDate);
             const daysStr=days!==null?' ('+days+'d)':'';
-            const desc=p.isRollover?'<span class="rollover-desc">'+rolloverLabel(p)+'</span>':p.desc;
+            const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
             const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
               +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
             return'<tr>'
@@ -1516,13 +1863,28 @@ function updateAddFields(){
   const showService = selectedCat === 'mh' || selectedCat === 'tr';
   document.getElementById('f-serviceDateRow').style.display = showService ? 'block' : 'none';
 }
+function renderCatGrid(){
+  const grid=document.getElementById('catGrid');if(!grid)return;
+  grid.innerHTML=CATS.map(c=>'<button class="cat-btn" data-cat="'+c.id+'">'+c.label+'</button>').join('');
+  document.querySelectorAll('#addOverlay .cat-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{selectedCat=btn.dataset.cat;updateCatBtns();updateAddFields();});
+  });
+  updateCatBtns();
+}
 function updateCatBtns(){
   document.querySelectorAll('#addOverlay .cat-btn').forEach(btn=>{
-    btn.className='cat-btn';if(btn.dataset.cat===selectedCat)btn.classList.add('sel-'+selectedCat);
+    const cat=CAT_MAP[btn.dataset.cat];
+    btn.className='cat-btn';
+    btn.style.borderColor='';btn.style.color='';
+    if(btn.dataset.cat===selectedCat&&cat){
+      btn.classList.add('cat-btn-selected');
+      btn.style.borderColor=cat.color;btn.style.color=cat.color;
+    }
   });
 }
 function openAdd(){
-  selectedCat=activeTab;updateCatBtns();
+  selectedCat=CAT_MAP[activeTab]?activeTab:CATS[0].id;
+  renderCatGrid();
   const today=todayStr();
   document.getElementById('f-serviceDate').value='';
   document.getElementById('f-purchaseDate').value=today;
@@ -1560,10 +1922,6 @@ document.getElementById('f-purchaseDate').addEventListener('change',function(){
 });
 
 
-
-document.querySelectorAll('#addOverlay .cat-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{selectedCat=btn.dataset.cat;updateCatBtns();updateAddFields();});
-});
 
 function saveAdd(){
   const serviceDate=document.getElementById('f-serviceDate').value||null;
@@ -2109,7 +2467,7 @@ function renderReceipts() {
     if (!rows.length) return '';
     return `<div class="history-cat-section" style="margin-bottom:24px">
       <div class="history-cat-label">
-        <span class="cat-dot dot-${cat.id}"></span>${cat.label}
+        <span class="cat-dot" style="background:${cat.color}"></span>${cat.label}
         <span style="font-weight:400;color:var(--text3);margin-left:8px">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border2)">
@@ -2320,6 +2678,20 @@ function showSuccessToast(msg) {
 }
 
 
+// ── METRIC POPUP ─────────────────────────────────────────
+document.getElementById('metricPopupClose').addEventListener('click',closeMetricPopup);
+document.getElementById('metricPopupBackdrop').addEventListener('click',closeMetricPopup);
+
+// ── INFO POPUP ────────────────────────────────────────────
+document.getElementById('btnInfo').addEventListener('click',function(e){
+  e.stopPropagation();
+  if(document.getElementById('infoPopup').style.display!=='none'){closeInfoPopup();return;}
+  closeMetricPopup();
+  openInfoPopup(this);
+});
+document.getElementById('infoPopupClose').addEventListener('click',closeInfoPopup);
+document.getElementById('infoPopupBackdrop').addEventListener('click',closeInfoPopup);
+
 // ── DELETE CONFIRMATION ───────────────────────────────────
 document.getElementById('btnCancelDelete').addEventListener('click', () => {
   document.getElementById('deleteConfirmOverlay').classList.remove('open');
@@ -2359,7 +2731,7 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
   data={purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
   rolloverQueue=[];rolloverActive=false;answeredIds=new Set();
   batchMode=false;batchSelected=new Set();
-  activeLogMonth=currentMonthKey();activeTab='hw';activeView='log';
+  activeLogMonth=currentMonthKey();activeTab=CATS[0].id;activeView='log';
   sessionStorage.removeItem('activeLogMonth');sessionStorage.removeItem('activeTab');sessionStorage.removeItem('activeView');
   document.getElementById('resetOverlay').classList.remove('open');
   render();switchView('log');
