@@ -87,7 +87,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
 main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 
 /* MONTH BAR */
-.month-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border2);padding:10px 14px}
+.month-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border-bottom:1px solid var(--border2);padding:10px 24px}
 .month-bar-fill{flex:1}
 .month-bar-right{flex:1;display:flex;justify-content:flex-end}
 .month-select{font-family:var(--mono);font-size:14px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 8px;cursor:pointer;outline:none;height:32px}
@@ -204,6 +204,8 @@ tr:hover td{background:var(--bg3)}
 .receipt-row{cursor:pointer}
 .receipt-row:hover{background:var(--bg3)}
 .empty-row{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
+@keyframes undo-flash{0%{background:var(--blue-bg)}100%{background:transparent}}
+.undo-highlight{animation:undo-flash 1.2s ease-out forwards}
 .badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 7px;letter-spacing:.04em;text-transform:uppercase;border:1px solid}
 .badge-pending{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
 .badge-submitted{background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)}
@@ -342,10 +344,10 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .success-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ROLLOVER TOAST */
-.rollover-toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg2);border:2px solid var(--text);padding:14px 18px;box-shadow:4px 4px 0 rgba(0,0,0,.12);z-index:200;width:360px;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.rollover-toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg2);border:2px solid var(--text);padding:14px 18px;box-shadow:4px 4px 0 rgba(0,0,0,.12);z-index:200;width:400px;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
 .rollover-toast.open{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0)}
-.rollover-toast-title{font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.rollover-toast-body{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5}
+.rollover-toast-title{font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;color:var(--text3)}
+.rollover-toast-body{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6;font-family:var(--mono)}
 .rollover-toast-actions{display:flex;gap:8px}
 .rollover-yes{flex:1;background:var(--text);color:var(--bg2);border:none;padding:8px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
 .rollover-yes:hover{opacity:.85}
@@ -488,6 +490,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     </div>
     <div class="header-row">
       <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
+      <button class="hdr-btn" id="btnRedo" disabled style="opacity:.4" title="Redo">↪ Redo</button>
       <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
     </div>
   </div>
@@ -498,19 +501,19 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   <button class="view-btn" id="btnViewReceipts">Receipts</button>
   <button class="view-btn" id="btnViewReceivables">Receivables</button>
 </div>
+<div class="month-bar" id="monthBarEl">
+  <div class="month-bar-left"><button class="info-btn" id="btnInfo" title="Reimbursement stats">&#9432;</button></div>
+  <button class="month-nav" id="monthPrev">&#8249;</button>
+  <select id="monthJumpM" class="month-select"></select>
+  <select id="monthJumpY" class="month-select"></select>
+  <button class="month-nav" id="monthNext">&#8250;</button>
+  <div class="month-bar-right">
+    <button class="today-btn" id="monthToday">Today</button>
+  </div>
+</div>
 </div>
 <main>
   <div id="logView">
-    <div class="month-bar">
-      <div class="month-bar-left"><button class="info-btn" id="btnInfo" title="Reimbursement stats">&#9432;</button></div>
-      <button class="month-nav" id="monthPrev">&#8249;</button>
-      <select id="monthJumpM" class="month-select"></select>
-      <select id="monthJumpY" class="month-select"></select>
-      <button class="month-nav" id="monthNext">&#8250;</button>
-      <div class="month-bar-right">
-        <button class="today-btn" id="monthToday">Today</button>
-      </div>
-    </div>
     <div class="summary-grid" id="summaryGrid"></div>
     <div class="tabs-row" id="tabsRow"></div>
     <div id="tabPanels"></div>
@@ -841,8 +844,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   <div class="rollover-toast-title" id="rolloverTitle"></div>
   <div class="rollover-toast-body" id="rolloverBody"></div>
   <div class="rollover-toast-actions">
-    <button class="rollover-no" id="rolloverNo">No thanks</button>
-    <button class="rollover-yes" id="rolloverYes">Yes, roll it over</button>
+    <button class="rollover-no" id="rolloverNo">Skip</button>
+    <button class="rollover-yes" id="rolloverYes">Move to <span id="rolloverNextMonth"></span></button>
   </div>
 </div>
 
@@ -911,25 +914,60 @@ async function loadFromFirebase(){
   }
 }
 
-// ── UNDO ─────────────────────────────────────────────────
+// ── UNDO / REDO ───────────────────────────────────────────
 let undoStack=[];
-async function doUndo(){
-  if(!undoStack.length)return;
-  const prev=JSON.parse(undoStack.pop());
+let redoStack=[];
+function _setUndoRedoBtns(){
+  const u=document.getElementById('btnUndo');
+  const r=document.getElementById('btnRedo');
+  if(u){u.disabled=!undoStack.length;u.style.opacity=undoStack.length?'1':'.4';}
+  if(r){r.disabled=!redoStack.length;r.style.opacity=redoStack.length?'1':'.4';}
+}
+let _undoRedoInProgress=false;
+async function _applyState(prev, toast){
   const prevIds=new Set(prev.purchases.map(p=>p.id));
   const curIds=new Set(data.purchases.map(p=>p.id));
   const toDelete=[...curIds].filter(id=>!prevIds.has(id));
+  // Find changed purchase ids for highlight
+  const changedIds=new Set();
+  prev.purchases.forEach(p=>{
+    const cur=data.purchases.find(x=>x.id===p.id);
+    if(!cur||JSON.stringify(cur)!==JSON.stringify(p))changedIds.add(p.id);
+  });
+  [...curIds].filter(id=>!prevIds.has(id)).forEach(id=>changedIds.add(id));
+  // Update state and UI immediately so the user sees the change at once
   data=prev;
+  _setUndoRedoBtns();
+  render();
+  showSuccessToast(toast);
+  // Highlight affected rows
+  changedIds.forEach(id=>{
+    const row=document.querySelector('tr[data-id="'+id+'"]');
+    if(row){row.classList.add('undo-highlight');setTimeout(()=>row.classList.remove('undo-highlight'),1200);}
+  });
+  // Release lock so undo/redo are responsive again, then persist in background
+  _undoRedoInProgress=false;
   for(const id of toDelete)await deletePurchaseFromDb(id);
   await save();
-  if(!undoStack.length){const btn=document.getElementById('btnUndo');if(btn){btn.disabled=true;btn.style.opacity='.4';}}
-  render();
-  showSuccessToast('↩ Undone');
+}
+async function doUndo(){
+  if(!undoStack.length||_undoRedoInProgress)return;
+  _undoRedoInProgress=true;
+  redoStack.push(JSON.stringify(data));
+  const prev=JSON.parse(undoStack.pop());
+  await _applyState(prev,'↩ Undone');
+}
+async function doRedo(){
+  if(!redoStack.length||_undoRedoInProgress)return;
+  _undoRedoInProgress=true;
+  undoStack.push(JSON.stringify(data));
+  const next=JSON.parse(redoStack.pop());
+  await _applyState(next,'↪ Redone');
 }
 function snapshot(){
   undoStack.push(JSON.stringify(data));
-  const btn=document.getElementById('btnUndo');
-  if(btn){btn.disabled=false;btn.style.opacity='1';}
+  redoStack=[];
+  _setUndoRedoBtns();
 }
 
 // ── DISPLAY NAME ─────────────────────────────────────────
@@ -1095,6 +1133,18 @@ function rolloverChain(p) {
   }
   walkDown(cur.id);
   return [...chain].map(id => data.purchases.find(x => x.id === id)).filter(Boolean);
+}
+
+// Returns the purchase itself plus all downstream rollover descendants.
+function rolloverDeleteSet(p) {
+  const result = [];
+  function collect(id) {
+    const purchase = data.purchases.find(x => x.id === id);
+    if (purchase) result.push(purchase);
+    data.purchases.filter(x => x.rolloverSourceId === id).forEach(c => collect(c.id));
+  }
+  collect(p.id);
+  return result;
 }
 
 // ── ROLLOVER LABEL ───────────────────────────────────────
@@ -1585,26 +1635,29 @@ function renderBatchBar(){
   document.getElementById('batchCancel').addEventListener('click',()=>{batchMode=false;batchSelected=new Set();renderPanels();renderBatchBar();});
   document.getElementById('batchMarkSubmitted').addEventListener('click',()=>{
     const date=document.getElementById('batchDate').value||todayStr();
+    snapshot();
     batchSelected.forEach(id=>{
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='submitted';p.submittedDate=date;}
     });
-    snapshot();save();batchMode=false;batchSelected=new Set();render();
+    save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchMarkPending').addEventListener('click',()=>{
+    snapshot();
     batchSelected.forEach(id=>{
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='pending';p.submittedDate=null;p.receivedDate=null;}
     });
-    snapshot();save();batchMode=false;batchSelected=new Set();render();
+    save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchMarkReceived').addEventListener('click',()=>{
     const date=document.getElementById('batchDate').value||todayStr();
+    snapshot();
     batchSelected.forEach(id=>{
       const p=data.purchases.find(x=>x.id===id);
       if(p){p.status='received';p.receivedDate=date;if(!p.submittedDate)p.submittedDate=date;}
     });
-    snapshot();save();batchMode=false;batchSelected=new Set();render();
+    save();batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchEdit').addEventListener('click',()=>{
     openBatchEdit();
@@ -1721,6 +1774,7 @@ function attachEvents(){
       if(p.status==='pending'){
         openDatePicker('Date submitted', date=>{
           // Apply submitted date to every transaction in the rollover chain
+          snapshot();
           const chain = p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id)
             ? rolloverChain(p) : [p];
           chain.forEach(c => {
@@ -1729,7 +1783,7 @@ function attachEvents(){
           });
           save();render();
           if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));
-        });
+        }, p.date);
       } else if(p.status==='submitted'){
         openDatePicker('Date received', date=>{
           // Mark this transaction received
@@ -1754,7 +1808,7 @@ function attachEvents(){
           }
           save();render();
           if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));
-        });
+        }, p.expectedDate);
       }
     });
   });
@@ -1817,8 +1871,15 @@ function attachEvents(){
       const p=data.purchases.find(x=>x.id===id);
       if(!p)return;
       pendingDeleteId=id;
-      document.getElementById('deleteConfirmDesc').textContent=
-        '"'+(p.isRollover?rolloverLabel(p):p.desc)+'" — '+fmt(p.amount);
+      const cascade=rolloverDeleteSet(p);
+      const label=p.isRollover?rolloverLabel(p):p.desc;
+      let desc='"'+label+'" — '+fmt(p.amount);
+      if(cascade.length>1){
+        const extra=cascade.length-1;
+        desc+='\n\nThis will also delete '+extra+' linked rollover'+(extra===1?'':' entries')+' after it.';
+      }
+      document.getElementById('deleteConfirmDesc').style.whiteSpace='pre-line';
+      document.getElementById('deleteConfirmDesc').textContent=desc;
       document.getElementById('deleteConfirmOverlay').classList.add('open');
     });
   });
@@ -1942,6 +2003,7 @@ function switchView(v){
   activeView=v;sessionStorage.setItem('activeView',v);
   const isLog=v==='log',isHist=v==='history',isRec=v==='receipts';
   document.getElementById('logView').style.display=isLog?'block':'none';
+  document.getElementById('monthBarEl').style.display=isLog?'flex':'none';
   document.getElementById('historyView').classList.toggle('active',isHist);
   document.getElementById('receiptsView').classList.toggle('active',isRec);
   document.getElementById('btnViewLog').classList.toggle('active',isLog);
@@ -2141,6 +2203,7 @@ function saveAdd(){
   });
 
   // Always add the base entry
+  snapshot();
   data.purchases.push(makeEntry(purchaseDate));
 
   // If recurring, generate and add future entries
@@ -2150,7 +2213,7 @@ function saveAdd(){
   }
 
   activeLogMonth=mk;activeTab=selectedCat;
-  snapshot();save();closeAdd();render();
+  save();closeAdd();render();
   if(CAT_MAP[selectedCat].hasBudget)scheduleRolloverCheck(selectedCat,mk);
 }
 
@@ -2218,6 +2281,7 @@ function saveEdit(){
   const receiptUrl=document.getElementById('ef-receipt').value.trim()||null;
   const vendor=document.getElementById('ef-vendor').value.trim()||null;
   const paymentMethod=document.getElementById('ef-payment').value||null;
+  snapshot();
   if(!p.isRollover)p.serviceDate=serviceDate;
   p.date=date;p.desc=desc;p.vendor=vendor;p.paymentMethod=paymentMethod;p.amount=amount;p.status=status;
   p.receiptUrl=receiptUrl;
@@ -2230,7 +2294,7 @@ function saveEdit(){
       if (c.id !== p.id && c.status !== 'received') c.submittedDate = p.submittedDate;
     });
   }
-  snapshot();save();closeEdit();render();
+  save();closeEdit();render();
   scheduleRolloverCheck(oldCat,oldMk);
   if(getMonthKey(date)!==oldMk||p.cat!==oldCat)scheduleRolloverCheck(p.cat,getMonthKey(date));
 }
@@ -2329,12 +2393,24 @@ function processRolloverQueue(){
   if(!rolloverQueue.length){rolloverActive=false;document.getElementById('rolloverToast').classList.remove('open');return;}
   rolloverActive=true;
   const item=rolloverQueue[0];const nextMk=nextMonthKey(item.mk);
-  const partial=Math.round((item.purchaseAmount-item.overage)*100)/100;
+  const covered=Math.round((item.purchaseAmount-item.overage)*100)/100;
+  const budget=getBudget(item.catId,item.mk);
   const cleanDesc=item.purchaseDesc.replace(/^Rollover:\s*/i,'');
-  document.getElementById('rolloverTitle').textContent=cleanDesc+' over in '+monthLabel(item.mk);
-  document.getElementById('rolloverBody').textContent=
-    'This '+fmt(item.purchaseAmount)+' purchase is partially covered — you can expect '+fmt(partial)+' back. '
-    +'Roll the '+fmt(item.overage)+' overage into '+monthLabelFull(nextMk)+'?';
+  const cat=CAT_MAP[item.catId];
+  // Jump to the relevant month and tab so the user can see the purchase in context
+  activeLogMonth=item.mk;
+  activeTab=item.catId;
+  render();
+  document.getElementById('rolloverTitle').textContent='Over budget · '+(cat?cat.label:item.catId)+' · '+monthLabel(item.mk);
+  document.getElementById('rolloverBody').innerHTML=
+    '<div style="display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-bottom:10px">'
+    +'<span style="color:var(--text3)">Purchase</span><span>'+cleanDesc+'</span>'
+    +(budget?'<span style="color:var(--text3)">Budget</span><span>'+fmt(budget)+'</span>':'')
+    +'<span style="color:var(--text3)">Covered</span><span>'+fmt(covered)+'</span>'
+    +'<span style="color:var(--red-text);font-weight:600">Overage</span><span style="color:var(--red-text);font-weight:600">'+fmt(item.overage)+'</span>'
+    +'</div>'
+    +'Move <strong>'+fmt(item.overage)+'</strong> to '+monthLabelFull(nextMk)+'?';
+  document.getElementById('rolloverNextMonth').textContent=monthLabel(nextMk);
   document.getElementById('rolloverToast').classList.add('open');
 }
 document.getElementById('rolloverYes').addEventListener('click',()=>{
@@ -2407,6 +2483,7 @@ function saveBatchEdit() {
   const expected    = document.getElementById('be-expected').value || null;
   const received    = document.getElementById('be-received').value || null;
 
+  snapshot();
   // Apply only what was filled in
   const affectedChainIds = new Set();
   batchSelected.forEach(id => {
@@ -2433,7 +2510,7 @@ function saveBatchEdit() {
     });
   }
 
-  snapshot();save();
+  save();
   closeBatchEdit();
   batchMode = false;
   batchSelected = new Set();
@@ -2450,10 +2527,10 @@ document.getElementById('batchEditOverlay').addEventListener('click', function(e
 // ── DATE PICKER ───────────────────────────────────────────
 let datePickerCallback = null;
 
-function openDatePicker(title, callback) {
+function openDatePicker(title, callback, defaultDate) {
   datePickerCallback = callback;
   document.getElementById('datePickerTitle').textContent = title;
-  document.getElementById('datePickerInput').value = todayStr();
+  document.getElementById('datePickerInput').value = defaultDate || todayStr();
   document.getElementById('datePickerOverlay').classList.add('open');
 }
 
@@ -2921,13 +2998,16 @@ document.getElementById('btnCancelDelete').addEventListener('click', () => {
 document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
   if (pendingDeleteId === null) return;
   const p = data.purchases.find(x => x.id === pendingDeleteId);
+  if (!p) { document.getElementById('deleteConfirmOverlay').classList.remove('open'); pendingDeleteId=null; return; }
+  const cascade = rolloverDeleteSet(p);
+  const cascadeIds = new Set(cascade.map(x => x.id));
   snapshot();
-  data.purchases = data.purchases.filter(x => x.id !== pendingDeleteId);
-  await deletePurchaseFromDb(pendingDeleteId);
+  data.purchases = data.purchases.filter(x => !cascadeIds.has(x.id));
   render();
-  if (p && CAT_MAP[p.cat] && CAT_MAP[p.cat].hasBudget) scheduleRolloverCheck(p.cat, getPurchaseMonth(p));
+  if (CAT_MAP[p.cat] && CAT_MAP[p.cat].hasBudget) scheduleRolloverCheck(p.cat, getPurchaseMonth(p));
   document.getElementById('deleteConfirmOverlay').classList.remove('open');
   pendingDeleteId = null;
+  for (const id of cascadeIds) await deletePurchaseFromDb(id);
 });
 document.getElementById('deleteConfirmOverlay').addEventListener('click', function(e) {
   if (e.target === this) { this.classList.remove('open'); pendingDeleteId = null; }
@@ -2959,6 +3039,7 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
 });
 
 document.getElementById('btnUndo').addEventListener('click', doUndo);
+document.getElementById('btnRedo').addEventListener('click', doRedo);
 
 // ── BUDGET MANAGER ────────────────────────────────────────
 document.getElementById('budgetMgrSave').addEventListener('click',saveBudgetMgr);
