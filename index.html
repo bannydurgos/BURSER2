@@ -2237,7 +2237,7 @@ function updateDays(){
 function updateEditFields(){
   const s=document.getElementById('ef-status').value;
   const isOop=s==='oop';const isPending=s==='pending';
-  document.getElementById('ef-subRow').style.display=(isPending||isOop)?'none':'block';
+  document.getElementById('ef-subRow').style.display=isOop?'none':'block';
   document.getElementById('ef-expectedRow').style.display=(isPending||isOop)?'none':'block';
   document.getElementById('ef-rcvRow').style.display=s==='received'?'block':'none';
   updateDays();
@@ -2285,7 +2285,7 @@ function saveEdit(){
   if(!p.isRollover)p.serviceDate=serviceDate;
   p.date=date;p.desc=desc;p.vendor=vendor;p.paymentMethod=paymentMethod;p.amount=amount;p.status=status;
   p.receiptUrl=receiptUrl;
-  p.submittedDate=(status==='pending'||status==='oop')?null:(submittedDate||p.submittedDate||null);
+  p.submittedDate=status==='oop'?null:(submittedDate||p.submittedDate||null);
   p.expectedDate=(status==='pending'||status==='oop')?null:(expectedDate||p.expectedDate||null);
   p.receivedDate=status==='received'?(receivedDate||p.receivedDate||todayStr()):null;
   // Propagate submitted date across the rollover chain
@@ -2383,7 +2383,7 @@ function buildRolloverQueue(catId,mk){
     if(running>budget){
       const overage=Math.round((Math.min(running,p.amount)-Math.max(0,budget-before))*100)/100;
       const alreadyQueued=rolloverQueue.some(q=>q.purchaseId===p.id);
-      if(!answeredIds.has(p.id)&&!alreadyQueued)
+      if(!answeredIds.has(p.id)&&!alreadyQueued&&!p.rolledOver&&!p.declinedRollover)
         rolloverQueue.push({purchaseId:p.id,catId,mk,purchaseDesc:p.rolloverBaseDesc||p.desc,purchaseAmount:p.amount,overage});
     }
   });
@@ -2449,7 +2449,9 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
 });
 document.getElementById('rolloverNo').addEventListener('click',()=>{
   if(!rolloverQueue.length)return;
-  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];save();
+  const item=rolloverQueue.shift();answeredIds.add(item.purchaseId);data.answeredRollovers=[...answeredIds];
+  const srcNo=data.purchases.find(p=>p.id===item.purchaseId);if(srcNo)srcNo.declinedRollover=true;
+  save();
   if(rolloverQueue.length)processRolloverQueue();
   else{rolloverActive=false;document.getElementById('rolloverToast').classList.remove('open');}
 });
