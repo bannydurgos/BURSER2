@@ -798,6 +798,23 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   </div>
 </div>
 
+<!-- BUDGET MANAGER MODAL -->
+<div class="edit-overlay" id="budgetMgrOverlay">
+  <div class="edit-modal" style="width:420px">
+    <h3 id="budgetMgrTitle">Set Budgets</h3>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Year</span>
+      <select id="budgetMgrYear" class="month-select"></select>
+      <button id="budgetMgrFill" class="hdr-btn" style="margin-left:auto" title="Copy first amount to all empty months">Fill All</button>
+    </div>
+    <div id="budgetMgrGrid" style="margin-bottom:4px"></div>
+    <div class="popout-actions">
+      <button class="btn-cancel" id="budgetMgrCancel">Cancel</button>
+      <button class="btn-save" id="budgetMgrSave">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- INFO POPUP -->
 <div class="info-popup" id="infoPopup" style="display:none">
   <div class="info-popup-hdr">
@@ -1623,14 +1640,10 @@ function renderBudgetPanel(cat){
   const checkTh=batchMode?'<th class="check-cell"><input type="checkbox" class="select-all-check" title="Select all" style="width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)"></th>':'';
 
   return '<div class="panel-top">'
-    +'<div class="budget-left">'
-      +'<span class="budget-context">Budget for <strong>'+ml+'</strong></span>'
-      +'<div class="budget-input-wrap"><span>$</span><input class="budget-input" type="number" id="bi-'+cat.id+'" min="0" step="1" value="'+budget+'" placeholder="0"></div>'
-      +'<button class="budget-set-btn" id="bi-btn-'+cat.id+'">Set</button>'
-    +'</div>'
     +'<div style="display:flex;gap:6px">'
       +'<button class="hdr-btn" id="batchToggle-'+cat.id+'">'+(batchMode?'Done':'Select')+'</button>'
       +'<button class="hdr-btn" id="expenseBtn-'+cat.id+'">Expense Report</button>'
+      +'<button class="hdr-btn" id="budgetMgrBtn-'+cat.id+'">Budgets</button>'
     +'</div>'
   +'</div>'
   +(budget>0?
@@ -1642,7 +1655,7 @@ function renderBudgetPanel(cat){
       +'</div>'
       +'<div class="bar-track"><div class="bar-fill '+(over?'bar-over':'bar-ok')+'" style="width:'+pct.toFixed(1)+'%"></div></div>'
     +'</div>'
-  :'<p class="no-budget-hint">No budget set for '+ml+' — enter one above.</p>')
+  :'')
   +'<div class="table-wrap"><table>'
     +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th class="col-reimb">Reimb.</th><th>Status</th><th class="col-subrcv">Dates</th><th></th></tr></thead>'
     +'<tbody>'+makeRowsFull(rows,null,true)+'</tbody>'
@@ -1665,15 +1678,9 @@ function renderTravelPanel(cat){
 }
 
 function attachEvents(){
-  // Budget inputs
-  CATS.filter(c=>c.hasBudget).forEach(c=>{
-    const id=c.id;
-    const inp=document.getElementById('bi-'+id);
-    const btn=document.getElementById('bi-btn-'+id);
-    if(!inp||!btn)return;
-    inp.addEventListener('input',()=>btn.classList.add('visible'));
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter')commitBudget(id);});
-    btn.addEventListener('click',()=>commitBudget(id));
+  // Budget manager buttons
+  document.querySelectorAll('[id^="budgetMgrBtn-"]').forEach(btn=>{
+    btn.addEventListener('click',()=>openBudgetMgr(btn.id.replace('budgetMgrBtn-','')));
   });
 
   // Batch toggle buttons
@@ -1817,15 +1824,55 @@ function attachEvents(){
   });
 }
 
-function commitBudget(catId){
-  const inp=document.getElementById('bi-'+catId);
-  const btn=document.getElementById('bi-btn-'+catId);
-  if(!inp)return;
-  const v=parseFloat(inp.value);
-  if(!isNaN(v)&&v>=0){snapshot();setBudget(catId,activeLogMonth,v);}
-  if(btn)btn.classList.remove('visible');
-  renderPanels();renderSummary();
-  scheduleRolloverCheck(catId,activeLogMonth);
+let budgetMgrCatId=null;
+
+function openBudgetMgr(catId){
+  budgetMgrCatId=catId;
+  const cat=CAT_MAP[catId];
+  document.getElementById('budgetMgrTitle').textContent='Budgets — '+cat.name;
+  const yearSel=document.getElementById('budgetMgrYear');
+  const thisYear=new Date().getFullYear();
+  const purchaseYears=data.purchases.map(p=>parseInt(getPurchaseMonth(p).slice(0,4))).filter(Boolean);
+  const minYear=purchaseYears.length?Math.min(...purchaseYears,2020):2020;
+  const maxYear=thisYear+2;
+  yearSel.innerHTML='';
+  for(let y=maxYear;y>=minYear;y--){
+    const opt=document.createElement('option');
+    opt.value=y;opt.textContent=y;
+    if(y===parseInt(activeLogMonth.slice(0,4)))opt.selected=true;
+    yearSel.appendChild(opt);
+  }
+  renderBudgetMgrGrid(catId,parseInt(yearSel.value));
+  yearSel.onchange=()=>renderBudgetMgrGrid(catId,parseInt(yearSel.value));
+  document.getElementById('budgetMgrOverlay').classList.add('open');
+}
+
+function renderBudgetMgrGrid(catId,year){
+  const grid=document.getElementById('budgetMgrGrid');
+  grid.innerHTML=MF.map((name,i)=>{
+    const mk=year+'-'+String(i+1).padStart(2,'0');
+    const val=getBudget(catId,mk);
+    return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">'
+      +'<span style="font-family:var(--mono);font-size:12px;color:var(--text2);width:100px;flex-shrink:0">'+name+'</span>'
+      +'<div class="budget-input-wrap" style="flex:1;margin:0"><span>$</span>'
+        +'<input class="budget-input" type="number" min="0" step="1" data-mk="'+mk+'" value="'+(val>0?val:'')+'" placeholder="0" style="width:100%">'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function saveBudgetMgr(){
+  const grid=document.getElementById('budgetMgrGrid');
+  const year=parseInt(document.getElementById('budgetMgrYear').value);
+  snapshot();
+  grid.querySelectorAll('input[data-mk]').forEach(inp=>{
+    const mk=inp.dataset.mk;
+    const v=inp.value===''?0:parseFloat(inp.value);
+    if(!isNaN(v)&&v>=0)setBudget(budgetMgrCatId,mk,v);
+  });
+  document.getElementById('budgetMgrOverlay').classList.remove('open');
+  render();
+  for(let m=1;m<=12;m++)scheduleRolloverCheck(budgetMgrCatId,year+'-'+String(m).padStart(2,'0'));
 }
 
 // ── HISTORY ───────────────────────────────────────────────
@@ -2909,6 +2956,17 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
 });
 
 document.getElementById('btnUndo').addEventListener('click', doUndo);
+
+// ── BUDGET MANAGER ────────────────────────────────────────
+document.getElementById('budgetMgrSave').addEventListener('click',saveBudgetMgr);
+document.getElementById('budgetMgrCancel').addEventListener('click',()=>document.getElementById('budgetMgrOverlay').classList.remove('open'));
+document.getElementById('budgetMgrOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+document.getElementById('budgetMgrFill').addEventListener('click',()=>{
+  const inputs=[...document.getElementById('budgetMgrGrid').querySelectorAll('input[data-mk]')];
+  const first=inputs.find(i=>i.value&&parseFloat(i.value)>0);
+  if(!first)return;
+  inputs.forEach(i=>{if(!i.value||parseFloat(i.value)===0)i.value=first.value;});
+});
 
 
 
