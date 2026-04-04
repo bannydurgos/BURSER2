@@ -48,43 +48,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xMiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz48bGluZSB4MT0iNjAiIHkxPSIyOCIgeDI9IjYwIiB5Mj0iMzYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48bGluZSB4MT0iNjAiIHkxPSI4NCIgeDI9IjYwIiB5Mj0iOTIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNNjAgMzggQzQ3IDM4IDM5IDQ0IDM5IDUyIEMzOSA2MCA0NyA2My41IDYwIDY3IEM3MyA3MC41IDgxIDc0LjUgODEgODMgQzgxIDkxIDczIDk3IDYwIDk3IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC45Ii8+PHBhdGggZD0iTTYwIDM4IEM3MyAzOCA4MSA0NCA4MSA1MiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOSIvPjwvc3ZnPg==">
-<link rel="apple-touch-icon" id="apple-touch-icon-link">
-<script>
-(function(){
-  var c=document.createElement('canvas');
-  c.width=c.height=180;
-  var x=c.getContext('2d');
-  // Background
-  x.fillStyle='#111';
-  x.fillRect(0,0,180,180);
-  // Circle fill
-  x.beginPath();x.arc(90,90,54,0,Math.PI*2);
-  x.fillStyle='rgba(255,255,255,0.12)';x.fill();
-  // Circle stroke
-  x.beginPath();x.arc(90,90,54,0,Math.PI*2);
-  x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=4.5;x.stroke();
-  // Top tick
-  x.beginPath();x.moveTo(90,42);x.lineTo(90,54);
-  x.strokeStyle='rgba(255,255,255,0.9)';x.lineWidth=7.5;x.lineCap='round';x.stroke();
-  // Bottom tick
-  x.beginPath();x.moveTo(90,126);x.lineTo(90,138);x.stroke();
-  // Dollar S lower curve
-  x.beginPath();
-  x.moveTo(90,57);
-  x.bezierCurveTo(70.5,57,58.5,66,58.5,78);
-  x.bezierCurveTo(58.5,90,70.5,95.25,90,100.5);
-  x.bezierCurveTo(109.5,105.75,121.5,111.75,121.5,124.5);
-  x.bezierCurveTo(121.5,136.5,109.5,145.5,90,145.5);
-  x.lineWidth=9;x.stroke();
-  // Dollar S upper curve
-  x.beginPath();
-  x.moveTo(90,57);
-  x.bezierCurveTo(109.5,57,121.5,66,121.5,78);
-  x.stroke();
-  document.getElementById('apple-touch-icon-link').href=c.toDataURL('image/png');
-})();
-</script>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQnVyc2VyIiwic2hvcnRfbmFtZSI6IkJ1cnNlciIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjdmNmYzIiwidGhlbWVfY29sb3IiOiIjMTExIn0=">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQnVyc2VyIiwic2hvcnRfbmFtZSI6IkJ1cnNlciIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjdmNmYzIiwidGhlbWVfY29sb3IiOiIjMTExIiwiaWNvbnMiOlt7InNyYyI6ImFwcGxlLXRvdWNoLWljb24ucG5nIiwic2l6ZXMiOiIxODB4MTgwIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
 <style>
 :root{
   --bg:#f7f6f3;--bg2:#ffffff;--bg3:#f0efe9;--bg4:#e5e3db;
@@ -234,6 +199,8 @@ th{text-align:left;padding:9px 12px;color:var(--text3);font-family:var(--mono);f
 td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
+.receipt-row{cursor:pointer}
+.receipt-row:hover{background:var(--bg3)}
 .empty-row{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
 .badge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 7px;letter-spacing:.04em;text-transform:uppercase;border:1px solid}
 .badge-pending{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
@@ -1858,7 +1825,7 @@ function renderHistory(){
             const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
             const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
               +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
-            return'<tr>'
+            return'<tr data-id="'+p.id+'" style="cursor:pointer">'
               +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
               +'<td>'+desc+'</td>'
               +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
@@ -1892,6 +1859,33 @@ function switchView(v){
 document.getElementById('btnViewLog').addEventListener('click',()=>switchView('log'));
 document.getElementById('btnViewHistory').addEventListener('click',()=>switchView('history'));
 document.getElementById('btnViewReceipts').addEventListener('click',()=>switchView('receipts'));
+document.getElementById('historyContent').addEventListener('dblclick',e=>{
+  const row=e.target.closest('tr[data-id]');
+  if(row)navigateToTransaction(+row.dataset.id);
+});
+document.getElementById('receiptsContent').addEventListener('dblclick',e=>{
+  const row=e.target.closest('.receipt-row[data-id]');
+  if(row)navigateToTransaction(+row.dataset.id);
+});
+document.getElementById('historyContent').addEventListener('click',e=>{
+  const btn=e.target.closest('.rollover-desc-link');
+  if(!btn)return;
+  e.stopPropagation();
+  let cur=data.purchases.find(x=>x.id===parseInt(btn.dataset.parentid));
+  let safety=0;
+  while(cur&&cur.rolloverSourceId&&safety<10){
+    const up=data.purchases.find(x=>x.id===cur.rolloverSourceId);
+    if(!up)break;
+    cur=up;safety++;
+  }
+  if(!cur)return;
+  const target=document.querySelector('#historyContent tr[data-id="'+cur.id+'"]');
+  if(target){
+    target.scrollIntoView({behavior:'smooth',block:'center'});
+    target.classList.add('row-highlight');
+    setTimeout(()=>target.classList.remove('row-highlight'),2100);
+  }
+});
 
 // ── ADD PURCHASE MODAL ────────────────────────────────────
 function updateAddFields(){
@@ -2513,17 +2507,19 @@ function renderReceipts() {
   }).join('');
 
   el.innerHTML = `
-    <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.6">
-      ${withCount} of ${purchases.length} purchases have receipt links.
-    </div>
-    ${sections}`;
+    <div style="max-width:560px;margin:0 auto">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+        ${withCount} of ${purchases.length} purchases have receipt links.
+      </div>
+      ${sections}
+    </div>`;
 
   wireReceiptRows();
 }
 
 function receiptRow(p) {
   const hasLink = !!p.receiptUrl;
-  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap">
+  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${p.date} · ${fmt(p.amount)}</div>
