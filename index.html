@@ -28,6 +28,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   window._fbAuth = auth;
   window._fbDb = db;
@@ -47,7 +48,42 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xMiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz48bGluZSB4MT0iNjAiIHkxPSIyOCIgeDI9IjYwIiB5Mj0iMzYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48bGluZSB4MT0iNjAiIHkxPSI4NCIgeDI9IjYwIiB5Mj0iOTIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNNjAgMzggQzQ3IDM4IDM5IDQ0IDM5IDUyIEMzOSA2MCA0NyA2My41IDYwIDY3IEM3MyA3MC41IDgxIDc0LjUgODEgODMgQzgxIDkxIDczIDk3IDYwIDk3IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC45Ii8+PHBhdGggZD0iTTYwIDM4IEM3MyAzOCA4MSA0NCA4MSA1MiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOSIvPjwvc3ZnPg==">
-<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjAgMTIwIiBmaWxsPSJub25lIj48cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iIzExMSIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xMiIvPjxjaXJjbGUgY3g9IjYwIiBjeT0iNjAiIHI9IjM2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz48bGluZSB4MT0iNjAiIHkxPSIyOCIgeDI9IjYwIiB5Mj0iMzYiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48bGluZSB4MT0iNjAiIHkxPSI4NCIgeDI9IjYwIiB5Mj0iOTIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjkiLz48cGF0aCBkPSJNNjAgMzggQzQ3IDM4IDM5IDQ0IDM5IDUyIEMzOSA2MCA0NyA2My41IDYwIDY3IEM3MyA3MC41IDgxIDc0LjUgODEgODMgQzgxIDkxIDczIDk3IDYwIDk3IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIgb3BhY2l0eT0iMC45Ii8+PHBhdGggZD0iTTYwIDM4IEM3MyAzOCA4MSA0NCA4MSA1MiIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIG9wYWNpdHk9IjAuOSIvPjwvc3ZnPg==">
+<link rel="apple-touch-icon" id="apple-touch-icon-link">
+<script>
+(function(){
+  var c=document.createElement('canvas');
+  c.width=c.height=180;
+  var x=c.getContext('2d');
+  // Background
+  x.fillStyle='#111';
+  x.fillRect(0,0,180,180);
+  // Circle fill
+  x.beginPath();x.arc(90,90,54,0,Math.PI*2);
+  x.fillStyle='rgba(255,255,255,0.12)';x.fill();
+  // Circle stroke
+  x.beginPath();x.arc(90,90,54,0,Math.PI*2);
+  x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=4.5;x.stroke();
+  // Top tick
+  x.beginPath();x.moveTo(90,42);x.lineTo(90,54);
+  x.strokeStyle='rgba(255,255,255,0.9)';x.lineWidth=7.5;x.lineCap='round';x.stroke();
+  // Bottom tick
+  x.beginPath();x.moveTo(90,126);x.lineTo(90,138);x.stroke();
+  // Dollar S lower curve
+  x.beginPath();
+  x.moveTo(90,57);
+  x.bezierCurveTo(70.5,57,58.5,66,58.5,78);
+  x.bezierCurveTo(58.5,90,70.5,95.25,90,100.5);
+  x.bezierCurveTo(109.5,105.75,121.5,111.75,121.5,124.5);
+  x.bezierCurveTo(121.5,136.5,109.5,145.5,90,145.5);
+  x.lineWidth=9;x.stroke();
+  // Dollar S upper curve
+  x.beginPath();
+  x.moveTo(90,57);
+  x.bezierCurveTo(109.5,57,121.5,66,121.5,78);
+  x.stroke();
+  document.getElementById('apple-touch-icon-link').href=c.toDataURL('image/png');
+})();
+</script>
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQnVyc2VyIiwic2hvcnRfbmFtZSI6IkJ1cnNlciIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjdmNmYzIiwidGhlbWVfY29sb3IiOiIjMTExIn0=">
 <style>
 :root{
