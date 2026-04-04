@@ -2099,6 +2099,9 @@ document.getElementById('f-purchaseDate').addEventListener('change',function(){
   }else{
     document.getElementById('f-monthDisplay').style.display='none';
   }
+  // Pre-fill expected date with purchase date so the calendar opens there
+  const fExpected=document.getElementById('f-expected');
+  if(this.value) fExpected.value=this.value;
 });
 
 
