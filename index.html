@@ -87,9 +87,11 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 .month-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;background:var(--bg2);border:1px solid var(--border2);padding:10px 14px}
 .month-bar-fill{flex:1}
 .month-bar-right{flex:1;display:flex;justify-content:flex-end}
-.month-select{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 6px;cursor:pointer;outline:none;height:28px}
+.month-select{font-family:var(--mono);font-size:14px;background:var(--bg2);border:1px solid var(--border2);color:var(--text);padding:3px 8px;cursor:pointer;outline:none;height:32px}
 .today-btn{font-family:var(--mono);font-size:10px;font-weight:600;padding:0 10px;height:28px;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0;white-space:nowrap;border:1px solid var(--hw);background:none;color:var(--hw);cursor:pointer}
 .today-btn:hover{background:var(--hw);color:#fff}
+.month-nav{font-family:var(--mono);font-size:14px;font-weight:600;width:28px;height:28px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.month-nav:hover{background:var(--bg3,var(--bg2));border-color:var(--text2)}
 
 /* SUMMARY */
 .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-bottom:20px;border:1px solid var(--border2);background:var(--border2)}
@@ -428,8 +430,10 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   <div id="logView">
     <div class="month-bar">
       <div class="month-bar-fill"></div>
+      <button class="month-nav" id="monthPrev">&#8249;</button>
       <select id="monthJumpM" class="month-select"></select>
       <select id="monthJumpY" class="month-select"></select>
+      <button class="month-nav" id="monthNext">&#8250;</button>
       <div class="month-bar-right">
         <button class="today-btn" id="monthToday">Today</button>
       </div>
@@ -1004,6 +1008,18 @@ function renderMonthBar(){
 }
 document.getElementById('monthToday').addEventListener('click',()=>{
   activeLogMonth=currentMonthKey();batchMode=false;batchSelected=new Set();render();
+});
+document.getElementById('monthPrev').addEventListener('click',()=>{
+  const{year,month}=parseMonthKey(activeLogMonth);
+  const d=new Date(year,month-1,1);
+  activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  batchMode=false;batchSelected=new Set();render();
+});
+document.getElementById('monthNext').addEventListener('click',()=>{
+  const{year,month}=parseMonthKey(activeLogMonth);
+  const d=new Date(year,month+1,1);
+  activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  batchMode=false;batchSelected=new Set();render();
 });
 
 // ── SUMMARY ───────────────────────────────────────────────
