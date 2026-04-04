@@ -247,16 +247,26 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 
 /* HISTORY */
 .history-view{display:none}.history-view.active{display:block}
-.history-month-block{margin-bottom:28px}
-.history-month-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--text);flex-wrap:wrap;gap:8px}
+.history-year-block{margin-bottom:20px}
+.history-year-header{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;border-bottom:3px solid var(--text);margin-bottom:16px;user-select:none}
+.history-year-title{font-family:var(--mono);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.history-toggle{font-family:var(--mono);transition:transform .15s;display:inline-block}
+.history-toggle.collapsed{transform:rotate(-90deg)}
+.history-toggle-year{font-size:13px;color:var(--text);font-weight:700}
+.history-toggle-month{font-size:11px;color:var(--text2);font-weight:600}
+.history-toggle-cat{font-size:9px;color:var(--text3);font-weight:400}
+.history-year-body{padding-left:14px}
+.history-month-body{padding-left:14px}
+.history-month-block{margin-bottom:4px}
+.history-month-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:2px 0;cursor:pointer;user-select:none}
 .history-month-title{font-family:var(--mono);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .history-chips{display:flex;gap:6px;flex-wrap:wrap}
 .history-chip{font-family:var(--mono);font-size:10px;font-weight:600;padding:3px 9px;border:1px solid;text-transform:uppercase;letter-spacing:.04em}
 .chip-hw{background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
-.history-cat-section{margin-bottom:22px}
-.history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.history-cat-section{margin-bottom:6px}
+.history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .cat-dot{width:6px;height:6px;display:inline-block;flex-shrink:0}
 .dot-hw{background:var(--hw)}.dot-mh{background:var(--mh)}.dot-tr{background:var(--tr)}
 .history-empty{text-align:center;padding:48px;color:var(--text3);font-family:var(--mono);font-size:12px;line-height:1.8}
@@ -986,6 +996,9 @@ const now=new Date();
 let activeLogMonth=sessionStorage.getItem('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
 let activeTab=sessionStorage.getItem('activeTab')||CATS[0].id;
 let activeView=sessionStorage.getItem('activeView')||'log';
+let historyCollapsed=JSON.parse(sessionStorage.getItem('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
+let receiptsCollapsed=JSON.parse(sessionStorage.getItem('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
+function saveCollapseState(){sessionStorage.setItem('historyCollapsed',JSON.stringify(historyCollapsed));sessionStorage.setItem('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
 let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
@@ -1820,39 +1833,60 @@ function renderHistory(){
   const used=allUsedMonths();
   const el=document.getElementById('historyContent');
   if(!used.length){el.innerHTML='<div class="history-empty">No history yet.</div>';return;}
-  el.innerHTML=used.map(mk=>{
-    const mp=data.purchases.filter(p=>getPurchaseMonth(p)===mk);
-    const sections=CATS.map(cat=>{
-      const rows=mp.filter(p=>p.cat===cat.id).sort((a,b)=>b.date.localeCompare(a.date));
-      if(!rows.length)return'';
-      const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
-      let chipTxt=cat.hasBudget&&budget>0
-        ?fmt(spent)+' of '+fmt(budget)+(spent>budget?' <span style="color:var(--red-text);font-size:10px">('+fmt(spent-budget)+' over)</span>':' <span style="color:var(--green-text);font-size:10px">('+fmt(budget-spent)+' left)</span>')
-        :fmt(spent);
-      const chip='<span class="history-chip" style="background:'+cat.color+'22;color:'+cat.color+';border-color:'+cat.color+'">'+chipTxt+'</span>';
-      return'<div class="history-cat-section">'
-        +'<div class="history-month-header"><span class="history-month-title">'+monthLabelFull(mk)+'</span>'+chip+'</div>'
-        +'<div class="history-cat-label"><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</div>'
-        +'<div class="table-wrap"><table>'
-          +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Dates</th></tr></thead>'
-          +'<tbody>'+rows.map(p=>{
-            const days=daysBetween(p.submittedDate,p.receivedDate);
-            const daysStr=days!==null?' ('+days+'d)':'';
-            const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
-            const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
-              +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
-            return'<tr data-id="'+p.id+'" style="cursor:pointer">'
-              +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
-              +'<td>'+desc+'</td>'
-              +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
-              +'<td>'+statusBadge(p.status)+'</td>'
-              +'<td style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
-            +'</tr>';
-          }).join('')+'</tbody>'
-        +'</table></div>'
+  // group months by year
+  const byYear={};
+  used.forEach(mk=>{const yr=mk.slice(0,4);if(!byYear[yr])byYear[yr]=[];byYear[yr].push(mk);});
+  const years=Object.keys(byYear).sort().reverse();
+  el.innerHTML=years.map(yr=>{
+    const yCol=!!historyCollapsed.years[yr];
+    const monthsHtml=byYear[yr].map(mk=>{
+      const mp=data.purchases.filter(p=>getPurchaseMonth(p)===mk);
+      const mCol=!!historyCollapsed.months[mk];
+      const sections=CATS.map(cat=>{
+        const rows=mp.filter(p=>p.cat===cat.id).sort((a,b)=>b.date.localeCompare(a.date));
+        if(!rows.length)return'';
+        const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
+        let chipTxt=cat.hasBudget&&budget>0
+          ?fmt(spent)+' of '+fmt(budget)+(spent>budget?' <span style="color:var(--red-text);font-size:10px">('+fmt(spent-budget)+' over)</span>':' <span style="color:var(--green-text);font-size:10px">('+fmt(budget-spent)+' left)</span>')
+          :fmt(spent);
+        const chip='<span class="history-chip" style="background:'+cat.color+'22;color:'+cat.color+';border-color:'+cat.color+'">'+chipTxt+'</span>';
+        const ck=mk+':'+cat.id;const cCol=!!historyCollapsed.cats[ck];
+        return'<div class="history-cat-section">'
+          +'<div class="history-cat-label" data-cat="'+ck+'" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat'+(cCol?' collapsed':'')+'">▼</span><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</span>'+chip+'</div>'
+          +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table>'
+            +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Dates</th></tr></thead>'
+            +'<tbody>'+rows.map(p=>{
+              const days=daysBetween(p.submittedDate,p.receivedDate);
+              const daysStr=days!==null?' ('+days+'d)':'';
+              const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
+              const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
+                +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
+              return'<tr data-id="'+p.id+'" style="cursor:pointer">'
+                +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
+                +'<td>'+desc+'</td>'
+                +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
+                +'<td>'+statusBadge(p.status)+'</td>'
+                +'<td style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
+              +'</tr>';
+            }).join('')+'</tbody>'
+          +'</table></div></div>'
+        +'</div>';
+      }).join('');
+      return'<div class="history-month-block">'
+        +'<div class="history-month-header" data-month="'+mk+'">'
+          +'<span class="history-toggle history-toggle-month'+(mCol?' collapsed':'')+'">▼</span>'
+          +'<span class="history-month-title">'+monthLabelFull(mk)+'</span>'
+        +'</div>'
+        +'<div class="history-month-body"'+(mCol?' style="display:none"':'')+'>'+sections+'</div>'
       +'</div>';
     }).join('');
-    return'<div class="history-month-block">'+sections+'</div>';
+    return'<div class="history-year-block">'
+      +'<div class="history-year-header" data-year="'+yr+'">'
+        +'<span class="history-toggle history-toggle-year'+(yCol?' collapsed':'')+'">▼</span>'
+        +'<span class="history-year-title">'+yr+'</span>'
+      +'</div>'
+      +'<div class="history-year-body"'+(yCol?' style="display:none"':'')+'>'+monthsHtml+'</div>'
+    +'</div>';
   }).join('');
 }
 
@@ -1881,7 +1915,62 @@ document.getElementById('receiptsContent').addEventListener('dblclick',e=>{
   const row=e.target.closest('.receipt-row[data-id]');
   if(row)navigateToTransaction(+row.dataset.id);
 });
+document.getElementById('receiptsContent').addEventListener('click',e=>{
+  const yh=e.target.closest('.receipts-year-hdr');
+  if(yh){
+    const k=yh.dataset.ryk;
+    receiptsCollapsed.years[k]=!receiptsCollapsed.years[k];
+    const body=yh.nextElementSibling;
+    body.style.display=receiptsCollapsed.years[k]?'none':'';
+    yh.querySelector('.history-toggle').classList.toggle('collapsed',!!receiptsCollapsed.years[k]);
+    saveCollapseState();return;
+  }
+  const mh=e.target.closest('.receipts-month-hdr');
+  if(mh){
+    const k=mh.dataset.rmk;
+    receiptsCollapsed.months[k]=!receiptsCollapsed.months[k];
+    const body=mh.nextElementSibling;
+    body.style.display=receiptsCollapsed.months[k]?'none':'';
+    mh.querySelector('.history-toggle').classList.toggle('collapsed',!!receiptsCollapsed.months[k]);
+    saveCollapseState();return;
+  }
+  const ch=e.target.closest('.history-cat-label[data-rcat]');
+  if(!ch)return;
+  const id=ch.dataset.rcat;
+  receiptsCollapsed.cats[id]=!receiptsCollapsed.cats[id];
+  const body=ch.nextElementSibling;
+  body.style.display=receiptsCollapsed.cats[id]?'none':'';
+  ch.querySelector('.history-toggle').classList.toggle('collapsed',!!receiptsCollapsed.cats[id]);
+  saveCollapseState();
+});
 document.getElementById('historyContent').addEventListener('click',e=>{
+  const yh=e.target.closest('.history-year-header');
+  if(yh){
+    const yr=yh.dataset.year;
+    historyCollapsed.years[yr]=!historyCollapsed.years[yr];
+    const body=yh.nextElementSibling;
+    body.style.display=historyCollapsed.years[yr]?'none':'';
+    yh.querySelector('.history-toggle').classList.toggle('collapsed',!!historyCollapsed.years[yr]);
+    saveCollapseState();return;
+  }
+  const mh=e.target.closest('.history-month-header');
+  if(mh){
+    const mk=mh.dataset.month;
+    historyCollapsed.months[mk]=!historyCollapsed.months[mk];
+    const body=mh.nextElementSibling;
+    body.style.display=historyCollapsed.months[mk]?'none':'';
+    mh.querySelector('.history-toggle').classList.toggle('collapsed',!!historyCollapsed.months[mk]);
+    saveCollapseState();return;
+  }
+  const ch=e.target.closest('.history-cat-label[data-cat]');
+  if(ch){
+    const ck=ch.dataset.cat;
+    historyCollapsed.cats[ck]=!historyCollapsed.cats[ck];
+    const body=ch.nextElementSibling;
+    body.style.display=historyCollapsed.cats[ck]?'none':'';
+    ch.querySelector('.history-toggle').classList.toggle('collapsed',!!historyCollapsed.cats[ck]);
+    saveCollapseState();return;
+  }
   const btn=e.target.closest('.rollover-desc-link');
   if(!btn)return;
   e.stopPropagation();
@@ -2507,16 +2596,52 @@ function renderReceipts() {
   const withCount = purchases.filter(p => p.receiptUrl).length;
 
   const sections = CATS.map(cat => {
-    const rows = purchases.filter(p => p.cat === cat.id).sort((a,b) => b.date.localeCompare(a.date));
+    const rows = purchases.filter(p => p.cat === cat.id);
     if (!rows.length) return '';
-    return `<div class="history-cat-section" style="margin-bottom:24px">
-      <div class="history-cat-label">
-        <span class="cat-dot" style="background:${cat.color}"></span>${cat.label}
-        <span style="font-weight:400;color:var(--text3);margin-left:8px">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>
+    const catCol = !!receiptsCollapsed.cats[cat.id];
+    const count = `<span style="font-weight:400;color:var(--text3)">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>`;
+    // group by year then month
+    const byYear = {};
+    rows.forEach(p => {
+      const mk = getMonthKey(p.date); const yr = mk.slice(0,4);
+      if (!byYear[yr]) byYear[yr] = {};
+      if (!byYear[yr][mk]) byYear[yr][mk] = [];
+      byYear[yr][mk].push(p);
+    });
+    const yearsHtml = Object.keys(byYear).sort().reverse().map(yr => {
+      const yrKey = cat.id+':'+yr;
+      const yrCol = !!receiptsCollapsed.years[yrKey];
+      const monthsHtml = Object.keys(byYear[yr]).sort().reverse().map(mk => {
+        const mkKey = cat.id+':'+mk;
+        const mkCol = !!receiptsCollapsed.months[mkKey];
+        const mRows = byYear[yr][mk].sort((a,b) => b.date.localeCompare(a.date));
+        return `<div style="margin-bottom:4px">
+          <div class="receipts-month-hdr" data-rmk="${mkKey}" style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;user-select:none">
+            <span class="history-toggle history-toggle-month${mkCol?' collapsed':''}">▼</span>
+            <span style="font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">${monthLabelFull(mk)}</span>
+          </div>
+          <div class="receipts-month-body"${mkCol?' style="display:none"':''}>
+            <div style="background:var(--bg2);border:1px solid var(--border2)">${mRows.map(p => receiptRow(p)).join('')}</div>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div style="margin-bottom:6px">
+        <div class="receipts-year-hdr" data-ryk="${yrKey}" style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer;user-select:none">
+          <span class="history-toggle history-toggle-year${yrCol?' collapsed':''}">▼</span>
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${yr}</span>
+        </div>
+        <div class="receipts-year-body" style="padding-left:14px${yrCol?';display:none':''}">${monthsHtml}</div>
+      </div>`;
+    }).join('');
+    return `<div class="history-cat-section">
+      <div class="history-cat-label" data-rcat="${cat.id}" style="cursor:pointer;user-select:none">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span class="history-toggle history-toggle-cat${catCol?' collapsed':''}">▼</span>
+          <span class="cat-dot" style="background:${cat.color}"></span>${cat.label}
+        </span>
+        ${count}
       </div>
-      <div style="background:var(--bg2);border:1px solid var(--border2)">
-        ${rows.map(p => receiptRow(p)).join('')}
-      </div>
+      <div class="receipts-cat-body" style="padding-left:14px${catCol?';display:none':''}">${yearsHtml}</div>
     </div>`;
   }).join('');
 
