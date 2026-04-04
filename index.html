@@ -343,11 +343,12 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .mob-action{display:none;margin-top:6px}
 @media(max-width:600px){
   main{padding:20px 14px 100px}
-  header{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px}
+  header{padding:14px 16px;flex-direction:column;align-items:center;gap:12px}
   .wordmark{font-size:20px;gap:10px}
   .wordmark-icon{width:36px;height:36px;border-radius:0}
   .wordmark-icon svg{width:20px;height:20px}
-  .header-right{width:100%;justify-content:flex-start;gap:6px;flex-wrap:wrap}
+  .header-right{width:100%;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+  .header-row{justify-content:center}
   .hdr-btn{font-size:11px;padding:6px 10px}
   .view-btn{font-size:11px;padding:5px 11px}
 
@@ -366,9 +367,10 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   .tabs-row{margin-bottom:16px}
   .tab{font-size:11px;padding:10px 4px;letter-spacing:.02em}
 
-  .panel-top{margin-bottom:14px}
-  .budget-context{font-size:12px}
-  .budget-stat-row{margin-bottom:10px}
+  .panel-top{margin-bottom:14px;flex-direction:column;align-items:center}
+  .budget-left{justify-content:center}
+  .budget-context{font-size:12px;text-align:center}
+  .budget-stat-row{margin-bottom:10px;justify-content:center}
   .budget-spent{font-size:18px}
   .budget-bar-wrap{margin-bottom:20px}
   .no-budget-hint{margin-bottom:16px;padding:10px 14px}
@@ -378,7 +380,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   th.col-date,td.col-date{display:none}
   th.col-subrcv,td.col-subrcv{display:none}
   .dup-btn,.recur-btn,.recur-indicator{display:none}
-  .action-grid{grid-template-columns:1fr}
+  .action-grid{display:none}
+  .del-btn-red{font-size:22px;padding:6px 8px}
   .mob-info{display:block;margin-top:5px;line-height:1.6}
   .mob-action{display:block;margin-top:8px}
   .mark-btn{font-size:11px;padding:5px 12px}
