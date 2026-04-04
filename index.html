@@ -250,8 +250,11 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .pending-sheet-body{overflow-y:auto;padding:14px 20px 28px;flex:1}
 .pending-cat-block{margin-bottom:18px}
 .pending-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px}
-.pending-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);gap:12px}
+.pending-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);gap:12px;cursor:pointer;border-radius:4px;transition:background .15s}
+.pending-row:hover{background:var(--bg3)}
 .pending-row:last-child{border-bottom:none}
+.highlight-row{animation:rowFlash 1.8s ease-out}
+@keyframes rowFlash{0%,20%{background:var(--blue-bg,rgba(59,130,246,.18))}100%{background:transparent}}
 .pending-row-left{flex:1;min-width:0}
 .pending-row-desc{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pending-row-meta{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px;letter-spacing:.02em}
@@ -1096,7 +1099,7 @@ function makeRows(rows,emptyMsg,showReimb){
 
     const checkCell=batchMode?'<td class="check-cell"><input type="checkbox" class="row-check" data-id="'+p.id+'"'+(batchSelected.has(p.id)?' checked':'')+'/></td>':'';
 
-    return '<tr>'
+    return '<tr id="prow-'+p.id+'">'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
       +'<td><div style="display:flex;flex-direction:column">'
@@ -1162,7 +1165,7 @@ function makeRowsFull(rows,emptyMsg,showReimb){
 
     const checkCell=batchMode?'<td class="check-cell"><input type="checkbox" class="row-check" data-id="'+p.id+'"'+(batchSelected.has(p.id)?' checked':'')+'/></td>':'';
 
-    return '<tr>'
+    return '<tr id="prow-'+p.id+'">'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
       +'<td><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span></div></td>'
@@ -1697,6 +1700,23 @@ document.getElementById('ef-status').addEventListener('change',updateEditFields)
 document.getElementById('ef-submitted').addEventListener('input',updateDays);
 document.getElementById('ef-received').addEventListener('input',updateDays);
 
+// ── NAVIGATE TO TRANSACTION ───────────────────────────────
+function navigateToTransaction(id){
+  const p=data.purchases.find(x=>x.id===id);if(!p)return;
+  document.getElementById('pendingOverlay').classList.remove('open');
+  activeLogMonth=getPurchaseMonth(p);
+  activeTab=p.cat;
+  switchView('log');
+  render();
+  requestAnimationFrame(()=>{
+    const row=document.getElementById('prow-'+id);
+    if(!row)return;
+    row.scrollIntoView({behavior:'smooth',block:'center'});
+    row.classList.add('highlight-row');
+    setTimeout(()=>row.classList.remove('highlight-row'),1800);
+  });
+}
+
 // ── PENDING SHEET ─────────────────────────────────────────
 function openPendingSheet(){
   const submitted=data.purchases.filter(p=>p.status==='submitted');
@@ -1720,7 +1740,7 @@ function openPendingSheet(){
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
         const meta=monthLabel(mk)+(p.submittedDate?' · Sub: '+p.submittedDate:'')+(p.expectedDate?' · Exp: '+p.expectedDate:'');
-        return'<div class="pending-row">'
+        return'<div class="pending-row" data-id="'+p.id+'" onclick="navigateToTransaction('+p.id+')">'
           +'<div class="pending-row-left">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
             +'<div class="pending-row-meta">'+meta+'</div>'
