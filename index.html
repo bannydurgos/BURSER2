@@ -2196,7 +2196,7 @@ document.getElementById('f-purchaseDate').addEventListener('change',function(){
 
 
 
-function saveAdd(){
+async function saveAdd(){
   const serviceDate=document.getElementById('f-serviceDate').value||null;
   const purchaseDate=document.getElementById('f-purchaseDate').value;
   const desc=document.getElementById('f-desc').value.trim();
@@ -2242,7 +2242,7 @@ function saveAdd(){
   }
 
   activeLogMonth=mk;activeTab=selectedCat;
-  data.purchases.filter(p=>p.id>=startId).forEach(p=>savePurchase(p));
+  await Promise.all(data.purchases.filter(p=>p.id>=startId).map(p=>savePurchase(p)));
   closeAdd();render();
   if(CAT_MAP[selectedCat].hasBudget)scheduleRolloverCheck(selectedCat,mk);
 }
