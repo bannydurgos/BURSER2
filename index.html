@@ -1017,15 +1017,18 @@ function initAuth(){
   waitForFirebase(()=>{
     window._fbOnAuthChanged(async(user)=>{
       if(user){
+        const isNewSignIn=!_currentUser||_currentUser.uid!==user.uid;
         _currentUser=user;
         document.getElementById('authOverlay').classList.remove('visible');
         const chip=document.getElementById('userChip');chip.style.display='flex';
         if(user.photoURL)document.getElementById('userAvatar').src=user.photoURL;
         else document.getElementById('userAvatar').style.display='none';
-        await loadFromFirebase();
-        const dn=await loadDisplayName();
-        document.getElementById('userEmail').textContent=dn||user.email;
-        _navRestoring=true;render();_switchViewInternal(activeView);_navRestoring=false;replaceNav();
+        if(isNewSignIn){
+          await loadFromFirebase();
+          const dn=await loadDisplayName();
+          document.getElementById('userEmail').textContent=dn||user.email;
+          _navRestoring=true;render();_switchViewInternal(activeView);_navRestoring=false;replaceNav();
+        }
       }else{
         _currentUser=null;data=loadData();
         document.getElementById('userChip').style.display='none';
@@ -3077,10 +3080,12 @@ document.getElementById('resetOverlay').addEventListener('click',function(e){
 document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
   if(_currentUser){
     const uid=_currentUser.uid;const db=window._fbDb;
-    const[ps,bs]=await Promise.all([window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))]);
+    const[ps,bs]=await Promise.all([window._fbGetDocsFromServer(window._fbCollection(db,'users',uid,'purchases')),window._fbGetDocsFromServer(window._fbCollection(db,'users',uid,'budgets'))]);
     await Promise.all([...ps.docs,...bs.docs].map(d=>window._fbDeleteDoc(d.ref)));
+    await window._fbSetDoc(window._fbDoc(db,'users',uid),{cats:[...DEFAULT_CATS],displayName:null},{merge:false});
   }
   data={purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
+  CATS=[...DEFAULT_CATS];rebuildCatMap();
   rolloverQueue=[];rolloverActive=false;answeredIds=new Set();
   batchMode=false;batchSelected=new Set();
   activeLogMonth=currentMonthKey();activeTab=CATS[0].id;activeView='log';
