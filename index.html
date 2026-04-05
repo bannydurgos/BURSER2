@@ -345,6 +345,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 /* SUCCESS TOAST */
 .success-toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#fff;font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:10px 20px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;border:2px solid var(--green-text)}
 .success-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.import-toast{position:fixed;bottom:0;left:0;right:0;background:#1a7a3a;color:#fff;font-family:var(--mono);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:18px 24px;text-align:center;z-index:400;transform:translateY(100%);transition:transform .25s ease;border-top:3px solid #0f5228}
+.import-toast.show{transform:translateY(0)}
 
 /* ROLLOVER TOAST */
 .rollover-toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg2);border:2px solid var(--text);padding:14px 18px;box-shadow:4px 4px 0 rgba(0,0,0,.12);z-index:200;width:400px;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
@@ -793,6 +795,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 </div>
 
 <div class="success-toast" id="successToast"></div>
+<div class="import-toast" id="importToast">Import complete</div>
 <div id="printFrame" style="display:none"></div>
 
 <!-- DELETE CONFIRM MODAL -->
@@ -3192,10 +3195,9 @@ document.getElementById('btnConfirmLoadSave').addEventListener('click', async ()
   if (_currentUser) await save();
 
   render();
-  const t = document.getElementById('successToast');
-  t.textContent = 'Save loaded successfully';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  const it = document.getElementById('importToast');
+  it.classList.add('show');
+  setTimeout(() => it.classList.remove('show'), 3000);
 });
 
 // ── RENDER ────────────────────────────────────────────────
