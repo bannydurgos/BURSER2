@@ -1335,12 +1335,16 @@ function renderInfoFilter(){
   document.getElementById('infoFilterBar').innerHTML=
     '<span class="info-filter-chip'+(_infoFilterMode==='ytd'?' active':'')+'" id="infoChipYtd">YTD</span>'
     +'<span class="info-filter-chip'+(_infoFilterMode==='month'?' active':'')+'" id="infoChipMonth">Month</span>'
+    +'<span class="info-filter-chip'+(_infoFilterMode==='year'?' active':'')+'" id="infoChipYear">Year</span>'
     +(_infoFilterMode==='month'
       ?'<select class="info-filter-select" id="infoMonthSel">'+monthOpts+'</select>'
        +'<select class="info-filter-select" id="infoYearSel">'+yearOpts+'</select>'
+      :_infoFilterMode==='year'
+      ?'<select class="info-filter-select" id="infoYearSel">'+yearOpts+'</select>'
       :'');
   document.getElementById('infoChipYtd').addEventListener('click',()=>{_infoFilterMode='ytd';_infoFilterYear=new Date().getFullYear();renderInfoFilter();renderInfoBody();});
   document.getElementById('infoChipMonth').addEventListener('click',()=>{_infoFilterMode='month';renderInfoFilter();renderInfoBody();});
+  document.getElementById('infoChipYear').addEventListener('click',()=>{_infoFilterMode='year';renderInfoFilter();renderInfoBody();});
   const mSel=document.getElementById('infoMonthSel');
   if(mSel)mSel.addEventListener('change',()=>{_infoFilterMonth=parseInt(mSel.value);renderInfoBody();});
   const ySel=document.getElementById('infoYearSel');
@@ -1357,6 +1361,13 @@ function renderInfoBody(){
       p.receivedDate>=janFirst&&p.receivedDate<=todayStr
     );
     rangeLabel='YTD '+new Date().getFullYear();
+  } else if(_infoFilterMode==='year'){
+    const prefix=String(_infoFilterYear);
+    received=data.purchases.filter(p=>
+      p.status==='received'&&p.submittedDate&&p.receivedDate&&
+      p.receivedDate.startsWith(prefix)
+    );
+    rangeLabel=String(_infoFilterYear);
   } else {
     const mm=String(_infoFilterMonth).padStart(2,'0');
     const prefix=_infoFilterYear+'-'+mm;
