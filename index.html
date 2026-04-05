@@ -1672,7 +1672,7 @@ function renderBatchBar(){
         const isChained=p.isRollover||data.purchases.some(x=>x.rolloverSourceId===p.id);
         if(isChained){
           rolloverChain(p).forEach(c=>{
-            if(c.id!==p.id&&c.status!=='received'){c.submittedDate=date;affectedIds.add(c.id);}
+            if(c.id!==p.id&&c.status!=='received'&&c.status!=='oop'){c.status='submitted';c.submittedDate=date;affectedIds.add(c.id);}
           });
         }
       }
@@ -1820,8 +1820,7 @@ function attachEvents(){
           const chain = p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id)
             ? rolloverChain(p) : [p];
           chain.forEach(c => {
-            if (c.status === 'pending') { c.status = 'submitted'; c.submittedDate = date; }
-            else if (c.status !== 'received') { c.submittedDate = date; }
+            if (c.status !== 'received' && c.status !== 'oop') { c.status = 'submitted'; c.submittedDate = date; }
           });
           Promise.all(chain.map(c=>savePurchase(c)));render();
           if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));
@@ -2341,7 +2340,9 @@ function saveEdit(){
   const chainToSave=[p];
   if (p.submittedDate && (p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id))) {
     rolloverChain(p).forEach(c => {
-      if (c.id !== p.id && c.status !== 'received'){c.submittedDate = p.submittedDate;chainToSave.push(c);}
+      if (c.id !== p.id && c.status !== 'received' && c.status !== 'oop'){
+        c.status='submitted';c.submittedDate=p.submittedDate;chainToSave.push(c);
+      }
     });
   }
   chainToSave.forEach(c=>savePurchase(c));
@@ -2560,7 +2561,9 @@ function saveBatchEdit() {
   if (submitted) {
     affectedChainIds.forEach(id => {
       const c = data.purchases.find(x => x.id === id);
-      if (c && !batchSelected.has(c.id) && c.status !== 'received') c.submittedDate = submitted;
+      if (c && !batchSelected.has(c.id) && c.status !== 'received' && c.status !== 'oop'){
+        c.status='submitted';c.submittedDate=submitted;
+      }
     });
   }
 
