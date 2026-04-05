@@ -245,6 +245,11 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .receipt-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:2px 5px;font-family:var(--mono);text-decoration:none;display:inline-block}
 .receipt-btn:hover{color:var(--hw)}
 .receipt-btn.has-receipt{color:var(--hw)}
+.receipt-popover{position:fixed;z-index:9999;background:var(--bg2);border:1px solid var(--border2);box-shadow:0 4px 16px rgba(0,0,0,.35);padding:10px 12px;display:flex;gap:8px;align-items:center;min-width:300px}
+.receipt-popover input{flex:1;font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:6px 9px;outline:none;min-width:0}
+.receipt-popover input:focus{border-color:var(--hw)}
+.receipt-popover-save{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--hw);color:#fff;border:none;padding:6px 12px;cursor:pointer;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
+.receipt-popover-cancel{font-family:var(--mono);font-size:11px;background:none;color:var(--text3);border:1px solid var(--border2);padding:6px 10px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em}
 .recurring-toggle{display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;user-select:none}
 .recurring-toggle input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)}
 .recurring-toggle span{font-family:var(--mono);font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
@@ -1855,6 +1860,14 @@ function attachEvents(){
     });
   });
 
+  // Receipt link buttons (no receipt attached)
+  document.querySelectorAll('.receipt-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      showReceiptPopover(parseInt(btn.dataset.id), btn);
+    });
+  });
+
   // Duplicate buttons
   document.querySelectorAll('.dup-btn').forEach(btn=>{
     btn.addEventListener('click',()=>duplicatePurchase(parseInt(btn.dataset.id)));
@@ -2867,6 +2880,78 @@ function renderReceipts() {
     </div>`;
 
   wireReceiptRows();
+}
+
+function showReceiptPopover(id, anchorBtn) {
+  // Remove any existing popover
+  const existing = document.getElementById('receipt-popover');
+  if (existing) existing.remove();
+  if (existing && existing.dataset.id === String(id)) return; // toggle off
+
+  const p = data.purchases.find(x => x.id === id);
+  if (!p) return;
+
+  const pop = document.createElement('div');
+  pop.className = 'receipt-popover';
+  pop.id = 'receipt-popover';
+  pop.dataset.id = String(id);
+
+  const input = document.createElement('input');
+  input.type = 'url';
+  input.placeholder = 'https://drive.google.com/...';
+  input.value = p.receiptUrl || '';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'receipt-popover-save';
+  saveBtn.textContent = 'Save';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'receipt-popover-cancel';
+  cancelBtn.textContent = '✕';
+
+  pop.appendChild(input);
+  pop.appendChild(saveBtn);
+  pop.appendChild(cancelBtn);
+  document.body.appendChild(pop);
+
+  // Position below the anchor button
+  const rect = anchorBtn.getBoundingClientRect();
+  let top = rect.bottom + 6;
+  let left = rect.left;
+  // Keep within viewport
+  if (left + 320 > window.innerWidth) left = window.innerWidth - 326;
+  if (top + 60 > window.innerHeight) top = rect.top - 54;
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+
+  input.focus();
+  input.select();
+
+  function doSave() {
+    const url = input.value.trim() || null;
+    snapshot();
+    p.receiptUrl = url;
+    savePurchase(p);
+    pop.remove();
+    render();
+  }
+
+  saveBtn.addEventListener('click', doSave);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSave();
+    if (e.key === 'Escape') { pop.remove(); }
+  });
+  cancelBtn.addEventListener('click', () => pop.remove());
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', function outsideClick(e) {
+      if (!pop.contains(e.target) && e.target !== anchorBtn) {
+        pop.remove();
+        document.removeEventListener('click', outsideClick);
+      }
+    });
+  }, 0);
 }
 
 function receiptRow(p) {
