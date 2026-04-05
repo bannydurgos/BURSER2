@@ -1645,12 +1645,12 @@ function renderBatchBar(){
       .map(p => p.id)
   );
   const n = [...batchSelected].filter(id => visibleIds.has(id)).length;
-  const today=todayStr();
+  const batchDefaultDate=activeLogMonth?activeLogMonth+'-01':todayStr();
   bar.innerHTML=
     '<div class="batch-bar">'
       +'<span class="batch-count">'+n+' selected</span>'
       +'<div class="batch-actions">'
-        +'<div class="batch-date-wrap"><span class="batch-date-label">Date:</span><input type="date" class="batch-date-input" id="batchDate" value="'+today+'"></div>'
+        +'<div class="batch-date-wrap"><span class="batch-date-label">Date:</span><input type="date" class="batch-date-input" id="batchDate" value="'+batchDefaultDate+'"></div>'
         +'<button class="batch-btn batch-btn-submit" id="batchMarkSubmitted">Submitted</button>'
         +'<button class="batch-btn batch-btn-pending" id="batchMarkPending">Pending</button>'
         +'<button class="batch-btn batch-btn-received" id="batchMarkReceived">Received</button>'
