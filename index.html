@@ -493,6 +493,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="header-row">
       <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
       <button class="hdr-btn" id="btnRedo" disabled style="opacity:.4" title="Redo">↪ Redo</button>
+      <button class="hdr-btn" id="btnSync" title="Save all data to cloud, then reload from cloud">⟳ Sync</button>
       <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
     </div>
   </div>
@@ -3063,6 +3064,21 @@ document.getElementById('btnConfirmReset').addEventListener('click',async()=>{
 
 document.getElementById('btnUndo').addEventListener('click', doUndo);
 document.getElementById('btnRedo').addEventListener('click', doRedo);
+document.getElementById('btnSync').addEventListener('click', async () => {
+  if(!_currentUser)return;
+  const btn=document.getElementById('btnSync');
+  btn.disabled=true;btn.textContent='Syncing…';
+  try{
+    await save();
+    await loadFromFirebase();
+    render();
+    showSuccessToast('Synced with cloud');
+  }catch(e){
+    showSuccessToast('Sync failed — check connection');
+  }finally{
+    btn.disabled=false;btn.textContent='⟳ Sync';
+  }
+});
 
 // ── BUDGET MANAGER ────────────────────────────────────────
 document.getElementById('budgetMgrSave').addEventListener('click',saveBudgetMgr);
