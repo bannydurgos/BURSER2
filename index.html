@@ -13,7 +13,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, collection, getDocs, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeFirestore, persistentLocalCache, doc, collection, getDocs, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -26,7 +26,7 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = initializeFirestore(app, { localCache: persistentLocalCache() });
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -878,12 +878,10 @@ let _currentUser=null;
 async function save(){
   if(!_currentUser)return;
   const uid=_currentUser.uid;const db=window._fbDb;
-  for(const p of data.purchases){
-    await window._fbSetDoc(window._fbDoc(db,'users',uid,'purchases',String(p.id)),p);
-  }
-  for(const[key,amount] of Object.entries(data.budgets)){
-    await window._fbSetDoc(window._fbDoc(db,'users',uid,'budgets',key),{amount});
-  }
+  await Promise.all([
+    ...data.purchases.map(p=>window._fbSetDoc(window._fbDoc(db,'users',uid,'purchases',String(p.id)),p)),
+    ...Object.entries(data.budgets).map(([key,amount])=>window._fbSetDoc(window._fbDoc(db,'users',uid,'budgets',key),{amount}))
+  ]);
 }
 async function savePurchase(p){
   if(!_currentUser)return;
@@ -1000,7 +998,7 @@ function initAuth(){
         await loadFromFirebase();
         const dn=await loadDisplayName();
         document.getElementById('userEmail').textContent=dn||user.email;
-        render();switchView(activeView);
+        _navRestoring=true;render();_switchViewInternal(activeView);_navRestoring=false;replaceNav();
       }else{
         _currentUser=null;data=loadData();
         document.getElementById('userChip').style.display='none';
@@ -1058,6 +1056,22 @@ let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
 let pendingDeleteId=null;
+
+// ── BROWSER HISTORY NAV ───────────────────────────────────
+let _navRestoring=false;
+function _navState(){return{view:activeView,month:activeLogMonth,tab:activeTab};}
+function pushNav(){if(_navRestoring)return;history.pushState(_navState(),'');}
+function replaceNav(){history.replaceState(_navState(),'');}
+window.addEventListener('popstate',e=>{
+  if(!e.state)return;
+  _navRestoring=true;
+  activeView=e.state.view||'log';
+  activeLogMonth=e.state.month||currentMonthKey();
+  activeTab=(e.state.tab&&CAT_MAP[e.state.tab])?e.state.tab:(CATS[0]&&CATS[0].id)||activeTab;
+  render();
+  _switchViewInternal(activeView);
+  _navRestoring=false;
+});
 
 // ── HELPERS ───────────────────────────────────────────────
 function fmt(n){return '$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -1188,25 +1202,25 @@ function renderMonthBar(){
   function applyJump(){
     const m=String(parseInt(jumpM.value)+1).padStart(2,'0');
     const y=jumpY.value;
-    activeLogMonth=y+'-'+m;batchMode=false;batchSelected=new Set();render();
+    activeLogMonth=y+'-'+m;batchMode=false;batchSelected=new Set();render();pushNav();
   }
   jumpM.onchange=applyJump;
   jumpY.onchange=applyJump;
 }
 document.getElementById('monthToday').addEventListener('click',()=>{
-  activeLogMonth=currentMonthKey();batchMode=false;batchSelected=new Set();render();
+  activeLogMonth=currentMonthKey();batchMode=false;batchSelected=new Set();render();pushNav();
 });
 document.getElementById('monthPrev').addEventListener('click',()=>{
   const{year,month}=parseMonthKey(activeLogMonth);
   const d=new Date(year,month-1,1);
   activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  batchMode=false;batchSelected=new Set();render();
+  batchMode=false;batchSelected=new Set();render();pushNav();
 });
 document.getElementById('monthNext').addEventListener('click',()=>{
   const{year,month}=parseMonthKey(activeLogMonth);
   const d=new Date(year,month+1,1);
   activeLogMonth=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  batchMode=false;batchSelected=new Set();render();
+  batchMode=false;batchSelected=new Set();render();pushNav();
 });
 
 // ── SUMMARY ───────────────────────────────────────────────
@@ -1380,14 +1394,14 @@ function renderTabs(){
       if(e.target.classList.contains('tab-close'))return;
       clearTimeout(_t);
       const tabId=btn.dataset.tab;
-      _t=setTimeout(()=>{activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();},180);
+      _t=setTimeout(()=>{activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();},180);
     });
     btn.addEventListener('dblclick',e=>{
       if(e.target.classList.contains('tab-close'))return;
       clearTimeout(_t);
       e.stopPropagation();
       const tabId=btn.dataset.tab;
-      if(activeTab!==tabId){activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();}
+      if(activeTab!==tabId){activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();}
       const cur=document.querySelector('.tab[data-tab="'+tabId+'"]');
       if(cur)startTabRename(tabId,cur);
     });
@@ -1999,7 +2013,7 @@ function renderHistory(){
 }
 
 // ── VIEW TOGGLE ───────────────────────────────────────────
-function switchView(v){
+function _switchViewInternal(v){
   activeView=v;sessionStorage.setItem('activeView',v);
   const isLog=v==='log',isHist=v==='history',isRec=v==='receipts';
   document.getElementById('logView').style.display=isLog?'block':'none';
@@ -2013,6 +2027,7 @@ function switchView(v){
   if(isHist)renderHistory();
   if(isRec)renderReceipts();
 }
+function switchView(v){_switchViewInternal(v);pushNav();}
 document.getElementById('btnViewLog').addEventListener('click',()=>switchView('log'));
 document.getElementById('btnViewHistory').addEventListener('click',()=>switchView('history'));
 document.getElementById('btnViewReceipts').addEventListener('click',()=>switchView('receipts'));
@@ -2204,6 +2219,7 @@ function saveAdd(){
 
   // Always add the base entry
   snapshot();
+  const startId=data.nextId;
   data.purchases.push(makeEntry(purchaseDate));
 
   // If recurring, generate and add future entries
@@ -2213,7 +2229,8 @@ function saveAdd(){
   }
 
   activeLogMonth=mk;activeTab=selectedCat;
-  save();closeAdd();render();
+  data.purchases.filter(p=>p.id>=startId).forEach(p=>savePurchase(p));
+  closeAdd();render();
   if(CAT_MAP[selectedCat].hasBudget)scheduleRolloverCheck(selectedCat,mk);
 }
 
@@ -2289,12 +2306,14 @@ function saveEdit(){
   p.expectedDate=(status==='pending'||status==='oop')?null:(expectedDate||p.expectedDate||null);
   p.receivedDate=status==='received'?(receivedDate||p.receivedDate||todayStr()):null;
   // Propagate submitted date across the rollover chain
+  const chainToSave=[p];
   if (p.submittedDate && (p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id))) {
     rolloverChain(p).forEach(c => {
-      if (c.id !== p.id && c.status !== 'received') c.submittedDate = p.submittedDate;
+      if (c.id !== p.id && c.status !== 'received'){c.submittedDate = p.submittedDate;chainToSave.push(c);}
     });
   }
-  save();closeEdit();render();
+  chainToSave.forEach(c=>savePurchase(c));
+  closeEdit();render();
   scheduleRolloverCheck(oldCat,oldMk);
   if(getMonthKey(date)!==oldMk||p.cat!==oldCat)scheduleRolloverCheck(p.cat,getMonthKey(date));
 }
@@ -2847,7 +2866,7 @@ function wireReceiptRows() {
       const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
       const url = row.querySelector('.receipt-url-input').value.trim() || null;
       snapshot();p.receiptUrl = url;
-      save();
+      savePurchase(p);
       // Update the link area in place — no full re-render
       const linkArea = row.querySelector('.receipt-link-area');
       linkArea.innerHTML = url
