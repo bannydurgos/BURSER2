@@ -1104,7 +1104,7 @@ function allUsedMonths(){
   return[...new Set(data.purchases.map(p=>getPurchaseMonth(p)).filter(Boolean))].sort().reverse();
 }
 function getBudget(catId,mk){return data.budgets[catId+':'+mk]||0;}
-function setBudget(catId,mk,val){data.budgets[catId+':'+mk]=val;save();}
+function setBudget(catId,mk,val){data.budgets[catId+':'+mk]=val;}
 // For rollover entries, use rolloverMonth to determine which month they belong to
 function getPurchaseMonth(p){return p.isRollover&&p.rolloverMonth?p.rolloverMonth:getMonthKey(p.date);}
 
@@ -1689,9 +1689,11 @@ function renderBatchBar(){
   document.getElementById('batchExpense').addEventListener('click',()=>{
     openExpenseReport([...batchSelected]);
   });
-  document.getElementById('batchDelete').addEventListener('click',()=>{
+  document.getElementById('batchDelete').addEventListener('click',async()=>{
+    const toDelete=[...batchSelected];
     snapshot();data.purchases=data.purchases.filter(p=>!batchSelected.has(p.id));
-    save();batchMode=false;batchSelected=new Set();render();
+    batchMode=false;batchSelected=new Set();render();
+    for(const id of toDelete)await deletePurchaseFromDb(id);
   });
 }
 
@@ -1955,6 +1957,7 @@ function saveBudgetMgr(){
     const v=inp.value===''?0:parseFloat(inp.value);
     if(!isNaN(v)&&v>=0)setBudget(budgetMgrCatId,mk,v);
   });
+  save();
   document.getElementById('budgetMgrOverlay').classList.remove('open');
   render();
   for(let m=1;m<=12;m++)scheduleRolloverCheck(budgetMgrCatId,year+'-'+String(m).padStart(2,'0'));
