@@ -2243,7 +2243,7 @@ async function saveAdd(){
   activeLogMonth=mk;activeTab=selectedCat;
   closeAdd();render();
   if(CAT_MAP[selectedCat].hasBudget)scheduleRolloverCheck(selectedCat,mk);
-  Promise.all(data.purchases.filter(p=>p.id>=startId).map(p=>savePurchase(p)));
+  await Promise.all(data.purchases.filter(p=>p.id>=startId).map(p=>savePurchase(p)));
 }
 
 document.getElementById('fab').addEventListener('click',openAdd);
