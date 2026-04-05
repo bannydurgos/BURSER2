@@ -494,7 +494,10 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="header-row">
       <button class="hdr-btn" id="btnUndo" disabled style="opacity:.4" title="Undo">↩ Undo</button>
       <button class="hdr-btn" id="btnRedo" disabled style="opacity:.4" title="Redo">↪ Redo</button>
+      <button class="hdr-btn" id="btnSaveAs" title="Export data as JSON">Save As</button>
+      <button class="hdr-btn" id="btnLoadSave" title="Import data from JSON">Load Save</button>
 <button class="hdr-btn" id="btnReset" style="color:var(--red-text);border-color:var(--red-text)">Reset</button>
+<input type="file" id="importFileInput" accept=".json" style="display:none">
     </div>
   </div>
 </header>
@@ -758,6 +761,18 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
     <div class="popout-actions" style="justify-content:center">
       <button class="btn-cancel" id="btnCancelReset">Cancel</button>
       <button class="btn-save" id="btnConfirmReset" style="background:var(--red-text);flex:none;padding:10px 24px">Wipe everything</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD SAVE CONFIRM MODAL -->
+<div class="edit-overlay" id="loadSaveOverlay">
+  <div class="edit-modal" style="width:360px;text-align:center">
+    <h3 style="text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Load Save</h3>
+    <p style="font-family:var(--mono);font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:20px">This will replace all current data with the contents of the selected file. This cannot be undone.</p>
+    <div class="popout-actions" style="justify-content:center">
+      <button class="btn-cancel" id="btnCancelLoadSave">Cancel</button>
+      <button class="btn-save" id="btnConfirmLoadSave">Load file</button>
     </div>
   </div>
 </div>
@@ -3086,6 +3101,102 @@ document.getElementById('budgetMgrFill').addEventListener('click',()=>{
 });
 
 
+
+// ── SAVE AS / LOAD SAVE ───────────────────────────────────
+document.getElementById('btnSaveAs').addEventListener('click', () => {
+  const exportObj = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    cats: CATS,
+    purchases: data.purchases,
+    budgets: data.budgets,
+    nextId: data.nextId,
+    answeredRollovers: data.answeredRollovers
+  };
+  const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'burser-save-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+let _pendingImportData = null;
+document.getElementById('btnLoadSave').addEventListener('click', () => {
+  document.getElementById('importFileInput').value = '';
+  document.getElementById('importFileInput').click();
+});
+document.getElementById('importFileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      _pendingImportData = JSON.parse(e.target.result);
+      if (!_pendingImportData.purchases || !_pendingImportData.budgets) {
+        alert('Invalid save file format.');
+        _pendingImportData = null;
+        return;
+      }
+      document.getElementById('loadSaveOverlay').classList.add('open');
+    } catch(err) {
+      alert('Could not read file: ' + err.message);
+      _pendingImportData = null;
+    }
+  };
+  reader.readAsText(file);
+});
+document.getElementById('btnCancelLoadSave').addEventListener('click', () => {
+  document.getElementById('loadSaveOverlay').classList.remove('open');
+  _pendingImportData = null;
+});
+document.getElementById('loadSaveOverlay').addEventListener('click', function(e) {
+  if (e.target === this) { this.classList.remove('open'); _pendingImportData = null; }
+});
+document.getElementById('btnConfirmLoadSave').addEventListener('click', async () => {
+  if (!_pendingImportData) return;
+  const imp = _pendingImportData;
+  _pendingImportData = null;
+  document.getElementById('loadSaveOverlay').classList.remove('open');
+
+  // Clear Firebase first if logged in
+  if (_currentUser) {
+    const uid = _currentUser.uid;
+    const db = window._fbDb;
+    const [ps, bs] = await Promise.all([
+      window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
+      window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets'))
+    ]);
+    await Promise.all([...ps.docs, ...bs.docs].map(d => window._fbDeleteDoc(d.ref)));
+  }
+
+  // Load imported data
+  data = {
+    purchases: imp.purchases || [],
+    budgets: imp.budgets || {},
+    nextId: imp.nextId || 1,
+    answeredRollovers: imp.answeredRollovers || []
+  };
+  if (imp.cats && Array.isArray(imp.cats) && imp.cats.length) {
+    CATS = imp.cats;
+    rebuildCatMap();
+    if (_currentUser) await saveCats();
+  }
+
+  rolloverQueue = []; rolloverActive = false;
+  answeredIds = new Set(data.answeredRollovers || []);
+  batchMode = false; batchSelected = new Set();
+
+  // Persist to Firebase
+  if (_currentUser) await save();
+
+  render();
+  const t = document.getElementById('successToast');
+  t.textContent = 'Save loaded successfully';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+});
 
 // ── RENDER ────────────────────────────────────────────────
 function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();sessionStorage.setItem('activeLogMonth',activeLogMonth);sessionStorage.setItem('activeTab',activeTab);}
