@@ -13,7 +13,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { initializeFirestore, persistentLocalCache, doc, collection, getDocs, getDoc, getDocsFromServer, getDocFromServer, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeFirestore, persistentLocalCache, doc, collection, getDocs, getDoc, getDocsFromServer, getDocFromServer, setDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -43,6 +43,7 @@
   window._fbSetDoc = setDoc;
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
+  window._fbWriteBatch = () => writeBatch(db);
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -881,10 +882,16 @@ let _currentUser=null;
 async function save(){
   if(!_currentUser)return;
   const uid=_currentUser.uid;const db=window._fbDb;
-  await Promise.all([
-    ...data.purchases.map(p=>window._fbSetDoc(window._fbDoc(db,'users',uid,'purchases',String(p.id)),p)),
-    ...Object.entries(data.budgets).map(([key,amount])=>window._fbSetDoc(window._fbDoc(db,'users',uid,'budgets',key),{amount}))
-  ]);
+  const ops=[
+    ...data.purchases.map(p=>({ref:window._fbDoc(db,'users',uid,'purchases',String(p.id)),data:p})),
+    ...Object.entries(data.budgets).map(([key,amount])=>({ref:window._fbDoc(db,'users',uid,'budgets',key),data:{amount}}))
+  ];
+  // Firestore batches are capped at 500 ops each
+  for(let i=0;i<ops.length;i+=500){
+    const batch=window._fbWriteBatch();
+    ops.slice(i,i+500).forEach(op=>batch.set(op.ref,op.data));
+    await batch.commit();
+  }
 }
 async function savePurchase(p){
   if(!_currentUser)return;
@@ -3068,13 +3075,15 @@ document.getElementById('btnSync').addEventListener('click', async () => {
   if(!_currentUser)return;
   const btn=document.getElementById('btnSync');
   btn.disabled=true;btn.textContent='Syncing…';
+  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),15000));
   try{
-    await save();
-    await loadFromFirebase();
-    render();
+    await Promise.race([
+      (async()=>{ await save(); await loadFromFirebase(); render(); })(),
+      timeout
+    ]);
     showSuccessToast('Synced with cloud');
   }catch(e){
-    showSuccessToast('Sync failed — check connection');
+    showSuccessToast(e.message==='timeout'?'Sync timed out — check connection':'Sync failed — check connection');
   }finally{
     btn.disabled=false;btn.textContent='⟳ Sync';
   }
