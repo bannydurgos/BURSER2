@@ -2174,7 +2174,7 @@ function openAdd(){
   selectedCat=CAT_MAP[activeTab]?activeTab:CATS[0].id;
   renderCatGrid();
   const defaultDate=activeLogMonth?activeLogMonth+'-01':todayStr();
-  document.getElementById('f-serviceDate').value='';
+  document.getElementById('f-serviceDate').value=defaultDate;
   document.getElementById('f-purchaseDate').value=defaultDate;
   document.getElementById('f-monthDisplay').style.display='none';
   document.getElementById('f-desc').value='';
