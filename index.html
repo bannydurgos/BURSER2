@@ -1989,7 +1989,8 @@ function renderHistory(){
   const byYear={};
   used.forEach(mk=>{const yr=mk.slice(0,4);if(!byYear[yr])byYear[yr]=[];byYear[yr].push(mk);});
   const years=Object.keys(byYear).sort().reverse();
-  el.innerHTML=years.map(yr=>{
+  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px"><button class="hdr-btn" onclick="expandAllHistory()">Expand All</button><button class="hdr-btn" onclick="collapseAllHistory()">Collapse All</button></div>'
+    +years.map(yr=>{
     const yCol=!!historyCollapsed.years[yr];
     const monthsHtml=byYear[yr].map(mk=>{
       const mp=data.purchases.filter(p=>getPurchaseMonth(p)===mk);
@@ -2040,6 +2041,27 @@ function renderHistory(){
       +'<div class="history-year-body"'+(yCol?' style="display:none"':'')+'>'+monthsHtml+'</div>'
     +'</div>';
   }).join('');
+}
+
+function expandAllHistory(){
+  historyCollapsed={years:{},months:{},cats:{}};
+  saveCollapseState();renderHistory();
+}
+function collapseAllHistory(){
+  document.querySelectorAll('.history-year-header').forEach(h=>{historyCollapsed.years[h.dataset.year]=true;});
+  document.querySelectorAll('.history-month-header').forEach(h=>{historyCollapsed.months[h.dataset.month]=true;});
+  document.querySelectorAll('#historyContent .history-cat-label[data-cat]').forEach(h=>{historyCollapsed.cats[h.dataset.cat]=true;});
+  saveCollapseState();renderHistory();
+}
+function expandAllReceipts(){
+  receiptsCollapsed={cats:{},years:{},months:{}};
+  saveCollapseState();renderReceipts();
+}
+function collapseAllReceipts(){
+  document.querySelectorAll('.receipts-year-hdr').forEach(h=>{receiptsCollapsed.years[h.dataset.ryk]=true;});
+  document.querySelectorAll('.receipts-month-hdr').forEach(h=>{receiptsCollapsed.months[h.dataset.rmk]=true;});
+  document.querySelectorAll('#receiptsContent .history-cat-label[data-rcat]').forEach(h=>{receiptsCollapsed.cats[h.dataset.rcat]=true;});
+  saveCollapseState();renderReceipts();
 }
 
 // ── VIEW TOGGLE ───────────────────────────────────────────
@@ -2172,13 +2194,13 @@ function updateCatBtns(){
 function openAdd(){
   selectedCat=CAT_MAP[activeTab]?activeTab:CATS[0].id;
   renderCatGrid();
-  const defaultDate=activeLogMonth?activeLogMonth+'-01':todayStr();
+  const defaultDate=activeView==='log'&&activeLogMonth?activeLogMonth+'-01':todayStr();
   document.getElementById('f-serviceDate').value=defaultDate;
   document.getElementById('f-purchaseDate').value=defaultDate;
   document.getElementById('f-monthDisplay').style.display='none';
   document.getElementById('f-desc').value='';
   document.getElementById('f-amount').value='';
-  document.getElementById('f-expected').value='';
+  document.getElementById('f-expected').value=defaultDate;
   document.getElementById('f-payment').value='';
   document.getElementById('f-vendor').value='';
   document.getElementById('f-payment').value='';
@@ -2588,7 +2610,7 @@ let datePickerCallback = null;
 function openDatePicker(title, callback, defaultDate) {
   datePickerCallback = callback;
   document.getElementById('datePickerTitle').textContent = title;
-  document.getElementById('datePickerInput').value = defaultDate || todayStr();
+  document.getElementById('datePickerInput').value = defaultDate || (activeView==='log'&&activeLogMonth ? activeLogMonth+'-01' : todayStr());
   document.getElementById('datePickerOverlay').classList.add('open');
 }
 
@@ -2832,8 +2854,14 @@ function renderReceipts() {
 
   el.innerHTML = `
     <div style="max-width:560px;margin:0 auto">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:16px;line-height:1.6">
-        ${withCount} of ${purchases.length} purchases have receipt links.
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.6">
+          ${withCount} of ${purchases.length} purchases have receipt links.
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="hdr-btn" onclick="expandAllReceipts()">Expand All</button>
+          <button class="hdr-btn" onclick="collapseAllReceipts()">Collapse All</button>
+        </div>
       </div>
       ${sections}
     </div>`;
