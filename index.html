@@ -13,7 +13,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { initializeFirestore, persistentLocalCache, doc, collection, getDocs, getDoc, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeFirestore, persistentLocalCache, doc, collection, getDocs, getDoc, getDocsFromServer, getDocFromServer, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -38,6 +38,8 @@
   window._fbDoc = doc;
   window._fbCollection = collection;
   window._fbGetDocs = getDocs;
+  window._fbGetDocsFromServer = getDocsFromServer;
+  window._fbGetDocFromServer = getDocFromServer;
   window._fbSetDoc = setDoc;
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
@@ -895,9 +897,9 @@ async function loadFromFirebase(){
   if(!_currentUser)return;
   const uid=_currentUser.uid;const db=window._fbDb;
   const[ps,bs,userSnap]=await Promise.all([
-    window._fbGetDocs(window._fbCollection(db,'users',uid,'purchases')),
-    window._fbGetDocs(window._fbCollection(db,'users',uid,'budgets')),
-    window._fbGetDoc(window._fbDoc(db,'users',uid))
+    window._fbGetDocsFromServer(window._fbCollection(db,'users',uid,'purchases')),
+    window._fbGetDocsFromServer(window._fbCollection(db,'users',uid,'budgets')),
+    window._fbGetDocFromServer(window._fbDoc(db,'users',uid))
   ]);
   const purchases=ps.docs.map(d=>d.data());
   const budgets={};bs.docs.forEach(d=>{budgets[d.id]=d.data().amount;});
