@@ -2189,7 +2189,8 @@ function openAdd(){
   document.getElementById('addErrorMsg').textContent='';
   updateAddFields();
   document.getElementById('addOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('f-purchaseDate').focus(),300);
+  const focusField=(selectedCat==='mh'||selectedCat==='tr')?'f-serviceDate':'f-purchaseDate';
+  setTimeout(()=>document.getElementById(focusField).focus(),300);
 }
 function closeAdd(){document.getElementById('addOverlay').classList.remove('open');}
 
