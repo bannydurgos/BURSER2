@@ -1664,11 +1664,20 @@ function renderBatchBar(){
   document.getElementById('batchMarkSubmitted').addEventListener('click',()=>{
     const date=document.getElementById('batchDate').value||todayStr();
     snapshot();
-    const affected=[];
+    const affectedIds=new Set();
     batchSelected.forEach(id=>{
       const p=data.purchases.find(x=>x.id===id);
-      if(p){p.status='submitted';p.submittedDate=date;affected.push(p);}
+      if(p){
+        p.status='submitted';p.submittedDate=date;affectedIds.add(p.id);
+        const isChained=p.isRollover||data.purchases.some(x=>x.rolloverSourceId===p.id);
+        if(isChained){
+          rolloverChain(p).forEach(c=>{
+            if(c.id!==p.id&&c.status!=='received'){c.submittedDate=date;affectedIds.add(c.id);}
+          });
+        }
+      }
     });
+    const affected=[...affectedIds].map(id=>data.purchases.find(x=>x.id===id)).filter(Boolean);
     Promise.all(affected.map(p=>savePurchase(p)));batchMode=false;batchSelected=new Set();render();
   });
   document.getElementById('batchMarkPending').addEventListener('click',()=>{
