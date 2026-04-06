@@ -200,10 +200,10 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 .batch-btn-cancel{background:none;border:1px solid var(--border2);color:var(--text2)}.batch-btn-cancel:hover{background:var(--bg4)}
 
 /* TABLE */
-.table-wrap{background:var(--bg2);border:1px solid var(--border2);overflow:hidden}
+.table-wrap{background:var(--bg2);border:1px solid var(--border2);overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:9px 12px;color:var(--text3);font-family:var(--mono);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border2);background:var(--bg3)}
-td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+th{text-align:left;padding:9px 12px;color:var(--text3);font-family:var(--mono);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
 .receipt-row{cursor:pointer}
@@ -225,8 +225,9 @@ tr:hover td{background:var(--bg3)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)}
 td.check-cell{width:36px;text-align:center;padding:10px 4px 10px 12px}
 th.check-cell{width:36px;padding:9px 4px 9px 12px}
-.date-sub{display:block;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.02em}
-.date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px}
+.date-sub{display:block;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.02em;white-space:nowrap}
+.date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px;white-space:nowrap}
+td.col-subrcv{min-width:150px}
 .reimb-hint{font-family:var(--mono);font-size:10px;color:var(--hw);display:block;margin-top:2px}
 .rollover-desc{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em}
 .rollover-desc-link{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-align:left}
@@ -259,7 +260,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .recurring-fields{background:var(--bg3);border:1px solid var(--border);padding:10px;margin-bottom:10px}
 
 /* HISTORY */
-.history-view{display:none}.history-view.active{display:block}
+.history-view{display:none}.history-view.active{display:block;width:fit-content;min-width:0;margin:0 auto}
 .history-year-block{margin-bottom:20px}
 .history-year-header{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;border-bottom:3px solid var(--text);margin-bottom:16px;user-select:none}
 .history-year-title{font-family:var(--mono);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -268,9 +269,9 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .history-toggle-year{font-size:13px;color:var(--text);font-weight:700}
 .history-toggle-month{font-size:11px;color:var(--text2);font-weight:600}
 .history-toggle-cat{font-size:9px;color:var(--text3);font-weight:400}
-.history-year-body{padding-left:14px}
-.history-month-body{padding-left:14px}
-.history-month-block{margin-bottom:4px}
+.history-year-body{padding-left:0}
+.history-month-body{padding-left:0}
+.history-month-block{margin-bottom:12px}
 .history-month-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;padding:2px 0;cursor:pointer;user-select:none}
 .history-month-title{font-family:var(--mono);font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .history-chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -1586,8 +1587,8 @@ function makeRows(rows,emptyMsg,showReimb){
       +'</div></td>'
       +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
       +reimbCell
-      +'<td>'+statusBadge(p.status)+'</td>'
       +'<td class="col-subrcv" style="font-size:12px;color:var(--text2)">'+dateCellContent+'</td>'
+      +'<td>'+statusBadge(p.status)+'</td>'
       +'<td style="white-space:nowrap">'
         +(batchMode?'':'<button class="mark-btn" data-id="'+p.id+'" style="display:none">x</button>')
         +'<button class="edit-btn" data-id="'+p.id+'" title="Edit">✎</button>'
@@ -1649,8 +1650,8 @@ function makeRowsFull(rows,emptyMsg,showReimb){
       +'<td><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span></div></td>'
       +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
       +reimbCell
-      +'<td>'+statusBadge(p.status)+'</td>'
       +'<td class="col-subrcv" style="font-size:12px;color:var(--text2)">'+dateCellContent+'</td>'
+      +'<td>'+statusBadge(p.status)+'</td>'
       +'<td>'
         +'<div class="action-cell">'
           +'<div class="action-grid">'
@@ -1794,7 +1795,7 @@ function renderBudgetPanel(cat){
     +'</div>'
   :'')
   +'<div class="table-wrap"><table>'
-    +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th class="col-reimb">Reimb.</th><th>Status</th><th class="col-subrcv">Dates</th><th></th></tr></thead>'
+    +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th class="col-reimb">Reimb.</th><th class="col-subrcv">Dates</th><th>Status</th><th></th></tr></thead>'
     +'<tbody>'+makeRowsFull(rows,null,true)+'</tbody>'
   +'</table></div>';
 }
@@ -1809,7 +1810,7 @@ function renderTravelPanel(cat){
     +'</div>'
   +'</div>'
   +'<div class="table-wrap"><table>'
-    +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th class="col-subrcv">Dates</th><th></th></tr></thead>'
+    +'<thead><tr>'+checkTh+'<th class="col-date">Date</th><th>Description</th><th>Amount</th><th class="col-subrcv">Dates</th><th>Status</th><th></th></tr></thead>'
     +'<tbody>'+makeRowsFull(mp,'No purchases for '+monthLabel(activeLogMonth)+' — hit + to add one.',false)+'</tbody>'
   +'</table></div>';
 }
@@ -2053,9 +2054,9 @@ function renderHistory(){
     +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
     +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
     +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
-    +(historyStatusFilter||historyCatFilter||historyMonthFilter||historyYearFilter?'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>':'')
+    +'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>'
     +'</div>'
-    +'<div style="max-width:580px;margin:0 auto">'
+    +'<div>'
     +years.map(yr=>{
     const yCol=!!historyCollapsed.years[yr];
     const monthsHtml=byYear[yr].filter(mk=>!historyMonthFilter||mk.slice(5,7)===historyMonthFilter).map(mk=>{
@@ -2073,7 +2074,7 @@ function renderHistory(){
         return'<div class="history-cat-section">'
           +'<div class="history-cat-label" data-cat="'+ck+'" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat'+(cCol?' collapsed':'')+'">▼</span><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</span>'+chip+'</div>'
           +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table>'
-            +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Dates</th></tr></thead>'
+            +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Dates</th><th>Status</th></tr></thead>'
             +'<tbody>'+rows.map(p=>{
               const days=daysBetween(p.submittedDate,p.receivedDate);
               const daysStr=days!==null?' ('+days+'d)':'';
@@ -2084,8 +2085,8 @@ function renderHistory(){
                 +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
                 +'<td>'+desc+'</td>'
                 +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
-                +'<td>'+statusBadge(p.status)+'</td>'
                 +'<td style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
+                +'<td>'+statusBadge(p.status)+'</td>'
               +'</tr>';
             }).join('')+'</tbody>'
           +'</table></div></div>'
@@ -2130,7 +2131,8 @@ function filterHistoryByStatus(status){
 }
 function clearHistoryFilters(){
   historyStatusFilter=null;historyCatFilter=null;historyMonthFilter=null;historyYearFilter=null;
-  renderHistory();
+  historyCollapsed={years:{},months:{},cats:{}};
+  saveCollapseState();renderHistory();
 }
 function wireHistoryJump(){
   const moSel=document.getElementById('historyJumpMonth');
@@ -2981,10 +2983,9 @@ function renderReceipts() {
         <option value="">Year…</option>
         ${yearOptions}
       </select>
-      <div class="receipts-divider"></div>
-      ${receiptsStatusFilter||receiptsCatFilter||receiptsMonthFilter||receiptsYearFilter?'<button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>':''}
+      <button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>
     </div>
-    <div style="max-width:580px;margin:0 auto">
+    <div>
       ${sections}
       <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:14px;text-align:center">
         ${withCount} of ${purchases.length} purchases have receipt links.
@@ -2997,7 +2998,8 @@ function renderReceipts() {
 
 function clearReceiptsFilters(){
   receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;
-  renderReceipts();
+  receiptsCollapsed={cats:{},years:{},months:{}};
+  saveCollapseState();renderReceipts();
 }
 function wireReceiptJump() {
   const catSel = document.getElementById('receiptsJumpCat');
@@ -3123,7 +3125,7 @@ function showReceiptPopover(id, anchorBtn) {
 
 function receiptRow(p) {
   const hasLink = !!p.receiptUrl;
-  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
+  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:nowrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${p.date} · ${fmt(p.amount)}</div>
