@@ -2992,6 +2992,7 @@ function receiptRow(p) {
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${p.date} · ${fmt(p.amount)}</div>
     </div>
+    <div style="flex-shrink:0">${statusBadge(p.status)}</div>
     <div class="receipt-link-area" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       ${hasLink
         ? `<a href="${p.receiptUrl}" target="_blank" class="receipt-view-btn" data-id="${p.id}"
