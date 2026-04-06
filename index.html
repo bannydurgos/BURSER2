@@ -260,7 +260,7 @@ td.col-subrcv{min-width:150px}
 .recurring-fields{background:var(--bg3);border:1px solid var(--border);padding:10px;margin-bottom:10px}
 
 /* HISTORY */
-.history-view{display:none}.history-view.active{display:block;width:fit-content;min-width:0;margin:0 auto}
+.history-view{display:none}.history-view.active{display:block;width:fit-content;max-width:100%;min-width:0;margin:0 auto}
 .history-year-block{margin-bottom:20px}
 .history-year-header{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;border-bottom:3px solid var(--text);margin-bottom:16px;user-select:none}
 .history-year-title{font-family:var(--mono);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -435,7 +435,8 @@ td.col-subrcv{min-width:150px}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
-  .receipts-controls{justify-content:flex-start}
+  .receipts-controls{justify-content:flex-start;flex-wrap:wrap}
+  .history-view.active{width:100%;max-width:100%}
 }
 /* AUTH */
 #authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:none;align-items:center;justify-content:center}
