@@ -278,6 +278,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .chip-hw{background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
+.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
+.receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
 .history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .cat-dot{width:6px;height:6px;display:inline-block;flex-shrink:0}
@@ -432,6 +434,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
+  .receipts-controls{justify-content:flex-start}
 }
 /* AUTH */
 #authOverlay{position:fixed;inset:0;background:var(--bg);z-index:999;display:none;align-items:center;justify-content:center}
@@ -925,7 +928,7 @@ async function loadFromFirebase(){
   answeredIds=new Set();
   if(userSnap.exists()&&userSnap.data().cats&&userSnap.data().cats.length){
     CATS=userSnap.data().cats;
-    CATS.forEach(c=>{if(c.id==='mh'&&(c.color==='#c44b73'||c.color==='#8b6cc4'))c.color='#6b2fa0';});
+    CATS.forEach(c=>{if(c.id==='mh'&&(c.color==='#c44b73'||c.color==='#8b6cc4'))c.color='#6b2fa0';if(c.id==='hw'&&c.label==='Health & wellness')c.label='Health & Wellness';});
     rebuildCatMap();
     if(!CAT_MAP[activeTab])activeTab=CATS[0].id;
   }
@@ -1075,6 +1078,7 @@ let activeTab=sessionStorage.getItem('activeTab')||CATS[0].id;
 let activeView=sessionStorage.getItem('activeView')||'log';
 let historyCollapsed=JSON.parse(sessionStorage.getItem('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
 let receiptsCollapsed=JSON.parse(sessionStorage.getItem('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
+let receiptsStatusFilter=null;
 function saveCollapseState(){sessionStorage.setItem('historyCollapsed',JSON.stringify(historyCollapsed));sessionStorage.setItem('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
 let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
@@ -2097,6 +2101,10 @@ function collapseAllHistory(){
   document.querySelectorAll('#historyContent .history-cat-label[data-cat]').forEach(h=>{historyCollapsed.cats[h.dataset.cat]=true;});
   saveCollapseState();renderHistory();
 }
+function toggleAllReceipts(){
+  const anyCollapsed=Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean);
+  if(anyCollapsed)expandAllReceipts();else collapseAllReceipts();
+}
 function expandAllReceipts(){
   receiptsCollapsed={cats:{},years:{},months:{}};
   saveCollapseState();renderReceipts();
@@ -2132,6 +2140,7 @@ document.getElementById('historyContent').addEventListener('dblclick',e=>{
   if(row)navigateToTransaction(+row.dataset.id);
 });
 document.getElementById('receiptsContent').addEventListener('dblclick',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){e.target.select();return;}
   const row=e.target.closest('.receipt-row[data-id]');
   if(row)navigateToTransaction(+row.dataset.id);
 });
@@ -2850,7 +2859,7 @@ function renderReceipts() {
     const rows = purchases.filter(p => p.cat === cat.id);
     if (!rows.length) return '';
     const catCol = !!receiptsCollapsed.cats[cat.id];
-    const count = `<span style="font-weight:400;color:var(--text3)">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>`;
+    const count = `<span id="receiptsCatCount-${cat.id}" style="font-weight:400;color:var(--text3)">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>`;
     // group by year then month
     const byYear = {};
     rows.forEach(p => {
@@ -2865,7 +2874,9 @@ function renderReceipts() {
       const monthsHtml = Object.keys(byYear[yr]).sort().reverse().map(mk => {
         const mkKey = cat.id+':'+mk;
         const mkCol = !!receiptsCollapsed.months[mkKey];
-        const mRows = byYear[yr][mk].sort((a,b) => b.date.localeCompare(a.date));
+        const mRows = byYear[yr][mk]
+          .filter(p => !receiptsStatusFilter || (p.status||'').toLowerCase() === receiptsStatusFilter)
+          .sort((a,b) => b.date.localeCompare(a.date));
         return `<div style="margin-bottom:4px">
           <div class="receipts-month-hdr" data-rmk="${mkKey}" style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;user-select:none">
             <span class="history-toggle history-toggle-month${mkCol?' collapsed':''}">▼</span>
@@ -2896,21 +2907,159 @@ function renderReceipts() {
     </div>`;
   }).join('');
 
+  const catOptions = CATS
+    .filter(cat => purchases.some(p => p.cat === cat.id))
+    .map(cat => `<option value="${cat.id}">${cat.label}</option>`)
+    .join('');
+
   el.innerHTML = `
-    <div style="max-width:560px;margin:0 auto">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.6">
-          ${withCount} of ${purchases.length} purchases have receipt links.
-        </div>
-        <div style="display:flex;gap:6px">
-          <button class="hdr-btn" onclick="expandAllReceipts()">Expand All</button>
-          <button class="hdr-btn" onclick="collapseAllReceipts()">Collapse All</button>
-        </div>
+    <div style="max-width:860px;margin:0 auto">
+      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:10px;text-align:center">
+        ${withCount} of ${purchases.length} purchases have receipt links.
+      </div>
+      <div class="receipts-controls">
+        <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
+        <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
+        <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
+        <div class="receipts-divider"></div>
+        <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px">
+          <option value="">Category…</option>
+          ${catOptions}
+        </select>
+        <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px">
+          <option value="">Month…</option>
+        </select>
+        <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px">
+          <option value="">Year…</option>
+        </select>
+        <button class="hdr-btn" id="receiptsJumpBtn">Go ↓</button>
+        <div class="receipts-divider"></div>
+        <button class="hdr-btn" id="receiptsExpandToggle" title="${Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean)?'Expand all':'Collapse all'}" style="font-size:13px;padding:3px 9px">${Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean)?'▼':'▲'}</button>
       </div>
       ${sections}
     </div>`;
 
   wireReceiptRows();
+  wireReceiptJump();
+}
+
+function updateReceiptsJumpMonths() {
+  const catSel = document.getElementById('receiptsJumpCat');
+  const monthSel = document.getElementById('receiptsJumpMonth');
+  if (!catSel || !monthSel) return;
+  const catId = catSel.value;
+  const purchases = data.purchases.filter(p => !p.isRollover);
+  const months = new Set();
+  purchases.forEach(p => {
+    const mk = getMonthKey(p.date);
+    if (!catId || p.cat === catId) months.add(mk.slice(5, 7));
+  });
+  const prev = monthSel.value;
+  const sorted = [...months].filter(Boolean).sort();
+  monthSel.innerHTML = '<option value="">Month…</option>' +
+    sorted.map(m => `<option value="${m}"${m === prev ? ' selected' : ''}>${MF[parseInt(m) - 1]}</option>`).join('');
+  updateReceiptsJumpYears();
+}
+
+function updateReceiptsJumpYears() {
+  const catSel = document.getElementById('receiptsJumpCat');
+  const monthSel = document.getElementById('receiptsJumpMonth');
+  const yearSel = document.getElementById('receiptsJumpYear');
+  if (!catSel || !monthSel || !yearSel) return;
+  const catId = catSel.value;
+  const mo = monthSel.value;
+  const purchases = data.purchases.filter(p => !p.isRollover);
+  const years = new Set();
+  purchases.forEach(p => {
+    const mk = getMonthKey(p.date);
+    if ((!catId || p.cat === catId) && (!mo || mk.slice(5, 7) === mo)) years.add(mk.slice(0, 4));
+  });
+  const prev = yearSel.value;
+  const sorted = [...years].filter(Boolean).sort().reverse();
+  yearSel.innerHTML = '<option value="">Year…</option>' +
+    sorted.map(yr => `<option value="${yr}"${yr === prev ? ' selected' : ''}>${yr}</option>`).join('');
+}
+
+function jumpToReceiptsSection() {
+  const catId = document.getElementById('receiptsJumpCat').value;
+  const yr = document.getElementById('receiptsJumpYear').value;
+  const mo = document.getElementById('receiptsJumpMonth').value;
+  if (!catId || !yr || !mo) return;
+  const mk = yr + '-' + mo;
+  const yrKey = catId + ':' + yr;
+  const mkKey = catId + ':' + mk;
+  // Collapse everything, then expand only the target path
+  const purchases = data.purchases.filter(p => !p.isRollover);
+  receiptsCollapsed.cats = {};
+  receiptsCollapsed.years = {};
+  receiptsCollapsed.months = {};
+  CATS.forEach(cat => { receiptsCollapsed.cats[cat.id] = true; });
+  purchases.forEach(p => {
+    const pmk = getMonthKey(p.date);
+    const pyr = pmk.slice(0, 4);
+    receiptsCollapsed.years[p.cat + ':' + pyr] = true;
+    receiptsCollapsed.months[p.cat + ':' + pmk] = true;
+  });
+  delete receiptsCollapsed.cats[catId];
+  delete receiptsCollapsed.years[yrKey];
+  delete receiptsCollapsed.months[mkKey];
+  saveCollapseState();
+  renderReceipts();
+  setTimeout(() => {
+    const target = document.querySelector(`[data-rmk="${mkKey}"]`);
+    if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, 50);
+}
+
+function wireReceiptJump() {
+  const catSel = document.getElementById('receiptsJumpCat');
+  const monthSel = document.getElementById('receiptsJumpMonth');
+  const yearSel = document.getElementById('receiptsJumpYear');
+  const jumpBtn = document.getElementById('receiptsJumpBtn');
+  if (!catSel || !monthSel || !yearSel || !jumpBtn) return;
+  updateReceiptsJumpMonths();
+  catSel.addEventListener('change', updateReceiptsJumpMonths);
+  monthSel.addEventListener('change', updateReceiptsJumpYears);
+  jumpBtn.addEventListener('click', jumpToReceiptsSection);
+  document.querySelectorAll('.receipts-status-btn').forEach(btn => {
+    btn.addEventListener('click', () => filterReceiptsByStatus(btn.dataset.status));
+  });
+  const expandToggle = document.getElementById('receiptsExpandToggle');
+  if (expandToggle) expandToggle.addEventListener('click', toggleAllReceipts);
+}
+
+function filterReceiptsByStatus(status) {
+  // Toggle off if clicking the active filter
+  if (receiptsStatusFilter === status) {
+    receiptsStatusFilter = null;
+    receiptsCollapsed = {cats:{}, years:{}, months:{}};
+    saveCollapseState();
+    renderReceipts();
+    return;
+  }
+  receiptsStatusFilter = status;
+  const purchases = data.purchases.filter(p => !p.isRollover);
+  // Collapse everything first
+  receiptsCollapsed.cats = {};
+  receiptsCollapsed.years = {};
+  receiptsCollapsed.months = {};
+  CATS.forEach(cat => { receiptsCollapsed.cats[cat.id] = true; });
+  purchases.forEach(p => {
+    const mk = getMonthKey(p.date);
+    if (!mk) return;
+    receiptsCollapsed.years[p.cat + ':' + mk.slice(0,4)] = true;
+    receiptsCollapsed.months[p.cat + ':' + mk] = true;
+  });
+  // Expand only sections containing a matching purchase
+  purchases.filter(p => (p.status || '').toLowerCase() === status).forEach(p => {
+    const mk = getMonthKey(p.date);
+    if (!mk) return;
+    delete receiptsCollapsed.cats[p.cat];
+    delete receiptsCollapsed.years[p.cat + ':' + mk.slice(0,4)];
+    delete receiptsCollapsed.months[p.cat + ':' + mk];
+  });
+  saveCollapseState();
+  renderReceipts();
 }
 
 function showReceiptPopover(id, anchorBtn) {
@@ -3049,6 +3198,15 @@ function wireReceiptRows() {
       const url = row.querySelector('.receipt-url-input').value.trim() || null;
       snapshot();p.receiptUrl = url;
       savePurchase(p);
+      // Update receipt counts in place
+      const all = data.purchases.filter(x => !x.isRollover);
+      const countEl = document.getElementById('receiptsLinkCount');
+      if (countEl) countEl.textContent = `${all.filter(x => x.receiptUrl).length} of ${all.length} purchases have receipt links.`;
+      const catCountEl = document.getElementById(`receiptsCatCount-${p.cat}`);
+      if (catCountEl) {
+        const catRows = all.filter(x => x.cat === p.cat);
+        catCountEl.textContent = `${catRows.filter(x => x.receiptUrl).length} of ${catRows.length} linked`;
+      }
       // Update the link area in place — no full re-render
       const linkArea = row.querySelector('.receipt-link-area');
       linkArea.innerHTML = url
