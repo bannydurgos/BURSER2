@@ -72,19 +72,19 @@
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px}
 
 /* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:2px solid var(--text);gap:10px}
+header{display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px;border-bottom:2px solid var(--text);gap:10px}
 .sticky-top{position:sticky;top:0;z-index:10;background:var(--bg)}
-.header-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.header-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end;padding:10px 0}
 .header-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.wordmark{font-family:var(--mono);font-size:32px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:10px;flex-shrink:0;text-transform:uppercase}
+.wordmark{font-family:var(--mono);font-size:32px;font-weight:600;letter-spacing:.05em;display:flex;align-items:center;gap:10px;flex-shrink:0;text-transform:uppercase;padding:10px 0}
 .wordmark-icon{width:36px;height:36px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 .hdr-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:5px 10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);cursor:pointer;white-space:nowrap;letter-spacing:.03em;text-transform:uppercase}
 .hdr-btn:hover{background:var(--text);color:var(--bg2)}
-.view-toggle{display:flex;border-bottom:2px solid var(--border2);width:100%;justify-content:center;gap:0}
-.view-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:10px 28px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text2);cursor:pointer;letter-spacing:.05em;text-transform:uppercase;margin-bottom:-2px;transition:color .15s}
+.view-toggle{display:flex;gap:0}
+.view-btn{font-family:var(--mono);font-size:11px;font-weight:500;padding:8px 20px;border:none;border-top:2px solid transparent;background:none;color:var(--text2);cursor:pointer;letter-spacing:.05em;text-transform:uppercase;transition:color .15s,border-color .15s;white-space:nowrap}
 .view-btn:hover{color:var(--text)}
-.view-btn.active{color:var(--text);border-bottom:2px solid var(--text);font-weight:600}
+.view-btn.active{color:var(--text);font-weight:600;border-top:2px solid var(--text)}
 
 /* MAIN */
 main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
@@ -204,6 +204,13 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:9px 12px;color:var(--text3);font-family:var(--mono);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border2);background:var(--bg3);white-space:nowrap}
 td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap}
+/* HISTORY TABLE — fixed layout keeps columns aligned across all category tables */
+.history-table{table-layout:fixed;width:auto}
+.history-table .col-h-date{width:100px}
+.history-table .col-h-desc{width:200px;overflow:hidden;text-overflow:ellipsis}
+.history-table .col-h-amount{width:90px}
+.history-table .col-h-dates{width:200px}
+.history-table .col-h-status{width:110px;text-align:right}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--bg3)}
 .receipt-row{cursor:pointer}
@@ -279,7 +286,7 @@ td.col-subrcv{min-width:150px}
 .chip-hw{background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
-.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-top:2px;padding-bottom:2px}
+.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-top:6px;padding-bottom:6px;position:sticky;top:var(--sticky-offset,0px);z-index:9;background:var(--bg)}
 .receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
 .history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;justify-content:space-between}
@@ -497,6 +504,12 @@ td.col-subrcv{min-width:150px}
     </div>
     Burser
   </div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btnViewLog">Log</button>
+    <button class="view-btn" id="btnViewHistory">History</button>
+    <button class="view-btn" id="btnViewReceipts">Receipts</button>
+    <button class="view-btn" id="btnViewReceivables">Receivables</button>
+  </div>
   <div class="header-right">
     <div class="header-row">
       <div id="userChip" class="user-chip" style="display:none">
@@ -513,12 +526,6 @@ td.col-subrcv{min-width:150px}
     </div>
   </div>
 </header>
-<div class="view-toggle">
-  <button class="view-btn active" id="btnViewLog">Log</button>
-  <button class="view-btn" id="btnViewHistory">History</button>
-  <button class="view-btn" id="btnViewReceipts">Receipts</button>
-  <button class="view-btn" id="btnViewReceivables">Receivables</button>
-</div>
 <div class="month-bar" id="monthBarEl">
   <div class="month-bar-left"><button class="info-btn" id="btnInfo" title="Reimbursement stats">&#9432;</button></div>
   <button class="month-nav" id="monthPrev">&#8249;</button>
@@ -2074,8 +2081,8 @@ function renderHistory(){
         const ck=mk+':'+cat.id;const cCol=!!historyCollapsed.cats[ck];
         return'<div class="history-cat-section">'
           +'<div class="history-cat-label" data-cat="'+ck+'" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat'+(cCol?' collapsed':'')+'">▼</span><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</span>'+chip+'</div>'
-          +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table>'
-            +'<thead><tr><th class="col-date">Date</th><th>Description</th><th>Amount</th><th>Dates</th><th>Status</th></tr></thead>'
+          +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table class="history-table">'
+            +'<thead><tr><th class="col-h-date">Date</th><th class="col-h-desc">Description</th><th class="col-h-amount">Amount</th><th class="col-h-dates">Submitted/Received</th><th class="col-h-status">Status</th></tr></thead>'
             +'<tbody>'+rows.map(p=>{
               const days=daysBetween(p.submittedDate,p.receivedDate);
               const daysStr=days!==null?' ('+days+'d)':'';
@@ -2083,11 +2090,11 @@ function renderHistory(){
               const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
                 +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
               return'<tr data-id="'+p.id+'" style="cursor:pointer">'
-                +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
-                +'<td>'+desc+'</td>'
-                +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
-                +'<td style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
-                +'<td>'+statusBadge(p.status)+'</td>'
+                +'<td class="col-h-date" style="color:var(--text2)">'+p.date+'</td>'
+                +'<td class="col-h-desc">'+desc+'</td>'
+                +'<td class="col-h-amount" style="font-weight:600">'+fmt(p.amount)+'</td>'
+                +'<td class="col-h-dates" style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
+                +'<td class="col-h-status">'+statusBadge(p.status)+'</td>'
               +'</tr>';
             }).join('')+'</tbody>'
           +'</table></div></div>'
@@ -2167,6 +2174,10 @@ function collapseAllReceipts(){
 }
 
 // ── VIEW TOGGLE ───────────────────────────────────────────
+function setStickyOffset(){
+  const h=document.querySelector('.sticky-top').offsetHeight;
+  document.documentElement.style.setProperty('--sticky-offset',h+'px');
+}
 function _switchViewInternal(v){
   activeView=v;sessionStorage.setItem('activeView',v);
   const isLog=v==='log',isHist=v==='history',isRec=v==='receipts';
@@ -2180,7 +2191,9 @@ function _switchViewInternal(v){
   document.getElementById('fab').style.display=isLog?'flex':'none';
   if(isHist)renderHistory();
   if(isRec)renderReceipts();
+  setStickyOffset();
 }
+window.addEventListener('resize',setStickyOffset);
 function switchView(v){_switchViewInternal(v);pushNav();}
 document.getElementById('btnViewLog').addEventListener('click',()=>switchView('log'));
 document.getElementById('btnViewHistory').addEventListener('click',()=>switchView('history'));
