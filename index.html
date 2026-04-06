@@ -239,6 +239,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:18px;padding:4px 6px;display:flex;align-items:center;justify-content:center;line-height:1;font-family:var(--mono);text-decoration:none;transition:color .12s}
 .action-btn:hover{color:var(--text)}
 .action-btn.receipt-linked{color:var(--hw)}
+.action-btn.recur-active{color:var(--text)}
 .action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .del-btn-red{background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px;padding:4px 6px;font-family:var(--mono);line-height:1;font-weight:400;transition:color .12s}
 .del-btn-red:hover{color:var(--red-text)}
@@ -405,7 +406,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
   td{padding:12px 10px;font-size:13px;line-height:1.4}
   th.col-date,td.col-date{display:none}
   th.col-subrcv,td.col-subrcv{display:none}
-  .dup-btn,.recur-btn,.recur-indicator{display:none}
+  .dup-btn,.recur-btn{display:none}
   .action-grid{display:none}
   .action-right{flex-direction:column}
   .mob-receipt-wrap{display:flex;align-items:center}
@@ -1406,7 +1407,11 @@ function renderInfoBody(){
       const items=_infoReceived.filter(p=>p.cat===catId);
       const cat=CATS.find(c=>c.id===catId);
       const title=(cat?cat.label:'Category')+' ('+items.length+')';
-      openMetricPopup(items,title,document.getElementById('infoPopup'));
+      const infoEl=document.getElementById('infoPopup');
+      openMetricPopup(items,title,infoEl);
+      const metricEl=document.getElementById('metricPopup');
+      metricEl.style.left=infoEl.style.left;
+      metricEl.style.top=infoEl.style.top;
     });
   });
 }
@@ -1647,9 +1652,7 @@ function makeRowsFull(rows,emptyMsg,showReimb){
               ? '<a class="action-btn receipt-linked" href="'+p.receiptUrl+'" target="_blank" title="View receipt"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>'
               : '<button class="action-btn receipt-btn" data-id="'+p.id+'" title="Add receipt link" style="opacity:.35"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>')
             +'<button class="action-btn dup-btn" data-id="'+p.id+'" title="Duplicate"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>'
-            +(p.isRecurring
-              ? '<span class="action-btn recur-indicator" title="Recurring" style="cursor:default;color:var(--text3)">↻</span>'
-              : '<button class="action-btn recur-btn" data-id="'+p.id+'" title="Make recurring">↻</button>')
+            +'<button class="action-btn recur-btn'+(p.isRecurring?' recur-active':'')+'" data-id="'+p.id+'" title="'+(p.isRecurring?'Recurring (click to modify)':'Make recurring')+'"><svg viewBox="0 0 24 24"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>'
             +'<button class="action-btn edit-btn" data-id="'+p.id+'" title="Edit"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>'
           +'</div>'
           +'<div class="action-right">'
