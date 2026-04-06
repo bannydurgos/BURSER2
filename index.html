@@ -278,7 +278,7 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .chip-hw{background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
-.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-bottom:2px}
+.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-top:2px;padding-bottom:2px}
 .receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
 .history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;justify-content:space-between}
@@ -1078,7 +1078,9 @@ let activeTab=sessionStorage.getItem('activeTab')||CATS[0].id;
 let activeView=sessionStorage.getItem('activeView')||'log';
 let historyCollapsed=JSON.parse(sessionStorage.getItem('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
 let receiptsCollapsed=JSON.parse(sessionStorage.getItem('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
-let receiptsStatusFilter=null;
+let receiptsStatusFilter=null;let historyStatusFilter=null;let historyCatFilter=null;
+let historyMonthFilter=null;let historyYearFilter=null;
+let receiptsCatFilter=null;let receiptsMonthFilter=null;let receiptsYearFilter=null;
 function saveCollapseState(){sessionStorage.setItem('historyCollapsed',JSON.stringify(historyCollapsed));sessionStorage.setItem('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
 let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
@@ -2036,15 +2038,31 @@ function renderHistory(){
   // group months by year
   const byYear={};
   used.forEach(mk=>{const yr=mk.slice(0,4);if(!byYear[yr])byYear[yr]=[];byYear[yr].push(mk);});
-  const years=Object.keys(byYear).sort().reverse();
-  el.innerHTML='<div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px"><button class="hdr-btn" onclick="expandAllHistory()">Expand All</button><button class="hdr-btn" onclick="collapseAllHistory()">Collapse All</button></div>'
+  const allYears=Object.keys(byYear).sort().reverse();
+  const allMonths=[...new Set(used.map(mk=>mk.slice(5,7)))].filter(Boolean).sort();
+  const years=allYears.filter(yr=>!historyYearFilter||yr===historyYearFilter);
+  const anyHCol=Object.values(historyCollapsed.years).some(Boolean)||Object.values(historyCollapsed.months).some(Boolean)||Object.values(historyCollapsed.cats).some(Boolean);
+  const histYearOpts=allYears.map(yr=>'<option value="'+yr+'"'+(historyYearFilter===yr?' selected':'')+'>'+yr+'</option>').join('');
+  const histMonthOpts=allMonths.map(m=>'<option value="'+m+'"'+(historyMonthFilter===m?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>').join('');
+  const histCatOpts=CATS.filter(c=>data.purchases.some(p=>p.cat===c.id)).map(c=>'<option value="'+c.id+'"'+(historyCatFilter===c.id?' selected':'')+'>'+c.label+'</option>').join('');
+  el.innerHTML='<div class="receipts-controls">'
+    +'<button class="hdr-btn history-status-btn" data-status="pending" style="'+(historyStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':'')+'">Pending</button>'
+    +'<button class="hdr-btn history-status-btn" data-status="submitted" style="'+(historyStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':'')+'">Submitted</button>'
+    +'<button class="hdr-btn history-status-btn" data-status="received" style="'+(historyStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':'')+'">Received</button>'
+    +'<div class="receipts-divider"></div>'
+    +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
+    +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
+    +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
+    +(historyStatusFilter||historyCatFilter||historyMonthFilter||historyYearFilter?'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>':'')
+    +'</div>'
+    +'<div style="max-width:580px;margin:0 auto">'
     +years.map(yr=>{
     const yCol=!!historyCollapsed.years[yr];
-    const monthsHtml=byYear[yr].map(mk=>{
+    const monthsHtml=byYear[yr].filter(mk=>!historyMonthFilter||mk.slice(5,7)===historyMonthFilter).map(mk=>{
       const mp=data.purchases.filter(p=>getPurchaseMonth(p)===mk);
       const mCol=!!historyCollapsed.months[mk];
-      const sections=CATS.map(cat=>{
-        const rows=mp.filter(p=>p.cat===cat.id).sort((a,b)=>b.date.localeCompare(a.date));
+      const sections=CATS.filter(cat=>!historyCatFilter||cat.id===historyCatFilter).map(cat=>{
+        const rows=mp.filter(p=>p.cat===cat.id&&(!historyStatusFilter||(p.status||'').toLowerCase()===historyStatusFilter)).sort((a,b)=>b.date.localeCompare(a.date));
         if(!rows.length)return'';
         const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
         let chipTxt=cat.hasBudget&&budget>0
@@ -2088,7 +2106,8 @@ function renderHistory(){
       +'</div>'
       +'<div class="history-year-body"'+(yCol?' style="display:none"':'')+'>'+monthsHtml+'</div>'
     +'</div>';
-  }).join('');
+  }).join('')+'</div></div>';
+  wireHistoryJump();
 }
 
 function expandAllHistory(){
@@ -2100,6 +2119,34 @@ function collapseAllHistory(){
   document.querySelectorAll('.history-month-header').forEach(h=>{historyCollapsed.months[h.dataset.month]=true;});
   document.querySelectorAll('#historyContent .history-cat-label[data-cat]').forEach(h=>{historyCollapsed.cats[h.dataset.cat]=true;});
   saveCollapseState();renderHistory();
+}
+function toggleAllHistory(){
+  const anyCollapsed=Object.values(historyCollapsed.years).some(Boolean)||Object.values(historyCollapsed.months).some(Boolean)||Object.values(historyCollapsed.cats).some(Boolean);
+  if(anyCollapsed)expandAllHistory();else collapseAllHistory();
+}
+function filterHistoryByStatus(status){
+  historyStatusFilter=historyStatusFilter===status?null:status;
+  renderHistory();
+}
+function clearHistoryFilters(){
+  historyStatusFilter=null;historyCatFilter=null;historyMonthFilter=null;historyYearFilter=null;
+  renderHistory();
+}
+function wireHistoryJump(){
+  const moSel=document.getElementById('historyJumpMonth');
+  const yrSel=document.getElementById('historyJumpYear');
+  const catSel=document.getElementById('historyJumpCat');
+  const expandToggle=document.getElementById('historyExpandToggle');
+  if(!moSel)return;
+  if(moSel)moSel.addEventListener('change',()=>{historyMonthFilter=moSel.value||null;renderHistory();});
+  if(yrSel)yrSel.addEventListener('change',()=>{historyYearFilter=yrSel.value||null;renderHistory();});
+  if(catSel)catSel.addEventListener('change',()=>{historyCatFilter=catSel.value||null;renderHistory();});
+  if(expandToggle)expandToggle.addEventListener('click',toggleAllHistory);
+  const clearBtn=document.getElementById('historyClearBtn');
+  if(clearBtn)clearBtn.addEventListener('click',clearHistoryFilters);
+  document.querySelectorAll('.history-status-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>filterHistoryByStatus(btn.dataset.status));
+  });
 }
 function toggleAllReceipts(){
   const anyCollapsed=Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean);
@@ -2855,7 +2902,9 @@ function renderReceipts() {
   }
   const withCount = purchases.filter(p => p.receiptUrl).length;
 
-  const sections = CATS.map(cat => {
+  const allReceiptMonths=[...new Set(purchases.map(p=>getMonthKey(p.date).slice(5,7)))].filter(Boolean).sort();
+  const allReceiptYears=[...new Set(purchases.map(p=>getMonthKey(p.date).slice(0,4)))].filter(Boolean).sort().reverse();
+  const sections = CATS.filter(cat=>(!receiptsCatFilter||cat.id===receiptsCatFilter)&&purchases.some(p=>p.cat===cat.id)).map(cat => {
     const rows = purchases.filter(p => p.cat === cat.id);
     if (!rows.length) return '';
     const catCol = !!receiptsCollapsed.cats[cat.id];
@@ -2868,10 +2917,10 @@ function renderReceipts() {
       if (!byYear[yr][mk]) byYear[yr][mk] = [];
       byYear[yr][mk].push(p);
     });
-    const yearsHtml = Object.keys(byYear).sort().reverse().map(yr => {
+    const yearsHtml = Object.keys(byYear).sort().reverse().filter(yr=>!receiptsYearFilter||yr===receiptsYearFilter).map(yr => {
       const yrKey = cat.id+':'+yr;
       const yrCol = !!receiptsCollapsed.years[yrKey];
-      const monthsHtml = Object.keys(byYear[yr]).sort().reverse().map(mk => {
+      const monthsHtml = Object.keys(byYear[yr]).sort().reverse().filter(mk=>!receiptsMonthFilter||mk.slice(5,7)===receiptsMonthFilter).map(mk => {
         const mkKey = cat.id+':'+mk;
         const mkCol = !!receiptsCollapsed.months[mkKey];
         const mRows = byYear[yr][mk]
@@ -2909,123 +2958,61 @@ function renderReceipts() {
 
   const catOptions = CATS
     .filter(cat => purchases.some(p => p.cat === cat.id))
-    .map(cat => `<option value="${cat.id}">${cat.label}</option>`)
+    .map(cat => `<option value="${cat.id}"${receiptsCatFilter===cat.id?' selected':''}>${cat.label}</option>`)
     .join('');
+  const monthOptions = allReceiptMonths.map(m=>`<option value="${m}"${receiptsMonthFilter===m?' selected':''}>${MF[parseInt(m)-1]}</option>`).join('');
+  const yearOptions = allReceiptYears.map(yr=>`<option value="${yr}"${receiptsYearFilter===yr?' selected':''}>${yr}</option>`).join('');
 
   el.innerHTML = `
-    <div style="max-width:860px;margin:0 auto">
-      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:10px;text-align:center">
+    <div class="receipts-controls">
+      <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
+      <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
+      <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
+      <div class="receipts-divider"></div>
+      <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px">
+        <option value="">Category…</option>
+        ${catOptions}
+      </select>
+      <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px">
+        <option value="">Month…</option>
+        ${monthOptions}
+      </select>
+      <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px">
+        <option value="">Year…</option>
+        ${yearOptions}
+      </select>
+      <div class="receipts-divider"></div>
+      ${receiptsStatusFilter||receiptsCatFilter||receiptsMonthFilter||receiptsYearFilter?'<button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>':''}
+    </div>
+    <div style="max-width:580px;margin:0 auto">
+      ${sections}
+      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:14px;text-align:center">
         ${withCount} of ${purchases.length} purchases have receipt links.
       </div>
-      <div class="receipts-controls">
-        <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
-        <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
-        <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
-        <div class="receipts-divider"></div>
-        <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px">
-          <option value="">Category…</option>
-          ${catOptions}
-        </select>
-        <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px">
-          <option value="">Month…</option>
-        </select>
-        <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px">
-          <option value="">Year…</option>
-        </select>
-        <button class="hdr-btn" id="receiptsJumpBtn">Go ↓</button>
-        <div class="receipts-divider"></div>
-        <button class="hdr-btn" id="receiptsExpandToggle" title="${Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean)?'Expand all':'Collapse all'}" style="font-size:13px;padding:3px 9px">${Object.values(receiptsCollapsed.cats).some(Boolean)||Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean)?'▼':'▲'}</button>
-      </div>
-      ${sections}
     </div>`;
 
   wireReceiptRows();
   wireReceiptJump();
 }
 
-function updateReceiptsJumpMonths() {
-  const catSel = document.getElementById('receiptsJumpCat');
-  const monthSel = document.getElementById('receiptsJumpMonth');
-  if (!catSel || !monthSel) return;
-  const catId = catSel.value;
-  const purchases = data.purchases.filter(p => !p.isRollover);
-  const months = new Set();
-  purchases.forEach(p => {
-    const mk = getMonthKey(p.date);
-    if (!catId || p.cat === catId) months.add(mk.slice(5, 7));
-  });
-  const prev = monthSel.value;
-  const sorted = [...months].filter(Boolean).sort();
-  monthSel.innerHTML = '<option value="">Month…</option>' +
-    sorted.map(m => `<option value="${m}"${m === prev ? ' selected' : ''}>${MF[parseInt(m) - 1]}</option>`).join('');
-  updateReceiptsJumpYears();
-}
-
-function updateReceiptsJumpYears() {
-  const catSel = document.getElementById('receiptsJumpCat');
-  const monthSel = document.getElementById('receiptsJumpMonth');
-  const yearSel = document.getElementById('receiptsJumpYear');
-  if (!catSel || !monthSel || !yearSel) return;
-  const catId = catSel.value;
-  const mo = monthSel.value;
-  const purchases = data.purchases.filter(p => !p.isRollover);
-  const years = new Set();
-  purchases.forEach(p => {
-    const mk = getMonthKey(p.date);
-    if ((!catId || p.cat === catId) && (!mo || mk.slice(5, 7) === mo)) years.add(mk.slice(0, 4));
-  });
-  const prev = yearSel.value;
-  const sorted = [...years].filter(Boolean).sort().reverse();
-  yearSel.innerHTML = '<option value="">Year…</option>' +
-    sorted.map(yr => `<option value="${yr}"${yr === prev ? ' selected' : ''}>${yr}</option>`).join('');
-}
-
-function jumpToReceiptsSection() {
-  const catId = document.getElementById('receiptsJumpCat').value;
-  const yr = document.getElementById('receiptsJumpYear').value;
-  const mo = document.getElementById('receiptsJumpMonth').value;
-  if (!catId || !yr || !mo) return;
-  const mk = yr + '-' + mo;
-  const yrKey = catId + ':' + yr;
-  const mkKey = catId + ':' + mk;
-  // Collapse everything, then expand only the target path
-  const purchases = data.purchases.filter(p => !p.isRollover);
-  receiptsCollapsed.cats = {};
-  receiptsCollapsed.years = {};
-  receiptsCollapsed.months = {};
-  CATS.forEach(cat => { receiptsCollapsed.cats[cat.id] = true; });
-  purchases.forEach(p => {
-    const pmk = getMonthKey(p.date);
-    const pyr = pmk.slice(0, 4);
-    receiptsCollapsed.years[p.cat + ':' + pyr] = true;
-    receiptsCollapsed.months[p.cat + ':' + pmk] = true;
-  });
-  delete receiptsCollapsed.cats[catId];
-  delete receiptsCollapsed.years[yrKey];
-  delete receiptsCollapsed.months[mkKey];
-  saveCollapseState();
+function clearReceiptsFilters(){
+  receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;
   renderReceipts();
-  setTimeout(() => {
-    const target = document.querySelector(`[data-rmk="${mkKey}"]`);
-    if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
-  }, 50);
 }
-
 function wireReceiptJump() {
   const catSel = document.getElementById('receiptsJumpCat');
   const monthSel = document.getElementById('receiptsJumpMonth');
   const yearSel = document.getElementById('receiptsJumpYear');
-  const jumpBtn = document.getElementById('receiptsJumpBtn');
-  if (!catSel || !monthSel || !yearSel || !jumpBtn) return;
-  updateReceiptsJumpMonths();
-  catSel.addEventListener('change', updateReceiptsJumpMonths);
-  monthSel.addEventListener('change', updateReceiptsJumpYears);
-  jumpBtn.addEventListener('click', jumpToReceiptsSection);
+  if (catSel) catSel.addEventListener('change', () => { receiptsCatFilter = catSel.value || null; renderReceipts(); });
+  if (monthSel) monthSel.addEventListener('change', () => { receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
+  if (yearSel) yearSel.addEventListener('change', () => { receiptsYearFilter = yearSel.value || null; renderReceipts(); });
   document.querySelectorAll('.receipts-status-btn').forEach(btn => {
     btn.addEventListener('click', () => filterReceiptsByStatus(btn.dataset.status));
   });
   const expandToggle = document.getElementById('receiptsExpandToggle');
   if (expandToggle) expandToggle.addEventListener('click', toggleAllReceipts);
+  const clearBtn = document.getElementById('receiptsClearBtn');
+  if (clearBtn) clearBtn.addEventListener('click', clearReceiptsFilters);
 }
 
 function filterReceiptsByStatus(status) {
