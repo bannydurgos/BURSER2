@@ -501,7 +501,7 @@ td.col-subrcv{min-width:150px}
 
 <div class="sticky-top">
 <header>
-  <div class="wordmark">
+  <div class="wordmark" id="wordmark" style="cursor:pointer">
     <div class="wordmark-icon">
       <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
         <circle cx="60" cy="60" r="36" fill="white" opacity="0.12"/>
@@ -537,7 +537,7 @@ td.col-subrcv{min-width:150px}
   </div>
 </header>
 <div class="month-bar" id="monthBarEl">
-  <div class="month-bar-left"><button class="info-btn" id="btnInfo" title="Reimbursement stats">&#9432;</button></div>
+  <div class="month-bar-left"></div>
   <button class="month-nav" id="monthPrev">&#8249;</button>
   <select id="monthJumpM" class="month-select"></select>
   <select id="monthJumpY" class="month-select"></select>
@@ -3354,7 +3354,7 @@ document.getElementById('metricPopupClose').addEventListener('click',closeMetric
 document.getElementById('metricPopupBackdrop').addEventListener('click',closeMetricPopup);
 
 // ── INFO POPUP ────────────────────────────────────────────
-document.getElementById('btnInfo').addEventListener('click',function(e){
+document.getElementById('wordmark').addEventListener('click',function(e){
   e.stopPropagation();
   if(document.getElementById('infoPopup').style.display!=='none'){closeInfoPopup();return;}
   closeMetricPopup();
