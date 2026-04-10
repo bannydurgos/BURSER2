@@ -14,6 +14,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, collection, getDocs, getDoc, getDocsFromServer, getDocFromServer, setDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -44,6 +45,11 @@
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
   window._fbWriteBatch = () => writeBatch(db);
+  const storage = getStorage(app);
+  window._fbStorage = storage;
+  window._fbStorageRef = storageRef;
+  window._fbUploadBytesResumable = uploadBytesResumable;
+  window._fbGetDownloadURL = getDownloadURL;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -207,9 +213,9 @@ td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);ver
 /* HISTORY TABLE — fixed layout keeps columns aligned across all category tables */
 .history-table{table-layout:fixed;width:100%}
 .history-table .col-h-date{width:11%}.date-short{display:none}
-.history-table .col-h-desc{width:150px;overflow:hidden;text-overflow:ellipsis}
+.history-table .col-h-desc{width:110px;overflow:hidden;text-overflow:ellipsis}
 .history-table .col-h-amount{width:11%}
-.history-table .col-h-dates{width:120px}
+.history-table .col-h-dates{width:90px}
 .history-table .col-h-status{width:22%;text-align:center}
 .history-table .col-h-status .badge{min-width:90px;text-align:center;display:inline-block;box-sizing:border-box}
 tr:last-child td{border-bottom:none}
@@ -450,7 +456,7 @@ td.col-subrcv{min-width:150px}
   th.col-h-dates,td.col-h-dates{display:none}
   .history-table .col-h-date{width:12%}
   .date-long{display:none}.date-short{display:inline}
-  .history-table .col-h-desc{width:41%}
+  .history-table .col-h-desc{width:32%}
   .history-table .col-h-amount{width:15%}
   .history-table .col-h-status{width:32%}
   .history-table .col-h-status .badge{min-width:0}
@@ -1131,6 +1137,7 @@ function currentMonthKey(){const n=new Date();return n.getFullYear()+'-'+String(
 function nextMonthKey(mk){const{year,month}=parseMonthKey(mk);const d=new Date(year,month+1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function daysBetween(d1,d2){if(!d1||!d2)return null;return Math.round((new Date(d2)-new Date(d1))/(864e5));}
 function todayStr(){return new Date().toISOString().slice(0,10);}
+function fmtDate(d){if(!d)return'';const p=d.split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0].slice(2):d;}
 
 function getMonthRange(){
   const keys=[];const n=new Date();const thisYear=n.getFullYear();
@@ -1311,7 +1318,7 @@ function openMetricPopup(items,title,anchor){
     const badge=p.status==='received'?'Received':p.status==='submitted'?'Submitted':p.status==='oop'?'OOP':'Pending';
     return '<button class="metric-popup-row" data-pid="'+p.id+'">'
       +'<div class="metric-popup-desc">'+(p.desc||'—')+'</div>'
-      +'<div class="metric-popup-meta">'+p.date+'<br>'+fmt(p.amount)+'<br>'+badge+'</div>'
+      +'<div class="metric-popup-meta">'+fmtDate(p.date)+'<br>'+fmt(p.amount)+'<br>'+badge+'</div>'
       +'</button>';
   }).join('');
   // Position popup near anchor
@@ -1567,10 +1574,10 @@ function makeRows(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
-        +'<span class="date-rcv">'+(p.receivedDate||'')+daysStr+'</span>';
+      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+        +'<span class="date-rcv">'+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr+'</span>';
     }else if(p.status==='submitted'){
-      dateCellContent=p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':markBtn;
+      dateCellContent=p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':markBtn;
     }else{
       dateCellContent=markBtn;
     }
@@ -1580,11 +1587,11 @@ function makeRows(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      mobInfo=(p.submittedDate?'Sub: '+p.submittedDate+'  ':'')+(p.receivedDate||'')+daysStr;
+      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate)+'  ':'')+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr;
     }else if(p.status==='submitted'){
-      mobInfo=(p.submittedDate?'Sub: '+p.submittedDate:'Submitted')+(p.expectedDate?' · Exp: '+p.expectedDate:'');
+      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate):'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
     }else{
-      mobInfo=p.date;
+      mobInfo=fmtDate(p.date);
     }
     // Mobile mark button — shown only on mobile via CSS, always rendered
     const nextSt2={pending:'submitted',submitted:'received',received:null,oop:null};
@@ -1596,7 +1603,7 @@ function makeRows(rows,emptyMsg,showReimb){
 
     return '<tr id="prow-'+p.id+'">'
       +checkCell
-      +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
+      +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
       +'<td><div style="display:flex;flex-direction:column">'
         +desc+reimbHint
         +'<span class="mob-info">'+mobInfo+'</span>'
@@ -1633,11 +1640,11 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
-        +'<span class="date-rcv">'+(p.receivedDate||'')+daysStr+'</span>';
+      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+        +'<span class="date-rcv">'+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr+'</span>';
     }else if(p.status==='submitted'){
-      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
-        +(p.expectedDate?'<span class="date-sub" style="color:var(--blue-text)">Exp: '+p.expectedDate+'</span>':'')
+      dateCellContent=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+        +(p.expectedDate?'<span class="date-sub" style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':'')
         +markBtn;
     }else{
       dateCellContent=markBtn;
@@ -1647,11 +1654,11 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      mobInfo=(p.submittedDate?'Sub: '+p.submittedDate+'  ':'')+(p.receivedDate||'')+daysStr;
+      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate)+'  ':'')+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr;
     }else if(p.status==='submitted'){
-      mobInfo=(p.submittedDate?'Sub: '+p.submittedDate:'Submitted')+(p.expectedDate?' · Exp: '+p.expectedDate:'');
+      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate):'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
     }else{
-      mobInfo=p.date;
+      mobInfo=fmtDate(p.date);
     }
     // Mobile mark button — shown only on mobile via CSS, always rendered
     const nextSt2={pending:'submitted',submitted:'received',received:null,oop:null};
@@ -1663,7 +1670,7 @@ function makeRowsFull(rows,emptyMsg,showReimb){
 
     return '<tr id="prow-'+p.id+'">'
       +checkCell
-      +'<td class="col-date" style="color:var(--text2)">'+p.date+'</td>'
+      +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
       +'<td><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span>'+mobMarkBtn+'</div></td>'
       +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
       +reimbCell
@@ -2096,10 +2103,10 @@ function renderHistory(){
               const days=daysBetween(p.submittedDate,p.receivedDate);
               const daysStr=days!==null?' ('+days+'d)':'';
               const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
-              const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+p.submittedDate+'</span>':'')
-                +(p.receivedDate?'<span class="date-rcv">'+p.receivedDate+daysStr+'</span>':'');
+              const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+                +(p.receivedDate?'<span class="date-rcv">'+fmtDate(p.receivedDate)+daysStr+'</span>':'');
               return'<tr data-id="'+p.id+'" style="cursor:pointer">'
-                +'<td class="col-h-date" style="color:var(--text2)"><span class="date-long">'+p.date+'</span><span class="date-short">'+(function(d){const parts=d.split('-');return parts.length===3?parseInt(parts[1])+'/'+parseInt(parts[2]):d;})(p.date)+'</span></td>'
+                +'<td class="col-h-date" style="color:var(--text2)"><span class="date-long">'+fmtDate(p.date)+'</span><span class="date-short">'+fmtDate(p.date)+'</span></td>'
                 +'<td class="col-h-desc">'+desc+'</td>'
                 +'<td class="col-h-amount" style="font-weight:600">'+fmt(p.amount)+'</td>'
                 +'<td class="col-h-dates" style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
@@ -2543,7 +2550,7 @@ function openPendingSheet(){
       +rows.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
-        const meta=monthLabel(mk)+(p.submittedDate?' · Sub: '+p.submittedDate:'')+(p.expectedDate?' · Exp: '+p.expectedDate:'');
+        const meta=monthLabel(mk)+(p.submittedDate?' · Sub: '+fmtDate(p.submittedDate):'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
         return'<div class="pending-row" data-id="'+p.id+'" onclick="navigateToTransaction('+p.id+')">'
           +'<div class="pending-row-left">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
@@ -3067,6 +3074,19 @@ function filterReceiptsByStatus(status) {
   renderReceipts();
 }
 
+async function uploadReceiptFile(file, purchaseId) {
+  if (!_currentUser) throw new Error('Not signed in');
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `receipts/${_currentUser.uid}/${purchaseId}_${Date.now()}.${ext}`;
+  const sRef = window._fbStorageRef(window._fbStorage, path);
+  const task = window._fbUploadBytesResumable(sRef, file);
+  return new Promise((resolve, reject) => {
+    task.on('state_changed', null, reject, async () => {
+      resolve(await window._fbGetDownloadURL(sRef));
+    });
+  });
+}
+
 function showReceiptPopover(id, anchorBtn) {
   // Remove any existing popover
   const existing = document.getElementById('receipt-popover');
@@ -3076,49 +3096,124 @@ function showReceiptPopover(id, anchorBtn) {
   const p = data.purchases.find(x => x.id === id);
   if (!p) return;
 
+  let mode = 'link';
+
   const pop = document.createElement('div');
   pop.className = 'receipt-popover';
   pop.id = 'receipt-popover';
   pop.dataset.id = String(id);
+  pop.style.cssText += ';flex-direction:column;align-items:stretch;gap:8px;min-width:300px';
 
+  // Mode toggle row
+  const toggleRow = document.createElement('div');
+  toggleRow.style.cssText = 'display:flex;gap:4px';
+  const linkModeBtn = document.createElement('button');
+  linkModeBtn.textContent = 'Link';
+  linkModeBtn.style.cssText = 'flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)';
+  const uploadModeBtn = document.createElement('button');
+  uploadModeBtn.textContent = 'Upload photo / PDF';
+  uploadModeBtn.style.cssText = 'flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)';
+  toggleRow.appendChild(linkModeBtn);
+  toggleRow.appendChild(uploadModeBtn);
+
+  // URL section
+  const urlSection = document.createElement('div');
+  urlSection.style.cssText = 'display:flex;gap:8px;align-items:center';
   const input = document.createElement('input');
   input.type = 'url';
   input.placeholder = 'https://drive.google.com/...';
   input.value = p.receiptUrl || '';
+  input.style.cssText = 'flex:1;min-width:0';
+  urlSection.appendChild(input);
 
+  // File section
+  const fileSection = document.createElement('div');
+  fileSection.style.cssText = 'display:none';
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*,.pdf';
+  fileInput.style.cssText = 'font-family:var(--mono);font-size:11px;color:var(--text2);width:100%';
+  fileSection.appendChild(fileInput);
+
+  // Action buttons
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px';
   const saveBtn = document.createElement('button');
   saveBtn.className = 'receipt-popover-save';
   saveBtn.textContent = 'Save';
-
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'receipt-popover-cancel';
   cancelBtn.textContent = '✕';
+  btnRow.appendChild(saveBtn);
+  btnRow.appendChild(cancelBtn);
 
-  pop.appendChild(input);
-  pop.appendChild(saveBtn);
-  pop.appendChild(cancelBtn);
+  pop.appendChild(toggleRow);
+  pop.appendChild(urlSection);
+  pop.appendChild(fileSection);
+  pop.appendChild(btnRow);
   document.body.appendChild(pop);
+
+  function setMode(m) {
+    mode = m;
+    const isLink = m === 'link';
+    linkModeBtn.style.background = isLink ? 'var(--hw)' : 'var(--bg3)';
+    linkModeBtn.style.color = isLink ? '#fff' : 'var(--text2)';
+    linkModeBtn.style.borderColor = isLink ? 'var(--hw)' : 'var(--border2)';
+    uploadModeBtn.style.background = !isLink ? 'var(--hw)' : 'var(--bg3)';
+    uploadModeBtn.style.color = !isLink ? '#fff' : 'var(--text2)';
+    uploadModeBtn.style.borderColor = !isLink ? 'var(--hw)' : 'var(--border2)';
+    urlSection.style.display = isLink ? 'flex' : 'none';
+    fileSection.style.display = isLink ? 'none' : 'block';
+  }
+  setMode('link');
+  linkModeBtn.addEventListener('click', () => setMode('link'));
+  uploadModeBtn.addEventListener('click', () => setMode('upload'));
 
   // Position below the anchor button
   const rect = anchorBtn.getBoundingClientRect();
   let top = rect.bottom + 6;
   let left = rect.left;
-  // Keep within viewport
   if (left + 320 > window.innerWidth) left = window.innerWidth - 326;
-  if (top + 60 > window.innerHeight) top = rect.top - 54;
+  if (top + 120 > window.innerHeight) top = rect.top - 130;
   pop.style.top = top + 'px';
   pop.style.left = left + 'px';
 
   input.focus();
   input.select();
 
-  function doSave() {
-    const url = input.value.trim() || null;
-    snapshot();
-    p.receiptUrl = url;
-    savePurchase(p);
-    pop.remove();
-    render();
+  async function doSave() {
+    if (mode === 'link') {
+      const url = input.value.trim() || null;
+      snapshot();
+      p.receiptUrl = url;
+      savePurchase(p);
+      pop.remove();
+      render();
+    } else {
+      const file = fileInput.files[0];
+      if (!file) { pop.remove(); return; }
+      saveBtn.textContent = 'Uploading…';
+      saveBtn.disabled = true;
+      try {
+        const url = await uploadReceiptFile(file, p.id);
+        snapshot();
+        p.receiptUrl = url;
+        savePurchase(p);
+        pop.remove();
+        render();
+      } catch (err) {
+        saveBtn.textContent = 'Save';
+        saveBtn.disabled = false;
+        let errEl = pop.querySelector('.pop-upload-err');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.className = 'pop-upload-err';
+          errEl.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--red-text)';
+          pop.insertBefore(errEl, btnRow);
+        }
+        errEl.textContent = 'Upload failed. Try again.';
+      }
+    }
   }
 
   saveBtn.addEventListener('click', doSave);
@@ -3141,10 +3236,10 @@ function showReceiptPopover(id, anchorBtn) {
 
 function receiptRow(p) {
   const hasLink = !!p.receiptUrl;
-  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:nowrap">
+  return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${p.date} · ${fmt(p.amount)}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}</div>
     </div>
     <div style="flex-shrink:0">${statusBadge(p.status)}</div>
     <div class="receipt-link-area" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -3154,20 +3249,64 @@ function receiptRow(p) {
            <button class="receipt-edit-toggle" data-id="${p.id}"
              style="font-family:var(--mono);font-size:10px;background:none;border:1px solid var(--border2);padding:4px 8px;cursor:pointer;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Edit</button>`
         : `<button class="receipt-edit-toggle" data-id="${p.id}"
-             style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:5px 12px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">+ Add link</button>`
+             style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:5px 12px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">+ Add receipt</button>`
       }
     </div>
-    <div class="receipt-input-area" data-id="${p.id}" style="display:none;width:100%;margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <input type="url" class="receipt-url-input" data-id="${p.id}"
-        value="${p.receiptUrl||''}"
-        placeholder="https://drive.google.com/..."
-        style="flex:1;min-width:200px;font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;outline:none">
-      <button class="receipt-save-btn" data-id="${p.id}"
-        style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
-      <button class="receipt-cancel-btn" data-id="${p.id}"
-        style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
+    <div class="receipt-input-area" data-id="${p.id}" style="display:none;width:100%;margin-top:8px;flex-direction:column;gap:6px">
+      <div style="display:flex;gap:4px">
+        <button class="receipt-mode-btn receipt-mode-link" data-id="${p.id}" data-mode="link"
+          style="flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--hw);background:var(--hw);color:#fff">Link</button>
+        <button class="receipt-mode-btn receipt-mode-upload" data-id="${p.id}" data-mode="upload"
+          style="flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)">Upload photo / PDF</button>
+      </div>
+      <div class="receipt-link-section" data-id="${p.id}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="url" class="receipt-url-input" data-id="${p.id}"
+          value="${p.receiptUrl||''}"
+          placeholder="https://drive.google.com/..."
+          style="flex:1;min-width:200px;font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;outline:none">
+        <button class="receipt-save-link-btn" data-id="${p.id}"
+          style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
+        <button class="receipt-cancel-btn" data-id="${p.id}"
+          style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
+      </div>
+      <div class="receipt-upload-section" data-id="${p.id}" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="file" class="receipt-file-input" data-id="${p.id}" accept="image/*,.pdf"
+          style="font-family:var(--mono);font-size:12px;color:var(--text2);flex:1;min-width:200px">
+        <button class="receipt-save-upload-btn" data-id="${p.id}"
+          style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
+        <button class="receipt-cancel-btn" data-id="${p.id}"
+          style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
+      </div>
     </div>
   </div>`;
+}
+
+function _updateReceiptLinkArea(row, id, url, p) {
+  const all = data.purchases.filter(x => !x.isRollover);
+  const countEl = document.getElementById('receiptsLinkCount');
+  if (countEl) countEl.textContent = `${all.filter(x => x.receiptUrl).length} of ${all.length} purchases have receipt links.`;
+  const catCountEl = document.getElementById(`receiptsCatCount-${p.cat}`);
+  if (catCountEl) {
+    const catRows = all.filter(x => x.cat === p.cat);
+    catCountEl.textContent = `${catRows.filter(x => x.receiptUrl).length} of ${catRows.length} linked`;
+  }
+  const linkArea = row.querySelector('.receipt-link-area');
+  linkArea.innerHTML = url
+    ? `<a href="${url}" target="_blank" class="receipt-view-btn" data-id="${id}"
+         style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--hw);border:1px solid var(--hw);padding:4px 10px;text-decoration:none;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">View ↗</a>
+       <button class="receipt-edit-toggle" data-id="${id}"
+         style="font-family:var(--mono);font-size:10px;background:none;border:1px solid var(--border2);padding:4px 8px;cursor:pointer;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Edit</button>`
+    : `<button class="receipt-edit-toggle" data-id="${id}"
+         style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:5px 12px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">+ Add receipt</button>`;
+  row.querySelector('.receipt-input-area').style.display = 'none';
+  linkArea.querySelectorAll('.receipt-edit-toggle').forEach(b => {
+    b.addEventListener('click', () => {
+      const inputArea = row.querySelector('.receipt-input-area');
+      inputArea.style.display = 'flex';
+      row.querySelector('.receipt-url-input').value = url || '';
+      row.querySelector('.receipt-url-input').focus();
+    });
+  });
 }
 
 function wireReceiptRows() {
@@ -3177,10 +3316,26 @@ function wireReceiptRows() {
       const id = btn.dataset.id;
       const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
       const inputArea = row.querySelector('.receipt-input-area');
-      inputArea.style.display = inputArea.style.display === 'none' ? 'flex' : 'none';
-      if (inputArea.style.display === 'flex') {
-        row.querySelector('.receipt-url-input').focus();
-      }
+      const isHidden = inputArea.style.display === 'none' || inputArea.style.display === '';
+      inputArea.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden) row.querySelector('.receipt-url-input').focus();
+    });
+  });
+
+  // Mode toggle
+  document.querySelectorAll('.receipt-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
+      const m = btn.dataset.mode;
+      row.querySelectorAll('.receipt-mode-btn').forEach(b => {
+        const active = b.dataset.mode === m;
+        b.style.background = active ? 'var(--hw)' : 'var(--bg3)';
+        b.style.color = active ? '#fff' : 'var(--text2)';
+        b.style.borderColor = active ? 'var(--hw)' : 'var(--border2)';
+      });
+      row.querySelector('.receipt-link-section').style.display = m === 'link' ? 'flex' : 'none';
+      row.querySelector('.receipt-upload-section').style.display = m === 'upload' ? 'flex' : 'none';
     });
   });
 
@@ -3193,44 +3348,48 @@ function wireReceiptRows() {
     });
   });
 
-  // Save — update in place, no full re-render
-  document.querySelectorAll('.receipt-save-btn').forEach(btn => {
+  // Save link
+  document.querySelectorAll('.receipt-save-link-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = parseInt(btn.dataset.id);
       const p = data.purchases.find(x => x.id === id);
       if (!p) return;
       const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
       const url = row.querySelector('.receipt-url-input').value.trim() || null;
-      snapshot();p.receiptUrl = url;
+      snapshot(); p.receiptUrl = url;
       savePurchase(p);
-      // Update receipt counts in place
-      const all = data.purchases.filter(x => !x.isRollover);
-      const countEl = document.getElementById('receiptsLinkCount');
-      if (countEl) countEl.textContent = `${all.filter(x => x.receiptUrl).length} of ${all.length} purchases have receipt links.`;
-      const catCountEl = document.getElementById(`receiptsCatCount-${p.cat}`);
-      if (catCountEl) {
-        const catRows = all.filter(x => x.cat === p.cat);
-        catCountEl.textContent = `${catRows.filter(x => x.receiptUrl).length} of ${catRows.length} linked`;
+      _updateReceiptLinkArea(row, id, url, p);
+    });
+  });
+
+  // Save upload
+  document.querySelectorAll('.receipt-save-upload-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = parseInt(btn.dataset.id);
+      const p = data.purchases.find(x => x.id === id);
+      if (!p) return;
+      const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
+      const file = row.querySelector('.receipt-file-input').files[0];
+      if (!file) return;
+      btn.textContent = 'Uploading…';
+      btn.disabled = true;
+      try {
+        const url = await uploadReceiptFile(file, p.id);
+        snapshot(); p.receiptUrl = url;
+        savePurchase(p);
+        _updateReceiptLinkArea(row, id, url, p);
+      } catch (err) {
+        btn.textContent = 'Save';
+        btn.disabled = false;
+        let errEl = row.querySelector('.receipt-upload-err');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.className = 'receipt-upload-err';
+          errEl.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--red-text);width:100%';
+          row.querySelector('.receipt-upload-section').appendChild(errEl);
+        }
+        errEl.textContent = 'Upload failed. Try again.';
       }
-      // Update the link area in place — no full re-render
-      const linkArea = row.querySelector('.receipt-link-area');
-      linkArea.innerHTML = url
-        ? `<a href="${url}" target="_blank" class="receipt-view-btn" data-id="${id}"
-             style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--hw);border:1px solid var(--hw);padding:4px 10px;text-decoration:none;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em">View ↗</a>
-           <button class="receipt-edit-toggle" data-id="${id}"
-             style="font-family:var(--mono);font-size:10px;background:none;border:1px solid var(--border2);padding:4px 8px;cursor:pointer;color:var(--text3);text-transform:uppercase;letter-spacing:.04em">Edit</button>`
-        : `<button class="receipt-edit-toggle" data-id="${id}"
-             style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:5px 12px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">+ Add link</button>`;
-      row.querySelector('.receipt-input-area').style.display = 'none';
-      // Re-wire the new buttons
-      linkArea.querySelectorAll('.receipt-edit-toggle').forEach(b => {
-        b.addEventListener('click', () => {
-          const inputArea = row.querySelector('.receipt-input-area');
-          inputArea.style.display = 'flex';
-          row.querySelector('.receipt-url-input').value = url || '';
-          row.querySelector('.receipt-url-input').focus();
-        });
-      });
     });
   });
 
@@ -3270,7 +3429,7 @@ function openExpenseReport(ids) {
         <tbody>
           ${purchases.sort((a,b)=>a.date.localeCompare(b.date)).map((p,i) => `
           <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap">${p.date}</td>
+            <td style="padding:10px 12px;font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap">${fmtDate(p.date)}</td>
             <td style="padding:10px 12px;font-size:13px">${p.isRollover ? (p.rolloverBaseDesc||p.desc) : p.desc}</td>
             <td style="padding:10px 12px;font-size:13px;color:var(--text2)">${p.vendor || (p.isRollover ? (p.rolloverBaseDesc||p.desc) : p.desc)}</td>
             <td style="padding:10px 12px">
