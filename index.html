@@ -2929,56 +2929,49 @@ function renderReceipts() {
 
   const allReceiptMonths=[...new Set(purchases.map(p=>getMonthKey(p.date).slice(5,7)))].filter(Boolean).sort();
   const allReceiptYears=[...new Set(purchases.map(p=>getMonthKey(p.date).slice(0,4)))].filter(Boolean).sort().reverse();
-  const sections = CATS.filter(cat=>(!receiptsCatFilter||cat.id===receiptsCatFilter)&&purchases.some(p=>p.cat===cat.id)).map(cat => {
-    const rows = purchases.filter(p => p.cat === cat.id);
-    if (!rows.length) return '';
-    const catCol = !!receiptsCollapsed.cats[cat.id];
-    const count = `<span id="receiptsCatCount-${cat.id}" style="font-weight:400;color:var(--text3)">${rows.filter(p=>p.receiptUrl).length} of ${rows.length} linked</span>`;
-    // group by year then month
-    const byYear = {};
-    rows.forEach(p => {
-      const mk = getMonthKey(p.date); const yr = mk.slice(0,4);
-      if (!byYear[yr]) byYear[yr] = {};
-      if (!byYear[yr][mk]) byYear[yr][mk] = [];
-      byYear[yr][mk].push(p);
-    });
-    const yearsHtml = Object.keys(byYear).sort().reverse().filter(yr=>!receiptsYearFilter||yr===receiptsYearFilter).map(yr => {
-      const yrKey = cat.id+':'+yr;
-      const yrCol = !!receiptsCollapsed.years[yrKey];
-      const monthsHtml = Object.keys(byYear[yr]).sort().reverse().filter(mk=>!receiptsMonthFilter||mk.slice(5,7)===receiptsMonthFilter).map(mk => {
-        const mkKey = cat.id+':'+mk;
-        const mkCol = !!receiptsCollapsed.months[mkKey];
-        const mRows = byYear[yr][mk]
-          .filter(p => !receiptsStatusFilter || (p.status||'').toLowerCase() === receiptsStatusFilter)
-          .sort((a,b) => b.date.localeCompare(a.date));
-        return `<div style="margin-bottom:4px">
-          <div class="receipts-month-hdr" data-rmk="${mkKey}" style="display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;user-select:none">
-            <span class="history-toggle history-toggle-month${mkCol?' collapsed':''}">▼</span>
-            <span style="font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">${monthLabelFull(mk)}</span>
-          </div>
-          <div class="receipts-month-body"${mkCol?' style="display:none"':''}>
-            <div style="background:var(--bg2);border:1px solid var(--border2)">${mRows.map(p => receiptRow(p)).join('')}</div>
-          </div>
-        </div>`;
+  // group by year > month
+  const byYear = {};
+  purchases.forEach(p => {
+    const mk = getMonthKey(p.date); const yr = mk.slice(0,4);
+    if (!byYear[yr]) byYear[yr] = {};
+    if (!byYear[yr][mk]) byYear[yr][mk] = [];
+    byYear[yr][mk].push(p);
+  });
+  const sections = allReceiptYears.filter(yr=>!receiptsYearFilter||yr===receiptsYearFilter).map(yr => {
+    const yrCol = !!receiptsCollapsed.years[yr];
+    const monthsHtml = Object.keys(byYear[yr]).sort().reverse().filter(mk=>!receiptsMonthFilter||mk.slice(5,7)===receiptsMonthFilter).map(mk => {
+      const mkCol = !!receiptsCollapsed.months[mk];
+      const mp = byYear[yr][mk];
+      const catsHtml = CATS.filter(cat=>!receiptsCatFilter||cat.id===receiptsCatFilter).map(cat => {
+        const rows = mp.filter(p=>p.cat===cat.id&&(!receiptsStatusFilter||(p.status||'').toLowerCase()===receiptsStatusFilter))
+          .sort((a,b)=>b.date.localeCompare(a.date));
+        if (!rows.length) return '';
+        const ck = mk+':'+cat.id;
+        const catCol = !!receiptsCollapsed.cats[ck];
+        const linked = rows.filter(p=>p.receiptUrl).length;
+        const chip = `<span class="history-chip" style="background:${cat.color}22;color:${cat.color};border-color:${cat.color}">${linked} of ${rows.length} linked</span>`;
+        return `<div class="history-cat-section">`
+          +`<div class="history-cat-label" data-rcat="${ck}" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat${catCol?' collapsed':''}">▼</span><span class="cat-dot" style="background:${cat.color}"></span>${cat.label}</span>${chip}</div>`
+          +`<div class="receipts-cat-body"${catCol?' style="display:none"':''}><div style="background:var(--bg2);border:1px solid var(--border2)">${rows.map(p=>receiptRow(p)).join('')}</div></div>`
+          +`</div>`;
       }).join('');
-      return `<div style="margin-bottom:6px">
-        <div class="receipts-year-hdr" data-ryk="${yrKey}" style="display:flex;align-items:center;gap:6px;padding:3px 0;cursor:pointer;user-select:none">
-          <span class="history-toggle history-toggle-year${yrCol?' collapsed':''}">▼</span>
-          <span style="font-family:var(--mono);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${yr}</span>
-        </div>
-        <div class="receipts-year-body" style="padding-left:14px${yrCol?';display:none':''}">${monthsHtml}</div>
-      </div>`;
+      if (!catsHtml) return '';
+      return `<div class="history-month-block">`
+        +`<div class="history-month-header receipts-month-hdr" data-rmk="${mk}">`
+          +`<span class="history-toggle history-toggle-month${mkCol?' collapsed':''}">▼</span>`
+          +`<span class="history-month-title">${monthLabelFull(mk)}</span>`
+        +`</div>`
+        +`<div class="history-month-body"${mkCol?' style="display:none"':''}>${catsHtml}</div>`
+        +`</div>`;
     }).join('');
-    return `<div class="history-cat-section">
-      <div class="history-cat-label" data-rcat="${cat.id}" style="cursor:pointer;user-select:none">
-        <span style="display:flex;align-items:center;gap:6px">
-          <span class="history-toggle history-toggle-cat${catCol?' collapsed':''}">▼</span>
-          <span class="cat-dot" style="background:${cat.color}"></span>${cat.label}
-        </span>
-        ${count}
-      </div>
-      <div class="receipts-cat-body" style="padding-left:14px${catCol?';display:none':''}">${yearsHtml}</div>
-    </div>`;
+    if (!monthsHtml) return '';
+    return `<div class="history-year-block">`
+      +`<div class="history-year-header receipts-year-hdr" data-ryk="${yr}">`
+        +`<span class="history-toggle history-toggle-year${yrCol?' collapsed':''}">▼</span>`
+        +`<span class="history-year-title">${yr}</span>`
+      +`</div>`
+      +`<div class="history-year-body"${yrCol?' style="display:none"':''}>${monthsHtml}</div>`
+      +`</div>`;
   }).join('');
 
   const catOptions = CATS
@@ -3055,20 +3048,20 @@ function filterReceiptsByStatus(status) {
   receiptsCollapsed.cats = {};
   receiptsCollapsed.years = {};
   receiptsCollapsed.months = {};
-  CATS.forEach(cat => { receiptsCollapsed.cats[cat.id] = true; });
   purchases.forEach(p => {
     const mk = getMonthKey(p.date);
     if (!mk) return;
-    receiptsCollapsed.years[p.cat + ':' + mk.slice(0,4)] = true;
-    receiptsCollapsed.months[p.cat + ':' + mk] = true;
+    receiptsCollapsed.years[mk.slice(0,4)] = true;
+    receiptsCollapsed.months[mk] = true;
+    receiptsCollapsed.cats[mk + ':' + p.cat] = true;
   });
   // Expand only sections containing a matching purchase
   purchases.filter(p => (p.status || '').toLowerCase() === status).forEach(p => {
     const mk = getMonthKey(p.date);
     if (!mk) return;
-    delete receiptsCollapsed.cats[p.cat];
-    delete receiptsCollapsed.years[p.cat + ':' + mk.slice(0,4)];
-    delete receiptsCollapsed.months[p.cat + ':' + mk];
+    delete receiptsCollapsed.years[mk.slice(0,4)];
+    delete receiptsCollapsed.months[mk];
+    delete receiptsCollapsed.cats[mk + ':' + p.cat];
   });
   saveCollapseState();
   renderReceipts();
