@@ -1121,17 +1121,20 @@ function initAuth(){
   inp.addEventListener('blur',commitEdit);
 })();
 
+// ── SESSION STORAGE HELPERS (safe against privacy-blocked storage) ────────
+function _ssGet(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
+function _ssSet(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}
 // ── STATE ─────────────────────────────────────────────────
 const now=new Date();
-let activeLogMonth=sessionStorage.getItem('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
-let activeTab=sessionStorage.getItem('activeTab')||CATS[0].id;
-let activeView=sessionStorage.getItem('activeView')||'log';
-let historyCollapsed=JSON.parse(sessionStorage.getItem('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
-let receiptsCollapsed=JSON.parse(sessionStorage.getItem('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
+let activeLogMonth=_ssGet('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
+let activeTab=_ssGet('activeTab')||CATS[0].id;
+let activeView=_ssGet('activeView')||'log';
+let historyCollapsed=JSON.parse(_ssGet('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
+let receiptsCollapsed=JSON.parse(_ssGet('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
 let receiptsStatusFilter=null;let historyStatusFilter=null;let historyCatFilter=null;
 let historyMonthFilter=null;let historyYearFilter=null;
 let receiptsCatFilter=null;let receiptsMonthFilter=null;let receiptsYearFilter=null;
-function saveCollapseState(){sessionStorage.setItem('historyCollapsed',JSON.stringify(historyCollapsed));sessionStorage.setItem('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
+function saveCollapseState(){_ssSet('historyCollapsed',JSON.stringify(historyCollapsed));_ssSet('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
 let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
 let batchSelected=new Set(); // selected purchase IDs
@@ -1479,7 +1482,7 @@ function closeInfoPopup(){
 function navigateToTransaction(id){
   const p=data.purchases.find(x=>x.id===id);if(!p)return;
   activeTab=p.cat;activeLogMonth=getPurchaseMonth(p);
-  sessionStorage.setItem('activeTab',activeTab);sessionStorage.setItem('activeLogMonth',activeLogMonth);
+  _ssSet('activeTab',activeTab);_ssSet('activeLogMonth',activeLogMonth);
   batchMode=false;batchSelected=new Set();
   render();switchView('log');
   setTimeout(()=>{
@@ -1503,14 +1506,14 @@ function renderTabs(){
       if(e.target.classList.contains('tab-close'))return;
       clearTimeout(_t);
       const tabId=btn.dataset.tab;
-      _t=setTimeout(()=>{activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();},180);
+      _t=setTimeout(()=>{activeTab=tabId;_ssSet('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();},180);
     });
     btn.addEventListener('dblclick',e=>{
       if(e.target.classList.contains('tab-close'))return;
       clearTimeout(_t);
       e.stopPropagation();
       const tabId=btn.dataset.tab;
-      if(activeTab!==tabId){activeTab=tabId;sessionStorage.setItem('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();}
+      if(activeTab!==tabId){activeTab=tabId;_ssSet('activeTab',activeTab);batchMode=false;batchSelected=new Set();renderTabs();renderPanels();renderSummary();pushNav();}
       const cur=document.querySelector('.tab[data-tab="'+tabId+'"]');
       if(cur)startTabRename(tabId,cur);
     });
@@ -2221,7 +2224,7 @@ function setStickyOffset(){
   document.documentElement.style.setProperty('--sticky-offset',h+'px');
 }
 function _switchViewInternal(v){
-  activeView=v;sessionStorage.setItem('activeView',v);
+  activeView=v;_ssSet('activeView',v);
   const isLog=v==='log',isHist=v==='history',isRec=v==='receipts';
   document.getElementById('logView').style.display=isLog?'block':'none';
   document.getElementById('monthBarEl').style.display=isLog?'flex':'none';
@@ -3609,7 +3612,7 @@ document.getElementById('budgetMgrFill').addEventListener('click',()=>{
 
 
 // ── RENDER ────────────────────────────────────────────────
-function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();sessionStorage.setItem('activeLogMonth',activeLogMonth);sessionStorage.setItem('activeTab',activeTab);}
+function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();_ssSet('activeLogMonth',activeLogMonth);_ssSet('activeTab',activeTab);}
 initAuth();
 </script>
 </body>
