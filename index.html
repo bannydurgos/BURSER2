@@ -297,7 +297,8 @@ td.col-subrcv{min-width:150px}
 .chip-hw{background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
-.receipts-controls{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:16px;padding-top:6px;padding-bottom:6px;position:sticky;top:var(--sticky-offset,0px);z-index:9;background:var(--bg)}
+.receipts-controls{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;margin-bottom:16px;padding:6px 0;position:sticky;top:var(--sticky-offset,0px);z-index:9;background:var(--bg)}
+.receipts-controls .hdr-btn{padding:5px 7px}
 .receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
 .history-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px;justify-content:space-between}
@@ -453,7 +454,7 @@ td.col-subrcv{min-width:150px}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
-  .receipts-controls{justify-content:flex-start;flex-wrap:wrap}
+  .receipts-controls{justify-content:flex-start;overflow-x:auto}
   .history-view.active{width:100%;max-width:100%}
   th.col-h-dates,td.col-h-dates{display:none}
   .history-table .col-h-date{width:12%}
@@ -2115,9 +2116,10 @@ function renderHistory(){
     +'<button class="hdr-btn history-status-btn" data-status="submitted" style="'+(historyStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':'')+'">Submitted</button>'
     +'<button class="hdr-btn history-status-btn" data-status="received" style="'+(historyStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':'')+'">Received</button>'
     +'<div class="receipts-divider"></div>'
-    +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
-    +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
-    +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
+    +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
+    +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
+    +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
+    +'<button class="hdr-btn" id="historyExpandToggle">'+(anyHCol?'Expand':'Collapse')+'</button>'
     +'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>'
     +'</div>'
     +'<div>'
@@ -3068,6 +3070,7 @@ function renderReceipts() {
       +`</div>`;
   }).join('');
 
+  const anyRCol=Object.values(receiptsCollapsed.years).some(Boolean)||Object.values(receiptsCollapsed.months).some(Boolean)||Object.values(receiptsCollapsed.cats).some(Boolean);
   const catOptions = CATS
     .filter(cat => purchases.some(p => p.cat === cat.id))
     .map(cat => `<option value="${cat.id}"${receiptsCatFilter===cat.id?' selected':''}>${cat.label}</option>`)
@@ -3081,18 +3084,19 @@ function renderReceipts() {
       <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
       <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
       <div class="receipts-divider"></div>
-      <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:130px">
+      <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px">
         <option value="">Category…</option>
         ${catOptions}
       </select>
-      <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:100px">
+      <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px">
         <option value="">Month…</option>
         ${monthOptions}
       </select>
-      <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:76px">
+      <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px">
         <option value="">Year…</option>
         ${yearOptions}
       </select>
+      <button class="hdr-btn" id="receiptsExpandToggle">${anyRCol?'Expand':'Collapse'}</button>
       <button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>
     </div>
     <div>
