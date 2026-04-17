@@ -897,6 +897,16 @@ td.col-subrcv{min-width:150px}
   </div>
 </div>
 
+<!-- MH BUDGET ROLLOVER TOAST -->
+<div class="rollover-toast" id="mhBudgetRolloverToast">
+  <div class="rollover-toast-title" id="mhBudgetRolloverTitle"></div>
+  <div class="rollover-toast-body" id="mhBudgetRolloverBody"></div>
+  <div class="rollover-toast-actions">
+    <button class="rollover-no" id="mhBudgetRolloverNo">Skip</button>
+    <button class="rollover-yes" id="mhBudgetRolloverYes">Roll over to <span id="mhBudgetRolloverNextMonth"></span></button>
+  </div>
+</div>
+
 <script>
 // ── DATA ─────────────────────────────────────────────────
 const DEFAULT_CATS=[
@@ -917,7 +927,7 @@ const MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec
 const MF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function loadData(){
-  return{purchases:[],budgets:{},nextId:1,answeredRollovers:[]};
+  return{purchases:[],budgets:{},nextId:1,answeredRollovers:[],answeredBudgetRollovers:[]};
 }
 let data=loadData();
 let _currentUser=null;
@@ -956,7 +966,7 @@ async function loadFromFirebase(){
   const purchases=ps.docs.map(d=>d.data());
   const budgets={};bs.docs.forEach(d=>{budgets[d.id]=d.data().amount;});
   const maxId=purchases.reduce((m,p)=>Math.max(m,p.id||0),0);
-  data={purchases,budgets,nextId:maxId+1,answeredRollovers:[]};
+  data={purchases,budgets,nextId:maxId+1,answeredRollovers:[],answeredBudgetRollovers:(userSnap.exists()&&userSnap.data().answeredBudgetRollovers)||[]};
   answeredIds=new Set();
   if(userSnap.exists()&&userSnap.data().cats&&userSnap.data().cats.length){
     CATS=userSnap.data().cats;
@@ -1057,6 +1067,7 @@ function initAuth(){
           const dn=await loadDisplayName();
           document.getElementById('userEmail').textContent=dn||user.email;
           _navRestoring=true;render();_switchViewInternal(activeView);_navRestoring=false;replaceNav();
+          checkMhBudgetRollover();
         }
       }else{
         _currentUser=null;data=loadData();
@@ -2690,6 +2701,53 @@ document.getElementById('rolloverNo').addEventListener('click',()=>{
   const srcNo=data.purchases.find(p=>p.id===item.purchaseId);if(srcNo){srcNo.declinedRollover=true;savePurchase(srcNo);}
   if(rolloverQueue.length)processRolloverQueue();
   else{rolloverActive=false;document.getElementById('rolloverToast').classList.remove('open');}
+});
+
+
+// ── MH END-OF-MONTH BUDGET ROLLOVER ──────────────────────────
+function prevMonthKey(mk){const{year,month}=parseMonthKey(mk);const d=new Date(year,month-1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function checkMhBudgetRollover(){
+  const cat=CAT_MAP['mh'];if(!cat||!cat.hasBudget)return;
+  const prevMk=prevMonthKey(currentMonthKey());
+  const budget=getBudget('mh',prevMk);if(!budget)return;
+  const spent=data.purchases.filter(p=>p.cat==='mh'&&getPurchaseMonth(p)===prevMk).reduce((s,p)=>s+p.amount,0);
+  const leftover=Math.round((budget-spent)*100)/100;if(leftover<=0)return;
+  const answered=(data.answeredBudgetRollovers||[]).includes('mh:'+prevMk);if(answered)return;
+  const nextMk=nextMonthKey(prevMk);
+  document.getElementById('mhBudgetRolloverTitle').textContent='Mental Health · '+monthLabel(prevMk)+' · Budget remaining';
+  document.getElementById('mhBudgetRolloverBody').innerHTML=
+    '<div style="display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-bottom:10px">'
+    +'<span style="color:var(--text3)">Budget</span><span>'+fmt(budget)+'</span>'
+    +'<span style="color:var(--text3)">Spent</span><span>'+fmt(spent)+'</span>'
+    +'<span style="color:var(--green-text);font-weight:600">Remaining</span><span style="color:var(--green-text);font-weight:600">'+fmt(leftover)+'</span>'
+    +'</div>'
+    +'Roll <strong>'+fmt(leftover)+'</strong> into '+monthLabelFull(nextMk)+'\'s Mental Health budget?';
+  document.getElementById('mhBudgetRolloverNextMonth').textContent=monthLabel(nextMk);
+  document.getElementById('mhBudgetRolloverToast').classList.add('open');
+}
+document.getElementById('mhBudgetRolloverYes').addEventListener('click',()=>{
+  const prevMk=prevMonthKey(currentMonthKey());
+  const nextMk=nextMonthKey(prevMk);
+  const budget=getBudget('mh',prevMk);
+  const spent=data.purchases.filter(p=>p.cat==='mh'&&getPurchaseMonth(p)===prevMk).reduce((s,p)=>s+p.amount,0);
+  const leftover=Math.round((budget-spent)*100)/100;
+  if(leftover>0){
+    const currentNext=getBudget('mh',nextMk);
+    setBudget('mh',nextMk,Math.round((currentNext+leftover)*100)/100);
+    if(_currentUser){const db=window._fbDb;const uid=_currentUser.uid;window._fbSetDoc(window._fbDoc(db,'users',uid,'budgets','mh:'+nextMk),{amount:data.budgets['mh:'+nextMk]});}
+  }
+  if(!data.answeredBudgetRollovers)data.answeredBudgetRollovers=[];
+  data.answeredBudgetRollovers.push('mh:'+prevMk);
+  if(_currentUser)window._fbSetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid),{answeredBudgetRollovers:data.answeredBudgetRollovers},{merge:true});
+  document.getElementById('mhBudgetRolloverToast').classList.remove('open');
+  render();
+});
+document.getElementById('mhBudgetRolloverNo').addEventListener('click',()=>{
+  const prevMk=prevMonthKey(currentMonthKey());
+  if(!data.answeredBudgetRollovers)data.answeredBudgetRollovers=[];
+  data.answeredBudgetRollovers.push('mh:'+prevMk);
+  if(_currentUser)window._fbSetDoc(window._fbDoc(window._fbDb,'users',_currentUser.uid),{answeredBudgetRollovers:data.answeredBudgetRollovers},{merge:true});
+  document.getElementById('mhBudgetRolloverToast').classList.remove('open');
 });
 
 
