@@ -2191,8 +2191,25 @@ function toggleAllHistory(){
   const anyCollapsed=Object.values(historyCollapsed.years).some(Boolean)||Object.values(historyCollapsed.months).some(Boolean)||Object.values(historyCollapsed.cats).some(Boolean);
   if(anyCollapsed)expandAllHistory();else collapseAllHistory();
 }
+function expandMatchingHistory(){
+  data.purchases
+    .filter(p=>(!historyStatusFilter||(p.status||'').toLowerCase()===historyStatusFilter)
+              &&(!historyCatFilter||p.cat===historyCatFilter)
+              &&(!historyMonthFilter||getPurchaseMonth(p).slice(5,7)===historyMonthFilter)
+              &&(!historyYearFilter||getPurchaseMonth(p).slice(0,4)===historyYearFilter))
+    .forEach(p=>{
+      const mk=getPurchaseMonth(p);
+      const yr=mk.slice(0,4);
+      const ck=mk+':'+p.cat;
+      historyCollapsed.years[yr]=false;
+      historyCollapsed.months[mk]=false;
+      historyCollapsed.cats[ck]=false;
+    });
+  saveCollapseState();
+}
 function filterHistoryByStatus(status){
   historyStatusFilter=historyStatusFilter===status?null:status;
+  expandMatchingHistory();
   renderHistory();
 }
 function clearHistoryFilters(){
@@ -2206,9 +2223,9 @@ function wireHistoryJump(){
   const catSel=document.getElementById('historyJumpCat');
   const expandToggle=document.getElementById('historyExpandToggle');
   if(!moSel)return;
-  if(moSel)moSel.addEventListener('change',()=>{historyMonthFilter=moSel.value||null;renderHistory();});
-  if(yrSel)yrSel.addEventListener('change',()=>{historyYearFilter=yrSel.value||null;renderHistory();});
-  if(catSel)catSel.addEventListener('change',()=>{historyCatFilter=catSel.value||null;renderHistory();});
+  if(moSel)moSel.addEventListener('change',()=>{historyMonthFilter=moSel.value||null;expandMatchingHistory();renderHistory();});
+  if(yrSel)yrSel.addEventListener('change',()=>{historyYearFilter=yrSel.value||null;expandMatchingHistory();renderHistory();});
+  if(catSel)catSel.addEventListener('change',()=>{historyCatFilter=catSel.value||null;expandMatchingHistory();renderHistory();});
   if(expandToggle)expandToggle.addEventListener('click',toggleAllHistory);
   const clearBtn=document.getElementById('historyClearBtn');
   if(clearBtn)clearBtn.addEventListener('click',clearHistoryFilters);
