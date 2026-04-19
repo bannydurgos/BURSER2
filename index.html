@@ -298,6 +298,7 @@ td.col-subrcv{min-width:150px}
 .chip-mh{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-text)}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
 .receipts-controls{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;margin-bottom:16px;padding:6px 0;position:sticky;top:var(--sticky-offset,0px);z-index:9;background:var(--bg)}
+.receipts-controls-inner{display:contents}
 .receipts-controls .hdr-btn{padding:5px 7px}
 .receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
@@ -454,7 +455,8 @@ td.col-subrcv{min-width:150px}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
-  .receipts-controls{justify-content:flex-start;overflow-x:auto}
+  .receipts-controls{display:block;padding:0}
+  .receipts-controls-inner{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:6px 0;-webkit-overflow-scrolling:touch}
   .history-view.active{width:100%;max-width:100%}
   th.col-h-dates,td.col-h-dates{display:none}
   .history-table .col-h-date{width:12%}
@@ -1146,6 +1148,7 @@ let receiptsCollapsed=JSON.parse(_ssGet('receiptsCollapsed')||'{"cats":{},"years
 let receiptsStatusFilter=null;let historyStatusFilter=null;let historyCatFilter=null;
 let historyMonthFilter=null;let historyYearFilter=null;
 let receiptsCatFilter=null;let receiptsMonthFilter=null;let receiptsYearFilter=null;
+let receiptsMissingFilter=false;
 function saveCollapseState(){_ssSet('historyCollapsed',JSON.stringify(historyCollapsed));_ssSet('receiptsCollapsed',JSON.stringify(receiptsCollapsed));}
 let selectedCat=CATS[0].id;
 let batchMode=false; // batch selection active?
@@ -2111,7 +2114,7 @@ function renderHistory(){
   const histYearOpts=allYears.map(yr=>'<option value="'+yr+'"'+(historyYearFilter===yr?' selected':'')+'>'+yr+'</option>').join('');
   const histMonthOpts=allMonths.map(m=>'<option value="'+m+'"'+(historyMonthFilter===m?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>').join('');
   const histCatOpts=CATS.filter(c=>data.purchases.some(p=>p.cat===c.id)).map(c=>'<option value="'+c.id+'"'+(historyCatFilter===c.id?' selected':'')+'>'+c.label+'</option>').join('');
-  el.innerHTML='<div class="receipts-controls">'
+  el.innerHTML='<div class="receipts-controls"><div class="receipts-controls-inner">'
     +'<button class="hdr-btn history-status-btn" data-status="pending" style="'+(historyStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':'')+'">Pending</button>'
     +'<button class="hdr-btn history-status-btn" data-status="submitted" style="'+(historyStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':'')+'">Submitted</button>'
     +'<button class="hdr-btn history-status-btn" data-status="received" style="'+(historyStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':'')+'">Received</button>'
@@ -2121,7 +2124,7 @@ function renderHistory(){
     +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
     +'<button class="hdr-btn" id="historyExpandToggle">'+(anyHCol?'Expand':'Collapse')+'</button>'
     +'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>'
-    +'</div>'
+    +'</div></div>'
     +'<div>'
     +years.map(yr=>{
     const yCol=!!historyCollapsed.years[yr];
@@ -3056,7 +3059,7 @@ function renderReceipts() {
       const mkCol = !!receiptsCollapsed.months[mk];
       const mp = byYear[yr][mk];
       const catsHtml = CATS.filter(cat=>!receiptsCatFilter||cat.id===receiptsCatFilter).map(cat => {
-        const rows = mp.filter(p=>p.cat===cat.id&&(!receiptsStatusFilter||(p.status||'').toLowerCase()===receiptsStatusFilter))
+        const rows = mp.filter(p=>p.cat===cat.id&&(!receiptsStatusFilter||(p.status||'').toLowerCase()===receiptsStatusFilter)&&(!receiptsMissingFilter||!p.receiptUrl))
           .sort((a,b)=>b.date.localeCompare(a.date));
         if (!rows.length) return '';
         const ck = mk+':'+cat.id;
@@ -3096,7 +3099,7 @@ function renderReceipts() {
   const yearOptions = allReceiptYears.map(yr=>`<option value="${yr}"${receiptsYearFilter===yr?' selected':''}>${yr}</option>`).join('');
 
   el.innerHTML = `
-    <div class="receipts-controls">
+    <div class="receipts-controls"><div class="receipts-controls-inner">
       <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
       <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
       <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
@@ -3115,11 +3118,11 @@ function renderReceipts() {
       </select>
       <button class="hdr-btn" id="receiptsExpandToggle">${anyRCol?'Expand':'Collapse'}</button>
       <button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>
-    </div>
+    </div></div>
     <div>
       ${sections}
-      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:14px;text-align:center">
-        ${withCount} of ${purchases.length} purchases have receipt links.
+      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;margin-top:14px;text-align:center;cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:${receiptsMissingFilter?'var(--blue-text)':'var(--text2)'}">
+        ${withCount} of ${purchases.length} purchases have receipt links${purchases.length-withCount>0?' · '+(purchases.length-withCount)+' missing':''}${receiptsMissingFilter?' [showing missing]':''}.
       </div>
     </div>`;
 
@@ -3129,6 +3132,7 @@ function renderReceipts() {
 
 function clearReceiptsFilters(){
   receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;
+  receiptsMissingFilter=false;
   receiptsCollapsed={cats:{},years:{},months:{}};
   saveCollapseState();renderReceipts();
 }
@@ -3146,6 +3150,36 @@ function wireReceiptJump() {
   if (expandToggle) expandToggle.addEventListener('click', toggleAllReceipts);
   const clearBtn = document.getElementById('receiptsClearBtn');
   if (clearBtn) clearBtn.addEventListener('click', clearReceiptsFilters);
+  const linkCount = document.getElementById('receiptsLinkCount');
+  if (linkCount) linkCount.addEventListener('click', toggleReceiptsMissingFilter);
+}
+
+function toggleReceiptsMissingFilter() {
+  receiptsMissingFilter = !receiptsMissingFilter;
+  const purchases = data.purchases.filter(p => !p.isRollover);
+  receiptsCollapsed.cats = {};
+  receiptsCollapsed.years = {};
+  receiptsCollapsed.months = {};
+  if (receiptsMissingFilter) {
+    // Collapse everything first
+    purchases.forEach(p => {
+      const mk = getMonthKey(p.date);
+      if (!mk) return;
+      receiptsCollapsed.years[mk.slice(0,4)] = true;
+      receiptsCollapsed.months[mk] = true;
+      receiptsCollapsed.cats[mk + ':' + p.cat] = true;
+    });
+    // Expand only sections that contain a purchase without a receipt
+    purchases.filter(p => !p.receiptUrl).forEach(p => {
+      const mk = getMonthKey(p.date);
+      if (!mk) return;
+      delete receiptsCollapsed.years[mk.slice(0,4)];
+      delete receiptsCollapsed.months[mk];
+      delete receiptsCollapsed.cats[mk + ':' + p.cat];
+    });
+  }
+  saveCollapseState();
+  renderReceipts();
 }
 
 function filterReceiptsByStatus(status) {
