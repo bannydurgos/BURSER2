@@ -299,6 +299,7 @@ td.col-subrcv{min-width:150px}
 .chip-tr{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)}
 .receipts-controls{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;margin-bottom:16px;padding:6px 0;position:sticky;top:var(--sticky-offset,0px);z-index:9;background:var(--bg)}
 .receipts-controls-inner{display:contents}
+.rc-row{display:contents}
 .receipts-controls .hdr-btn{padding:5px 7px}
 .receipts-divider{width:1px;height:20px;background:var(--border2);flex-shrink:0;margin:0 2px}
 .history-cat-section{margin-bottom:6px}
@@ -455,8 +456,10 @@ td.col-subrcv{min-width:150px}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
-  .receipts-controls{display:block;padding:0}
-  .receipts-controls-inner{display:flex;align-items:center;gap:5px;overflow-x:auto;padding:6px 0;-webkit-overflow-scrolling:touch}
+  .receipts-controls{display:block;padding:4px 0}
+  .receipts-controls-inner{display:flex;flex-direction:column;gap:5px}
+  .receipts-controls-inner .receipts-divider{display:none}
+  .rc-row{display:flex;align-items:center;justify-content:center;gap:5px}
   .history-view.active{width:100%;max-width:100%}
   th.col-h-dates,td.col-h-dates{display:none}
   .history-table .col-h-date{width:12%}
@@ -2115,15 +2118,21 @@ function renderHistory(){
   const histMonthOpts=allMonths.map(m=>'<option value="'+m+'"'+(historyMonthFilter===m?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>').join('');
   const histCatOpts=CATS.filter(c=>data.purchases.some(p=>p.cat===c.id)).map(c=>'<option value="'+c.id+'"'+(historyCatFilter===c.id?' selected':'')+'>'+c.label+'</option>').join('');
   el.innerHTML='<div class="receipts-controls"><div class="receipts-controls-inner">'
+    +'<div class="rc-row">'
     +'<button class="hdr-btn history-status-btn" data-status="pending" style="'+(historyStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':'')+'">Pending</button>'
     +'<button class="hdr-btn history-status-btn" data-status="submitted" style="'+(historyStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':'')+'">Submitted</button>'
     +'<button class="hdr-btn history-status-btn" data-status="received" style="'+(historyStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':'')+'">Received</button>'
+    +'</div>'
     +'<div class="receipts-divider"></div>'
+    +'<div class="rc-row">'
     +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
     +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
     +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
+    +'</div>'
+    +'<div class="rc-row">'
     +'<button class="hdr-btn" id="historyExpandToggle">'+(anyHCol?'Expand':'Collapse')+'</button>'
     +'<button class="hdr-btn" id="historyClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>'
+    +'</div>'
     +'</div></div>'
     +'<div>'
     +years.map(yr=>{
@@ -3100,24 +3109,30 @@ function renderReceipts() {
 
   el.innerHTML = `
     <div class="receipts-controls"><div class="receipts-controls-inner">
-      <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
-      <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
-      <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
+      <div class="rc-row">
+        <button class="hdr-btn receipts-status-btn" data-status="pending" style="${receiptsStatusFilter==='pending'?'background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue-text)':''}">Pending</button>
+        <button class="hdr-btn receipts-status-btn" data-status="submitted" style="${receiptsStatusFilter==='submitted'?'background:var(--red-bg);color:var(--red-text);border-color:var(--red-text)':''}">Submitted</button>
+        <button class="hdr-btn receipts-status-btn" data-status="received" style="${receiptsStatusFilter==='received'?'background:var(--green-bg);color:var(--green-text);border-color:var(--green-text)':''}">Received</button>
+      </div>
       <div class="receipts-divider"></div>
-      <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px">
-        <option value="">Category…</option>
-        ${catOptions}
-      </select>
-      <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px">
-        <option value="">Month…</option>
-        ${monthOptions}
-      </select>
-      <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px">
-        <option value="">Year…</option>
-        ${yearOptions}
-      </select>
-      <button class="hdr-btn" id="receiptsExpandToggle">${anyRCol?'Expand':'Collapse'}</button>
-      <button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>
+      <div class="rc-row">
+        <select id="receiptsJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px">
+          <option value="">Category…</option>
+          ${catOptions}
+        </select>
+        <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px">
+          <option value="">Month…</option>
+          ${monthOptions}
+        </select>
+        <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px">
+          <option value="">Year…</option>
+          ${yearOptions}
+        </select>
+      </div>
+      <div class="rc-row">
+        <button class="hdr-btn" id="receiptsExpandToggle">${anyRCol?'Expand':'Collapse'}</button>
+        <button class="hdr-btn" id="receiptsClearBtn" style="color:var(--red-text);border-color:var(--red-text)">Clear</button>
+      </div>
     </div></div>
     <div>
       ${sections}
