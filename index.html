@@ -2170,6 +2170,7 @@ function renderHistory(){
           +'</table></div></div>'
         +'</div>';
       }).join('');
+      if(!sections)return'';
       return'<div class="history-month-block">'
         +'<div class="history-month-header" data-month="'+mk+'">'
           +'<span class="history-toggle history-toggle-month'+(mCol?' collapsed':'')+'">▼</span>'
@@ -2178,6 +2179,7 @@ function renderHistory(){
         +'<div class="history-month-body"'+(mCol?' style="display:none"':'')+'>'+sections+'</div>'
       +'</div>';
     }).join('');
+    if(!monthsHtml)return'';
     return'<div class="history-year-block">'
       +'<div class="history-year-header" data-year="'+yr+'">'
         +'<span class="history-toggle history-toggle-year'+(yCol?' collapsed':'')+'">▼</span>'
@@ -3182,9 +3184,9 @@ function wireReceiptJump() {
   const catSel = document.getElementById('receiptsJumpCat');
   const monthSel = document.getElementById('receiptsJumpMonth');
   const yearSel = document.getElementById('receiptsJumpYear');
-  if (catSel) catSel.addEventListener('change', () => { receiptsCatFilter = catSel.value || null; renderReceipts(); });
-  if (monthSel) monthSel.addEventListener('change', () => { receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
-  if (yearSel) yearSel.addEventListener('change', () => { receiptsYearFilter = yearSel.value || null; renderReceipts(); });
+  if (catSel) catSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsCatFilter = catSel.value || null; renderReceipts(); });
+  if (monthSel) monthSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
+  if (yearSel) yearSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsMissingFilter=false; receiptsYearFilter = yearSel.value || null; renderReceipts(); });
   document.querySelectorAll('.receipts-status-btn').forEach(btn => {
     btn.addEventListener('click', () => filterReceiptsByStatus(btn.dataset.status));
   });
@@ -3203,6 +3205,10 @@ function toggleReceiptsMissingFilter() {
   receiptsCollapsed.years = {};
   receiptsCollapsed.months = {};
   if (receiptsMissingFilter) {
+    receiptsStatusFilter = null;
+    receiptsCatFilter = null;
+    receiptsMonthFilter = null;
+    receiptsYearFilter = null;
     // Collapse everything first
     purchases.forEach(p => {
       const mk = getMonthKey(p.date);
@@ -3234,6 +3240,7 @@ function filterReceiptsByStatus(status) {
     return;
   }
   receiptsStatusFilter = status;
+  receiptsCatFilter = null; receiptsMonthFilter = null; receiptsYearFilter = null; receiptsMissingFilter = false;
   const purchases = data.purchases.filter(p => !p.isRollover);
   // Collapse everything first
   receiptsCollapsed.cats = {};
