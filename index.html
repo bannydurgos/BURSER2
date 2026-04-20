@@ -3430,7 +3430,7 @@ function receiptRow(p) {
   return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}${p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>':''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}${p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>':''}${(p.submittedDate&&p.receivedDate)?' · <span style="color:var(--text2)">'+(Math.round((new Date(p.receivedDate)-new Date(p.submittedDate))/(1000*60*60*24)))+' days</span>':''}</div>
     </div>
     <div style="flex-shrink:0">${statusBadge(p.status)}</div>
     <div class="receipt-link-area" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
