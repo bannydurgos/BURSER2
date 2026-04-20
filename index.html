@@ -2635,8 +2635,7 @@ function openPendingSheet(){
       }).join('')
     +'</div>';
   }).join('');
-  const reimbDiff=grandTotal!==grandReimb?' · '+fmt(grandReimb)+' reimbursable':'';
-  sub.textContent=submitted.length+' submitted · '+fmt(grandTotal)+' awaiting'+reimbDiff;
+  sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
   body.innerHTML=sections
     +'<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value">'+fmt(grandReimb)+'</span></div>';
   document.getElementById('pendingOverlay').classList.add('open');
