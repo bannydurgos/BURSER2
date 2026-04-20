@@ -243,8 +243,8 @@ tr:hover td{background:var(--bg3)}
 .row-check{width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)}
 td.check-cell{width:36px;text-align:center;padding:10px 4px 10px 12px}
 th.check-cell{width:36px;padding:9px 4px 9px 12px}
-.date-sub{display:block;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.02em;white-space:nowrap}
-.date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px;white-space:nowrap}
+.date-sub{display:block;font-family:var(--mono);font-size:10px;color:var(--red-text);margin-top:2px;letter-spacing:.02em;white-space:nowrap}
+.date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px;white-space:nowrap;color:var(--green-text)}
 td.col-subrcv{min-width:150px}
 .reimb-hint{font-family:var(--mono);font-size:10px;color:var(--hw);display:block;margin-top:2px}
 .rollover-desc{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em}
@@ -314,7 +314,7 @@ td.col-subrcv{min-width:150px}
 .fab:active{transform:translate(1px,1px);box-shadow:2px 2px 0 rgba(0,0,0,.15)}
 
 /* MODALS (add + edit) */
-.edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:110;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:130;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .edit-overlay.open{opacity:1;pointer-events:all}
 .edit-modal{background:var(--bg2);border:2px solid var(--text);padding:24px;width:400px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto}
 .edit-modal h3{font-family:var(--mono);font-size:13px;font-weight:600;margin-bottom:16px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--border2);padding-bottom:10px}
@@ -1634,9 +1634,9 @@ function makeRows(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate)+'  ':'')+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr;
+      mobInfo=(p.submittedDate?'<span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>  ':'')+(p.receivedDate?'<span style="color:var(--green-text)">'+fmtDate(p.receivedDate)+daysStr+'</span>':'');
     }else if(p.status==='submitted'){
-      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate):'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
+      mobInfo=(p.submittedDate?'<span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
     }else{
       mobInfo=fmtDate(p.date);
     }
@@ -1701,9 +1701,9 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     if(p.status==='received'){
       const days=daysBetween(p.submittedDate,p.receivedDate);
       const daysStr=days!==null?' ('+days+'d)':'';
-      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate)+'  ':'')+(p.receivedDate?fmtDate(p.receivedDate):'')+daysStr;
+      mobInfo=(p.submittedDate?'<span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>  ':'')+(p.receivedDate?'<span style="color:var(--green-text)">'+fmtDate(p.receivedDate)+daysStr+'</span>':'');
     }else if(p.status==='submitted'){
-      mobInfo=(p.submittedDate?'Sub: '+fmtDate(p.submittedDate):'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
+      mobInfo=(p.submittedDate?'<span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'Submitted')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
     }else{
       mobInfo=fmtDate(p.date);
     }
@@ -2621,15 +2621,16 @@ function openPendingSheet(){
       +rows.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
-        const meta=monthLabel(mk)+(p.submittedDate?' · Sub: '+fmtDate(p.submittedDate):'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
-        return'<div class="pending-row" data-id="'+p.id+'" onclick="navigateToTransaction('+p.id+')">'
-          +'<div class="pending-row-left">'
+        const meta=monthLabel(mk)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
+        return'<div class="pending-row" style="cursor:default" data-id="'+p.id+'">'
+          +'<div class="pending-row-left" style="cursor:pointer" onclick="navigateToTransaction('+p.id+')">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
             +'<div class="pending-row-meta">'+meta+'</div>'
           +'</div>'
-          +'<div style="text-align:right">'
+          +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
             +'<div class="pending-row-amount">'+fmt(p.amount)+'</div>'
             +(reimb<p.amount?'<div class="pending-row-reimb">'+fmt(reimb)+' reimbursable</div>':'')
+            +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'">Mark received</button>'
           +'</div>'
         +'</div>';
       }).join('')
@@ -2642,6 +2643,33 @@ function openPendingSheet(){
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
 document.getElementById('pendingOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+document.getElementById('pendingBody').addEventListener('click',function(e){
+  const btn=e.target.closest('.pending-mark-rcv-btn');
+  if(!btn)return;
+  e.stopPropagation();
+  const id=parseInt(btn.dataset.id);
+  const p=data.purchases.find(x=>x.id===id);
+  if(!p||p.status!=='submitted')return;
+  openDatePicker('Date received',date=>{
+    snapshot();p.status='received';p.receivedDate=date;
+    const ancestors=rolloverAncestors(p);
+    const toSave=[p];
+    if(ancestors.length>0){
+      const rootId=ancestors[ancestors.length-1];
+      const allInChain=rolloverChain(data.purchases.find(x=>x.id===rootId)||p);
+      const allDoneExceptAncestors=allInChain.filter(c=>!ancestors.includes(c.id)).every(c=>c.status==='received'||c.status==='oop');
+      if(allDoneExceptAncestors){
+        ancestors.forEach(aid=>{
+          const a=data.purchases.find(x=>x.id===aid);
+          if(a&&a.status!=='received'&&a.status!=='oop'){a.status='received';a.receivedDate=date;toSave.push(a);}
+        });
+      }
+    }
+    Promise.all(toSave.map(x=>savePurchase(x)));render();
+    if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));
+    openPendingSheet();
+  },p.expectedDate);
+});
 
 // ── ROLLOVER ──────────────────────────────────────────────
 let rolloverQueue=[];let rolloverActive=false;
@@ -3395,7 +3423,7 @@ function receiptRow(p) {
   return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}${p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>':''}</div>
     </div>
     <div style="flex-shrink:0">${statusBadge(p.status)}</div>
     <div class="receipt-link-area" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
