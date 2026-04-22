@@ -14,7 +14,6 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, collection, getDocs, getDoc, getDocsFromServer, getDocFromServer, setDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-  import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyATkXrirtiKeJjK37BuzkG76T41HfqyLnw",
@@ -47,12 +46,7 @@
   window._fbGetDoc = getDoc;
   window._fbDeleteDoc = deleteDoc;
   window._fbWriteBatch = () => writeBatch(db);
-  const storage = getStorage(app);
-  window._fbStorage = storage;
-  window._fbStorageRef = storageRef;
-  window._fbUploadBytesResumable = uploadBytesResumable;
-  window._fbGetDownloadURL = getDownloadURL;
-  window._firebaseReady = true;
+window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3265,18 +3259,6 @@ function filterReceiptsByStatus(status) {
   renderReceipts();
 }
 
-async function uploadReceiptFile(file, purchaseId) {
-  if (!_currentUser) throw new Error('Not signed in');
-  const ext = file.name.split('.').pop().toLowerCase();
-  const path = `receipts/${_currentUser.uid}/${purchaseId}_${Date.now()}.${ext}`;
-  const sRef = window._fbStorageRef(window._fbStorage, path);
-  const task = window._fbUploadBytesResumable(sRef, file);
-  return new Promise((resolve, reject) => {
-    task.on('state_changed', null, reject, async () => {
-      resolve(await window._fbGetDownloadURL(sRef));
-    });
-  });
-}
 
 function showReceiptPopover(id, anchorBtn) {
   // Remove any existing popover
@@ -3287,46 +3269,16 @@ function showReceiptPopover(id, anchorBtn) {
   const p = data.purchases.find(x => x.id === id);
   if (!p) return;
 
-  let mode = 'link';
-
   const pop = document.createElement('div');
   pop.className = 'receipt-popover';
   pop.id = 'receipt-popover';
   pop.dataset.id = String(id);
-  pop.style.cssText += ';flex-direction:column;align-items:stretch;gap:8px;min-width:300px';
 
-  // Mode toggle row
-  const toggleRow = document.createElement('div');
-  toggleRow.style.cssText = 'display:flex;gap:4px';
-  const linkModeBtn = document.createElement('button');
-  linkModeBtn.textContent = 'Link';
-  linkModeBtn.style.cssText = 'flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)';
-  const uploadModeBtn = document.createElement('button');
-  uploadModeBtn.textContent = 'Upload photo / PDF';
-  uploadModeBtn.style.cssText = 'flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)';
-  toggleRow.appendChild(linkModeBtn);
-  toggleRow.appendChild(uploadModeBtn);
-
-  // URL section
-  const urlSection = document.createElement('div');
-  urlSection.style.cssText = 'display:flex;gap:8px;align-items:center';
   const input = document.createElement('input');
   input.type = 'url';
   input.placeholder = 'https://drive.google.com/...';
   input.value = p.receiptUrl || '';
-  input.style.cssText = 'flex:1;min-width:0';
-  urlSection.appendChild(input);
 
-  // File section
-  const fileSection = document.createElement('div');
-  fileSection.style.cssText = 'display:none';
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*,.pdf';
-  fileInput.style.cssText = 'font-family:var(--mono);font-size:11px;color:var(--text2);width:100%';
-  fileSection.appendChild(fileInput);
-
-  // Action buttons
   const btnRow = document.createElement('div');
   btnRow.style.cssText = 'display:flex;gap:6px';
   const saveBtn = document.createElement('button');
@@ -3338,27 +3290,9 @@ function showReceiptPopover(id, anchorBtn) {
   btnRow.appendChild(saveBtn);
   btnRow.appendChild(cancelBtn);
 
-  pop.appendChild(toggleRow);
-  pop.appendChild(urlSection);
-  pop.appendChild(fileSection);
+  pop.appendChild(input);
   pop.appendChild(btnRow);
   document.body.appendChild(pop);
-
-  function setMode(m) {
-    mode = m;
-    const isLink = m === 'link';
-    linkModeBtn.style.background = isLink ? 'var(--hw)' : 'var(--bg3)';
-    linkModeBtn.style.color = isLink ? '#fff' : 'var(--text2)';
-    linkModeBtn.style.borderColor = isLink ? 'var(--hw)' : 'var(--border2)';
-    uploadModeBtn.style.background = !isLink ? 'var(--hw)' : 'var(--bg3)';
-    uploadModeBtn.style.color = !isLink ? '#fff' : 'var(--text2)';
-    uploadModeBtn.style.borderColor = !isLink ? 'var(--hw)' : 'var(--border2)';
-    urlSection.style.display = isLink ? 'flex' : 'none';
-    fileSection.style.display = isLink ? 'none' : 'block';
-  }
-  setMode('link');
-  linkModeBtn.addEventListener('click', () => setMode('link'));
-  uploadModeBtn.addEventListener('click', () => setMode('upload'));
 
   // Position below the anchor button
   const rect = anchorBtn.getBoundingClientRect();
@@ -3372,39 +3306,13 @@ function showReceiptPopover(id, anchorBtn) {
   input.focus();
   input.select();
 
-  async function doSave() {
-    if (mode === 'link') {
-      const url = input.value.trim() || null;
-      snapshot();
-      p.receiptUrl = url;
-      savePurchase(p);
-      pop.remove();
-      render();
-    } else {
-      const file = fileInput.files[0];
-      if (!file) { pop.remove(); return; }
-      saveBtn.textContent = 'Uploading…';
-      saveBtn.disabled = true;
-      try {
-        const url = await uploadReceiptFile(file, p.id);
-        snapshot();
-        p.receiptUrl = url;
-        savePurchase(p);
-        pop.remove();
-        render();
-      } catch (err) {
-        saveBtn.textContent = 'Save';
-        saveBtn.disabled = false;
-        let errEl = pop.querySelector('.pop-upload-err');
-        if (!errEl) {
-          errEl = document.createElement('div');
-          errEl.className = 'pop-upload-err';
-          errEl.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--red-text)';
-          pop.insertBefore(errEl, btnRow);
-        }
-        errEl.textContent = 'Upload failed. Try again.';
-      }
-    }
+  function doSave() {
+    const url = input.value.trim() || null;
+    snapshot();
+    p.receiptUrl = url;
+    savePurchase(p);
+    pop.remove();
+    render();
   }
 
   saveBtn.addEventListener('click', doSave);
@@ -3443,31 +3351,15 @@ function receiptRow(p) {
              style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:5px 12px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">+ Add receipt</button>`
       }
     </div>
-    <div class="receipt-input-area" data-id="${p.id}" style="display:none;width:100%;margin-top:8px;flex-direction:column;gap:6px">
-      <div style="display:flex;gap:4px">
-        <button class="receipt-mode-btn receipt-mode-link" data-id="${p.id}" data-mode="link"
-          style="flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--hw);background:var(--hw);color:#fff">Link</button>
-        <button class="receipt-mode-btn receipt-mode-upload" data-id="${p.id}" data-mode="upload"
-          style="flex:1;font-family:var(--mono);font-size:10px;padding:4px 8px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--border2);background:var(--bg3);color:var(--text2)">Upload photo / PDF</button>
-      </div>
-      <div class="receipt-link-section" data-id="${p.id}" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="url" class="receipt-url-input" data-id="${p.id}"
-          value="${p.receiptUrl||''}"
-          placeholder="https://drive.google.com/..."
-          style="flex:1;min-width:200px;font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;outline:none">
-        <button class="receipt-save-link-btn" data-id="${p.id}"
-          style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
-        <button class="receipt-cancel-btn" data-id="${p.id}"
-          style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
-      </div>
-      <div class="receipt-upload-section" data-id="${p.id}" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="file" class="receipt-file-input" data-id="${p.id}" accept="image/*,.pdf"
-          style="font-family:var(--mono);font-size:12px;color:var(--text2);flex:1;min-width:200px">
-        <button class="receipt-save-upload-btn" data-id="${p.id}"
-          style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
-        <button class="receipt-cancel-btn" data-id="${p.id}"
-          style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
-      </div>
+    <div class="receipt-input-area" data-id="${p.id}" style="display:none;width:100%;margin-top:8px;flex-direction:row;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="url" class="receipt-url-input" data-id="${p.id}"
+        value="${p.receiptUrl||''}"
+        placeholder="https://drive.google.com/..."
+        style="flex:1;min-width:200px;font-family:var(--mono);font-size:12px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:7px 10px;outline:none">
+      <button class="receipt-save-link-btn" data-id="${p.id}"
+        style="font-family:var(--mono);font-size:11px;font-weight:600;background:var(--text);color:var(--bg2);border:none;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em">Save</button>
+      <button class="receipt-cancel-btn" data-id="${p.id}"
+        style="font-family:var(--mono);font-size:11px;background:none;border:1px solid var(--border2);padding:7px 10px;cursor:pointer;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Cancel</button>
     </div>
   </div>`;
 }
@@ -3513,23 +3405,6 @@ function wireReceiptRows() {
     });
   });
 
-  // Mode toggle
-  document.querySelectorAll('.receipt-mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
-      const m = btn.dataset.mode;
-      row.querySelectorAll('.receipt-mode-btn').forEach(b => {
-        const active = b.dataset.mode === m;
-        b.style.background = active ? 'var(--hw)' : 'var(--bg3)';
-        b.style.color = active ? '#fff' : 'var(--text2)';
-        b.style.borderColor = active ? 'var(--hw)' : 'var(--border2)';
-      });
-      row.querySelector('.receipt-link-section').style.display = m === 'link' ? 'flex' : 'none';
-      row.querySelector('.receipt-upload-section').style.display = m === 'upload' ? 'flex' : 'none';
-    });
-  });
-
   // Cancel
   document.querySelectorAll('.receipt-cancel-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3550,37 +3425,6 @@ function wireReceiptRows() {
       snapshot(); p.receiptUrl = url;
       savePurchase(p);
       _updateReceiptLinkArea(row, id, url, p);
-    });
-  });
-
-  // Save upload
-  document.querySelectorAll('.receipt-save-upload-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = parseInt(btn.dataset.id);
-      const p = data.purchases.find(x => x.id === id);
-      if (!p) return;
-      const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
-      const file = row.querySelector('.receipt-file-input').files[0];
-      if (!file) return;
-      btn.textContent = 'Uploading…';
-      btn.disabled = true;
-      try {
-        const url = await uploadReceiptFile(file, p.id);
-        snapshot(); p.receiptUrl = url;
-        savePurchase(p);
-        _updateReceiptLinkArea(row, id, url, p);
-      } catch (err) {
-        btn.textContent = 'Save';
-        btn.disabled = false;
-        let errEl = row.querySelector('.receipt-upload-err');
-        if (!errEl) {
-          errEl = document.createElement('div');
-          errEl.className = 'receipt-upload-err';
-          errEl.style.cssText = 'font-family:var(--mono);font-size:10px;color:var(--red-text);width:100%';
-          row.querySelector('.receipt-upload-section').appendChild(errEl);
-        }
-        errEl.textContent = 'Upload failed. Try again.';
-      }
     });
   });
 
