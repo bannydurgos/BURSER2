@@ -976,6 +976,25 @@ async function loadFromFirebase(){
   }
 }
 
+// Backfill receipt URLs from parent transactions to rollover children that are missing them
+async function backfillRolloverReceipts() {
+  const toSave = [];
+  data.purchases.forEach(p => {
+    if (!p.isRollover || p.receiptUrl) return;
+    // Walk up to find a parent with a receipt
+    let cur = p;
+    let safety = 0;
+    while (cur && cur.rolloverSourceId && safety < 20) {
+      const parent = data.purchases.find(x => x.id === cur.rolloverSourceId);
+      if (!parent) break;
+      if (parent.receiptUrl) { p.receiptUrl = parent.receiptUrl; toSave.push(p); break; }
+      cur = parent;
+      safety++;
+    }
+  });
+  if (toSave.length) await Promise.all(toSave.map(p => savePurchase(p)));
+}
+
 // ── UNDO / REDO ───────────────────────────────────────────
 let undoStack=[];
 let redoStack=[];
@@ -1064,6 +1083,7 @@ function initAuth(){
         else document.getElementById('userAvatar').style.display='none';
         if(isNewSignIn){
           await loadFromFirebase();
+          await backfillRolloverReceipts();
           const dn=await loadDisplayName();
           document.getElementById('userEmail').textContent=dn||user.email;
           _navRestoring=true;render();_switchViewInternal(activeView);_navRestoring=false;replaceNav();
@@ -2566,6 +2586,10 @@ function saveEdit(){
       }
     });
   }
+  // Propagate receipt URL to all downstream rollover children
+  rolloverDeleteSet(p).forEach(c => {
+    if (c.id !== p.id) { c.receiptUrl=receiptUrl; if(!chainToSave.includes(c))chainToSave.push(c); }
+  });
   chainToSave.forEach(c=>savePurchase(c));
   closeEdit();render();
   scheduleRolloverCheck(oldCat,oldMk);
@@ -2739,6 +2763,7 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
     serviceDate:srcP?(srcP.serviceDate||srcP.date):null,
     cat:item.catId,amount:item.overage,status:'pending',
     submittedDate:null,expectedDate:null,receivedDate:null,
+    receiptUrl:srcP?srcP.receiptUrl||null:null,
     isRollover:true,rolloverFrom:item.mk,rolloverSourceId:item.purchaseId
   };
   data.purchases.push(newRollover);
@@ -3310,6 +3335,8 @@ function showReceiptPopover(id, anchorBtn) {
     const url = input.value.trim() || null;
     snapshot();
     p.receiptUrl = url;
+    // Propagate receipt URL to all downstream rollover children
+    rolloverDeleteSet(p).forEach(c => { if (c.id !== p.id) { c.receiptUrl = url; savePurchase(c); } });
     savePurchase(p);
     pop.remove();
     render();
