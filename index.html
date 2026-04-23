@@ -2641,7 +2641,7 @@ function openPendingSheet(){
       +rows.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
-        const meta=monthLabel(mk)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
+        const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
         return'<div class="pending-row" style="cursor:default" data-id="'+p.id+'">'
           +'<div class="pending-row-left" style="cursor:pointer" onclick="navigateToTransaction('+p.id+')">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
