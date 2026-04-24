@@ -3238,8 +3238,8 @@ function wireReceiptJump() {
   const monthSel = document.getElementById('receiptsJumpMonth');
   const yearSel = document.getElementById('receiptsJumpYear');
   if (catSel) catSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsCatFilter = catSel.value || null; renderReceipts(); });
-  if (monthSel) monthSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
-  if (yearSel) yearSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsMissingFilter=false; receiptsYearFilter = yearSel.value || null; renderReceipts(); });
+  if (monthSel) monthSel.addEventListener('change', () => { receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
+  if (yearSel) yearSel.addEventListener('change', () => { receiptsYearFilter = yearSel.value || null; renderReceipts(); });
   function _rcptNavTo(mk){receiptsYearFilter=mk.slice(0,4);receiptsMonthFilter=mk.slice(5,7);renderReceipts();}
   function _rcptCurrentMK(){
     if(receiptsYearFilter&&receiptsMonthFilter)return receiptsYearFilter+'-'+receiptsMonthFilter;
