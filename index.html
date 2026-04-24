@@ -2653,7 +2653,10 @@ function openPendingSheet(){
             +'<div class="pending-row-meta">'+meta+'</div>'
           +'</div>'
           +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
-            +'<div class="pending-row-amount">'+fmt(p.amount)+'</div>'
+            +'<div style="display:flex;align-items:center;gap:5px">'
+              +'<div class="pending-row-amount">'+fmt(p.amount)+'</div>'
+              +(p.receiptUrl?'<a href="'+p.receiptUrl+'" target="_blank" style="color:var(--hw);display:flex;align-items:center" title="View receipt"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>':'')
+            +'</div>'
             +(reimb<p.amount?'<div class="pending-row-reimb">'+fmt(reimb)+' reimbursable</div>':'')
             +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'">Mark received</button>'
           +'</div>'
