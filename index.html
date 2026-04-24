@@ -341,7 +341,7 @@ td.col-subrcv{min-width:150px}
 .pending-sheet-handle{width:36px;height:3px;background:var(--bg4);margin:0 auto 12px}
 .pending-sheet-title{font-family:var(--mono);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
 .pending-sheet-sub{font-family:var(--mono);font-size:11px;color:var(--text2)}
-.pending-sheet-body{overflow-y:auto;padding:14px 20px 28px;flex:1}
+.pending-sheet-body{overflow-y:auto;padding:14px 20px 20px;flex:1}
 .pending-cat-block{margin-bottom:18px}
 .pending-cat-label{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:6px}
 .pending-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 20px;margin:0 -20px;border-bottom:1px solid var(--border);gap:12px;cursor:pointer;border-radius:4px;transition:background .15s}
@@ -354,7 +354,8 @@ td.col-subrcv{min-width:150px}
 .pending-row-meta{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px;letter-spacing:.02em}
 .pending-row-amount{font-family:var(--mono);font-size:13px;font-weight:600;flex-shrink:0}
 .pending-row-reimb{font-family:var(--mono);font-size:10px;color:var(--hw);text-align:right}
-.pending-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;border-top:2px solid var(--text);margin-top:4px}
+.pending-sheet-footer{flex-shrink:0;padding:12px 20px 20px;border-top:2px solid var(--text);background:var(--bg2)}
+.pending-total-row{display:flex;justify-content:space-between;align-items:center}
 .pending-total-label{font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .pending-total-value{font-family:var(--mono);font-size:20px;font-weight:600}
 .pending-empty{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
@@ -443,11 +444,11 @@ td.col-subrcv{min-width:150px}
   .batch-bar{gap:8px;padding:10px 12px}
   .batch-btn{font-size:11px;padding:6px 12px}
 
-  .pending-sheet-body{padding:14px 16px 28px}
+  .pending-sheet-body{padding:14px 16px 20px}
+  .pending-sheet-footer{padding:12px 16px 20px}
   .pending-row{padding:12px 16px;margin:0 -16px}
   .pending-row-desc{font-size:14px}
   .pending-row-meta{font-size:11px;margin-top:3px}
-  .pending-total-row{padding:14px 0 0}
 
   .history-month-title{font-size:13px}
   .history-chip{font-size:10px;padding:3px 8px}
@@ -673,6 +674,7 @@ td.col-subrcv{min-width:150px}
       <div class="pending-sheet-sub" id="pendingSub"></div>
     </div>
     <div class="pending-sheet-body" id="pendingBody"></div>
+    <div class="pending-sheet-footer" id="pendingFooter"></div>
   </div>
 </div>
 
@@ -2625,9 +2627,11 @@ function openPendingSheet(){
   const submitted=data.purchases.filter(p=>p.status==='submitted');
   const sub=document.getElementById('pendingSub');
   const body=document.getElementById('pendingBody');
+  const footer=document.getElementById('pendingFooter');
   if(!submitted.length){
     sub.textContent='';
     body.innerHTML='<div class="pending-empty">Nothing submitted yet — all caught up!</div>';
+    footer.innerHTML='';
     document.getElementById('pendingOverlay').classList.add('open');return;
   }
   let grandTotal=0,grandReimb=0;
@@ -2658,8 +2662,8 @@ function openPendingSheet(){
     +'</div>';
   }).join('');
   sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
-  body.innerHTML=sections
-    +'<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value">'+fmt(grandReimb)+'</span></div>';
+  body.innerHTML=sections;
+  footer.innerHTML='<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value">'+fmt(grandReimb)+'</span></div>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
