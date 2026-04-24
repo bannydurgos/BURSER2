@@ -2131,8 +2131,8 @@ function renderHistory(){
   const allMonths=[...new Set(used.map(mk=>mk.slice(5,7)))].filter(Boolean).sort();
   const years=allYears.filter(yr=>!historyYearFilter||yr===historyYearFilter);
   const anyHCol=Object.values(historyCollapsed.years).some(Boolean)||Object.values(historyCollapsed.months).some(Boolean)||Object.values(historyCollapsed.cats).some(Boolean);
-  const histYearOpts=allYears.map(yr=>'<option value="'+yr+'"'+(historyYearFilter===yr?' selected':'')+'>'+yr+'</option>').join('');
-  const histMonthOpts=allMonths.map(m=>'<option value="'+m+'"'+(historyMonthFilter===m?' selected':'')+'>'+MF[parseInt(m)-1]+'</option>').join('');
+  const histYearOpts=[...new Set([...allYears,...(historyYearFilter?[historyYearFilter]:[])])].sort().reverse().map(yr=>'<option value="'+yr+'"'+(historyYearFilter===yr?' selected':'')+'>'+yr+'</option>').join('');
+  const histMonthOpts=MF.map((name,i)=>'<option value="'+String(i+1).padStart(2,'0')+'"'+(historyMonthFilter===String(i+1).padStart(2,'0')?' selected':'')+'>'+name+'</option>').join('');
   const histCatOpts=CATS.filter(c=>data.purchases.some(p=>p.cat===c.id)).map(c=>'<option value="'+c.id+'"'+(historyCatFilter===c.id?' selected':'')+'>'+c.label+'</option>').join('');
   el.innerHTML='<div class="receipts-controls"><div class="receipts-controls-inner">'
     +'<div class="rc-row">'
@@ -2143,8 +2143,10 @@ function renderHistory(){
     +'<div class="receipts-divider"></div>'
     +'<div class="rc-row">'
     +'<select id="historyJumpCat" class="month-select" style="height:28px;font-size:11px;max-width:110px"><option value="">Category\u2026</option>'+histCatOpts+'</select>'
+    +'<button class="month-nav" id="histMonthPrev" title="Previous month">&#8249;</button>'
     +'<select id="historyJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px"><option value="">Month\u2026</option>'+histMonthOpts+'</select>'
     +'<select id="historyJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px"><option value="">Year\u2026</option>'+histYearOpts+'</select>'
+    +'<button class="month-nav" id="histMonthNext" title="Next month">&#8250;</button>'
     +'</div>'
     +'<div class="rc-row">'
     +'<button class="hdr-btn" id="historyExpandToggle">'+(anyHCol?'Expand':'Collapse')+'</button>'
@@ -2249,11 +2251,28 @@ function clearHistoryFilters(){
   saveCollapseState();renderHistory();
 }
 function wireHistoryJump(){
+  const prevBtn=document.getElementById('histMonthPrev');
+  const nextBtn=document.getElementById('histMonthNext');
   const moSel=document.getElementById('historyJumpMonth');
   const yrSel=document.getElementById('historyJumpYear');
   const catSel=document.getElementById('historyJumpCat');
   const expandToggle=document.getElementById('historyExpandToggle');
-  if(!moSel)return;
+  if(!prevBtn)return;
+  function _histNavTo(mk){historyYearFilter=mk.slice(0,4);historyMonthFilter=mk.slice(5,7);expandMatchingHistory();renderHistory();}
+  function _histCurrentMK(){
+    if(historyYearFilter&&historyMonthFilter)return historyYearFilter+'-'+historyMonthFilter;
+    const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  }
+  prevBtn.addEventListener('click',()=>{
+    const{year,month}=parseMonthKey(_histCurrentMK());
+    const d=new Date(year,month-1,1);
+    _histNavTo(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  });
+  nextBtn.addEventListener('click',()=>{
+    const{year,month}=parseMonthKey(_histCurrentMK());
+    const d=new Date(year,month+1,1);
+    _histNavTo(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  });
   if(moSel)moSel.addEventListener('change',()=>{historyMonthFilter=moSel.value||null;expandMatchingHistory();renderHistory();});
   if(yrSel)yrSel.addEventListener('change',()=>{historyYearFilter=yrSel.value||null;expandMatchingHistory();renderHistory();});
   if(catSel)catSel.addEventListener('change',()=>{historyCatFilter=catSel.value||null;expandMatchingHistory();renderHistory();});
@@ -3160,8 +3179,9 @@ function renderReceipts() {
     .filter(cat => purchases.some(p => p.cat === cat.id))
     .map(cat => `<option value="${cat.id}"${receiptsCatFilter===cat.id?' selected':''}>${cat.label}</option>`)
     .join('');
-  const monthOptions = allReceiptMonths.map(m=>`<option value="${m}"${receiptsMonthFilter===m?' selected':''}>${MF[parseInt(m)-1]}</option>`).join('');
-  const yearOptions = allReceiptYears.map(yr=>`<option value="${yr}"${receiptsYearFilter===yr?' selected':''}>${yr}</option>`).join('');
+  const rcptYearSet=[...new Set([...allReceiptYears,...(receiptsYearFilter?[receiptsYearFilter]:[])])].sort().reverse();
+  const rcptYearOpts=rcptYearSet.map(yr=>`<option value="${yr}"${receiptsYearFilter===yr?' selected':''}>${yr}</option>`).join('');
+  const rcptMonthOpts=MF.map((name,i)=>`<option value="${String(i+1).padStart(2,'0')}"${receiptsMonthFilter===String(i+1).padStart(2,'0')?' selected':''}>${name}</option>`).join('');
 
   el.innerHTML = `
     <div class="receipts-controls"><div class="receipts-controls-inner">
@@ -3176,14 +3196,16 @@ function renderReceipts() {
           <option value="">Category…</option>
           ${catOptions}
         </select>
+        <button class="month-nav" id="rcptMonthPrev" title="Previous month">&#8249;</button>
         <select id="receiptsJumpMonth" class="month-select" style="height:28px;font-size:11px;max-width:88px">
           <option value="">Month…</option>
-          ${monthOptions}
+          ${rcptMonthOpts}
         </select>
         <select id="receiptsJumpYear" class="month-select" style="height:28px;font-size:11px;max-width:70px">
           <option value="">Year…</option>
-          ${yearOptions}
+          ${rcptYearOpts}
         </select>
+        <button class="month-nav" id="rcptMonthNext" title="Next month">&#8250;</button>
       </div>
       <div class="rc-row">
         <button class="hdr-btn" id="receiptsExpandToggle">${anyRCol?'Expand':'Collapse'}</button>
@@ -3209,11 +3231,28 @@ function clearReceiptsFilters(){
 }
 function wireReceiptJump() {
   const catSel = document.getElementById('receiptsJumpCat');
+  const rcptPrevBtn = document.getElementById('rcptMonthPrev');
+  const rcptNextBtn = document.getElementById('rcptMonthNext');
   const monthSel = document.getElementById('receiptsJumpMonth');
   const yearSel = document.getElementById('receiptsJumpYear');
   if (catSel) catSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsMonthFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsCatFilter = catSel.value || null; renderReceipts(); });
   if (monthSel) monthSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsYearFilter=null;receiptsMissingFilter=false; receiptsMonthFilter = monthSel.value || null; renderReceipts(); });
   if (yearSel) yearSel.addEventListener('change', () => { receiptsStatusFilter=null;receiptsCatFilter=null;receiptsMonthFilter=null;receiptsMissingFilter=false; receiptsYearFilter = yearSel.value || null; renderReceipts(); });
+  function _rcptNavTo(mk){receiptsYearFilter=mk.slice(0,4);receiptsMonthFilter=mk.slice(5,7);renderReceipts();}
+  function _rcptCurrentMK(){
+    if(receiptsYearFilter&&receiptsMonthFilter)return receiptsYearFilter+'-'+receiptsMonthFilter;
+    const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  }
+  if(rcptPrevBtn)rcptPrevBtn.addEventListener('click',()=>{
+    const{year,month}=parseMonthKey(_rcptCurrentMK());
+    const d=new Date(year,month-1,1);
+    _rcptNavTo(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  });
+  if(rcptNextBtn)rcptNextBtn.addEventListener('click',()=>{
+    const{year,month}=parseMonthKey(_rcptCurrentMK());
+    const d=new Date(year,month+1,1);
+    _rcptNavTo(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  });
   document.querySelectorAll('.receipts-status-btn').forEach(btn => {
     btn.addEventListener('click', () => filterReceiptsByStatus(btn.dataset.status));
   });
