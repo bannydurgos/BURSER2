@@ -1163,8 +1163,8 @@ const now=new Date();
 let activeLogMonth=_ssGet('activeLogMonth')||(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'));
 let activeTab=_ssGet('activeTab')||CATS[0].id;
 let activeView=_ssGet('activeView')||'log';
-let historyCollapsed=JSON.parse(_ssGet('historyCollapsed')||'{"years":{},"months":{},"cats":{}}');
-let receiptsCollapsed=JSON.parse(_ssGet('receiptsCollapsed')||'{"cats":{},"years":{},"months":{}}');
+let historyCollapsed={years:{},months:{},cats:{}};
+let receiptsCollapsed={cats:{},years:{},months:{}};
 let receiptsStatusFilter=null;let historyStatusFilter=null;let historyCatFilter=null;
 let historyMonthFilter=null;let historyYearFilter=null;
 let receiptsCatFilter=null;let receiptsMonthFilter=null;let receiptsYearFilter=null;
@@ -2171,12 +2171,13 @@ function renderHistory(){
         return'<div class="history-cat-section">'
           +'<div class="history-cat-label" data-cat="'+ck+'" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat'+(cCol?' collapsed':'')+'">▼</span><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</span>'+chip+'</div>'
           +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table class="history-table">'
-            +'<thead><tr><th class="col-h-date">Date</th><th class="col-h-desc">Description</th><th class="col-h-amount">Amount</th><th class="col-h-dates">Submitted/Received</th><th class="col-h-status">Status</th></tr></thead>'
+            +'<thead><tr><th class="col-h-date">Date</th><th class="col-h-desc">Description</th><th class="col-h-amount">Amount</th><th class="col-h-dates">Dates</th><th class="col-h-status">Status</th></tr></thead>'
             +'<tbody>'+rows.map(p=>{
               const days=daysBetween(p.submittedDate,p.receivedDate);
               const daysStr=days!==null?' ('+days+'d)':'';
               const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
               const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+                +(!p.receivedDate&&p.expectedDate?'<span class="date-sub" style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':'')
                 +(p.receivedDate?'<span class="date-rcv">'+fmtDate(p.receivedDate)+daysStr+'</span>':'');
               return'<tr data-id="'+p.id+'" style="cursor:pointer">'
                 +'<td class="col-h-date" style="color:var(--text2)"><span class="date-long">'+fmtDate(p.date)+'</span><span class="date-short">'+fmtDate(p.date)+'</span></td>'
@@ -2551,7 +2552,7 @@ function updateEditFields(){
   const s=document.getElementById('ef-status').value;
   const isOop=s==='oop';const isPending=s==='pending';
   document.getElementById('ef-subRow').style.display=isOop?'none':'block';
-  document.getElementById('ef-expectedRow').style.display=(isPending||isOop)?'none':'block';
+  document.getElementById('ef-expectedRow').style.display=isOop?'none':'block';
   document.getElementById('ef-rcvRow').style.display=s==='received'?'block':'none';
   updateDays();
 }
@@ -2599,14 +2600,19 @@ function saveEdit(){
   p.date=date;p.desc=desc;p.vendor=vendor;p.paymentMethod=paymentMethod;p.amount=amount;p.status=status;
   p.receiptUrl=receiptUrl;
   p.submittedDate=status==='oop'?null:(submittedDate||p.submittedDate||null);
-  p.expectedDate=(status==='pending'||status==='oop')?null:(expectedDate||p.expectedDate||null);
+  p.expectedDate=status==='oop'?null:(expectedDate||null);
   p.receivedDate=status==='received'?(receivedDate||p.receivedDate||todayStr()):null;
-  // Propagate submitted date across the rollover chain
+  // Propagate submitted date and expected date across the rollover chain
   const chainToSave=[p];
-  if (p.submittedDate && (p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id))) {
+  if (p.isRollover || data.purchases.some(x=>x.rolloverSourceId===p.id)) {
     rolloverChain(p).forEach(c => {
-      if (c.id !== p.id && c.status !== 'received' && c.status !== 'oop'){
-        c.status='submitted';c.submittedDate=p.submittedDate;chainToSave.push(c);
+      if (c.id !== p.id) {
+        let changed=false;
+        if (p.submittedDate && c.status !== 'received' && c.status !== 'oop'){
+          c.status='submitted';c.submittedDate=p.submittedDate;changed=true;
+        }
+        if (p.expectedDate !== c.expectedDate){ c.expectedDate=p.expectedDate;changed=true; }
+        if (changed && !chainToSave.includes(c)) chainToSave.push(c);
       }
     });
   }
@@ -3308,7 +3314,7 @@ function filterReceiptsByStatus(status) {
     return;
   }
   receiptsStatusFilter = status;
-  receiptsCatFilter = null; receiptsMonthFilter = null; receiptsYearFilter = null; receiptsMissingFilter = false;
+  receiptsCatFilter = null; receiptsMissingFilter = false;
   const purchases = data.purchases.filter(p => !p.isRollover);
   // Collapse everything first
   receiptsCollapsed.cats = {};
@@ -3414,7 +3420,7 @@ function receiptRow(p) {
   return `<div class="receipt-row" data-id="${p.id}" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
       <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.desc}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}${p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>':''}${(p.submittedDate&&p.receivedDate)?' · <span style="color:var(--text2)">'+(Math.round((new Date(p.receivedDate)-new Date(p.submittedDate))/(1000*60*60*24)))+' days</span>':''}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${fmtDate(p.date)} · ${fmt(p.amount)}${p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':''}${(!p.receivedDate&&p.expectedDate)?' · <span style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':''}${p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>':''}${(p.submittedDate&&p.receivedDate)?' · <span style="color:var(--text2)">'+(Math.round((new Date(p.receivedDate)-new Date(p.submittedDate))/(1000*60*60*24)))+' days</span>':''}</div>
     </div>
     <div style="flex-shrink:0">${statusBadge(p.status)}</div>
     <div class="receipt-link-area" style="display:flex;align-items:center;gap:8px;flex-shrink:0">
