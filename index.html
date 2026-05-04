@@ -273,7 +273,7 @@ td.col-subrcv{min-width:150px}
 .recurring-fields{background:var(--bg3);border:1px solid var(--border);padding:10px;margin-bottom:10px}
 
 /* HISTORY */
-.history-view{display:none}.history-view.active{display:block;width:100%;max-width:720px;margin:0 auto}#receiptsView.active{max-width:640px;margin:0 auto}
+.history-view{display:none}.history-view.active{display:block;width:100%;max-width:640px;margin:0 auto}#receiptsView.active{max-width:640px;margin:0 auto}
 .history-year-block{margin-bottom:20px}
 .history-year-header{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;border-bottom:3px solid var(--text);margin-bottom:16px;user-select:none}
 .history-year-title{font-family:var(--mono);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
@@ -2188,24 +2188,24 @@ function renderHistory(){
         const ck=mk+':'+cat.id;const cCol=!!historyCollapsed.cats[ck];
         return'<div class="history-cat-section">'
           +'<div class="history-cat-label" data-cat="'+ck+'" style="cursor:pointer;user-select:none"><span style="display:flex;align-items:center;gap:6px"><span class="history-toggle history-toggle-cat'+(cCol?' collapsed':'')+'">▼</span><span class="cat-dot" style="background:'+cat.color+'"></span>'+cat.label+'</span>'+chip+'</div>'
-          +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div class="table-wrap"><table class="history-table">'
-            +'<thead><tr><th class="col-h-date">Date</th><th class="col-h-desc">Description</th><th class="col-h-amount">Amount</th><th class="col-h-dates">Dates</th><th class="col-h-status">Status</th></tr></thead>'
-            +'<tbody>'+rows.map(p=>{
+          +'<div class="history-cat-body"'+(cCol?' style="display:none"':'')+'><div style="background:var(--bg2);border:1px solid var(--border2)">'
+            +rows.map(p=>{
               const days=daysBetween(p.submittedDate,p.receivedDate);
-              const daysStr=days!==null?' ('+days+'d)':'';
+              const daysStr=days!==null?' · '+days+' days':'';
               const desc=p.isRollover?'<button class="rollover-desc-link" data-parentid="'+p.rolloverSourceId+'">'+rolloverLabel(p)+'</button>':p.desc;
-              const datePart=(p.submittedDate?'<span class="date-sub">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
-                +(!p.receivedDate&&p.expectedDate?'<span class="date-sub" style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':'')
-                +(p.receivedDate?'<span class="date-rcv">'+fmtDate(p.receivedDate)+daysStr+'</span>':'');
-              return'<tr data-id="'+p.id+'" style="cursor:pointer">'
-                +'<td class="col-h-date" style="color:var(--text2)"><span class="date-long">'+fmtDate(p.date)+'</span><span class="date-short">'+fmtDate(p.date)+'</span></td>'
-                +'<td class="col-h-desc">'+desc+'</td>'
-                +'<td class="col-h-amount" style="font-weight:600">'+fmt(p.amount)+'</td>'
-                +'<td class="col-h-dates" style="font-size:12px;color:var(--text2)">'+datePart+'</td>'
-                +'<td class="col-h-status">'+statusBadge(p.status)+'</td>'
-              +'</tr>';
-            }).join('')+'</tbody>'
-          +'</table></div></div>'
+              const meta=fmtDate(p.date)+' · '+fmt(p.amount)
+                +(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
+                +(!p.receivedDate&&p.expectedDate?' · <span style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':'')
+                +(p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>'+daysStr:'');
+              return'<div class="receipt-row" data-id="'+p.id+'" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer">'
+                +'<div style="flex:1;min-width:0">'
+                  +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+desc+'</div>'
+                  +'<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">'+meta+'</div>'
+                +'</div>'
+                +'<div style="flex-shrink:0">'+statusBadge(p.status)+'</div>'
+              +'</div>';
+            }).join('')
+          +'</div></div>'
         +'</div>';
       }).join('');
       if(!sections)return'';
@@ -2345,7 +2345,7 @@ document.getElementById('btnViewHistory').addEventListener('dblclick',()=>{if(ac
 document.getElementById('btnViewReceipts').addEventListener('click',()=>switchView('receipts'));
 document.getElementById('btnViewReceipts').addEventListener('dblclick',()=>{if(activeView==='receipts')toggleAllReceipts();});
 document.getElementById('historyContent').addEventListener('dblclick',e=>{
-  const row=e.target.closest('tr[data-id]');
+  const row=e.target.closest('.receipt-row[data-id]');
   if(row)navigateToTransaction(+row.dataset.id);
 });
 document.getElementById('receiptsContent').addEventListener('dblclick',e=>{
@@ -2420,7 +2420,7 @@ document.getElementById('historyContent').addEventListener('click',e=>{
     cur=up;safety++;
   }
   if(!cur)return;
-  const target=document.querySelector('#historyContent tr[data-id="'+cur.id+'"]');
+  const target=document.querySelector('#historyContent .receipt-row[data-id="'+cur.id+'"]');
   if(target){
     target.scrollIntoView({behavior:'smooth',block:'center'});
     target.classList.add('row-highlight');
