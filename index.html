@@ -354,11 +354,27 @@ td.col-subrcv{min-width:150px}
 .pending-row-meta{font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:2px;letter-spacing:.02em}
 .pending-row-amount{font-family:var(--mono);font-size:13px;font-weight:600;flex-shrink:0}
 .pending-row-reimb{font-family:var(--mono);font-size:10px;color:var(--hw);text-align:right}
+.pending-row.deselected .pending-row-desc,.pending-row.deselected .pending-row-amount,.pending-row.deselected .pending-row-reimb{opacity:.6}
+.pending-row.deselected .pending-row-meta{color:var(--text3)}
+.pending-row.deselected .pending-exp-date{color:var(--text2)}
 .pending-sheet-footer{flex-shrink:0;padding:12px 20px 20px;border-top:2px solid var(--text);background:var(--bg2)}
 .pending-total-row{display:flex;justify-content:space-between;align-items:center}
+.pending-batch-btn{width:100%;margin-top:12px;background:var(--text);color:var(--bg2);border:none;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
+.pending-batch-btn:disabled{opacity:.3;cursor:default}
+.pending-batch-btn:not(:disabled):hover{opacity:.85}
 .pending-total-label{font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .pending-total-value{font-family:var(--mono);font-size:20px;font-weight:600}
 .pending-empty{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
+.pending-select-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.pending-select-all{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text);user-select:none}
+.pending-select-all input[type=checkbox]{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid var(--text);background:var(--bg2);cursor:pointer;flex-shrink:0;position:relative;margin:0;transition:background .15s}
+.pending-select-all input[type=checkbox]:checked{background:var(--text)}
+.pending-select-all input[type=checkbox]:checked::after{content:'';position:absolute;left:2px;top:0px;width:8px;height:5px;border-left:1.5px solid var(--bg2);border-bottom:1.5px solid var(--bg2);transform:rotate(-45deg)}
+.pending-select-count{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.pending-row-check{display:flex;align-items:flex-start;flex-shrink:0;cursor:pointer;padding-right:10px;padding-top:2px}
+.pending-row-check input[type=checkbox]{appearance:none;-webkit-appearance:none;width:14px;height:14px;border:1.5px solid var(--border2);background:var(--bg2);cursor:pointer;flex-shrink:0;position:relative;margin:0;transition:border-color .15s,background .15s}
+.pending-row-check input[type=checkbox]:checked{background:var(--text);border-color:var(--text)}
+.pending-row-check input[type=checkbox]:checked::after{content:'';position:absolute;left:2px;top:0px;width:8px;height:5px;border-left:1.5px solid var(--bg2);border-bottom:1.5px solid var(--bg2);transform:rotate(-45deg)}
 
 /* PRINT STYLES */
 @media print {
@@ -2675,31 +2691,92 @@ function openPendingSheet(){
       +rows.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
-        const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · Exp: '+fmtDate(p.expectedDate):'');
-        return'<div class="pending-row" style="cursor:default" data-id="'+p.id+'">'
-          +'<div class="pending-row-left" style="cursor:pointer" onclick="navigateToTransaction('+p.id+')">'
+        const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · <span class="pending-exp-date">Exp: '+fmtDate(p.expectedDate)+'</span>':'');
+        return'<div class="pending-row deselected" data-id="'+p.id+'" data-reimb="'+reimb+'" style="cursor:pointer" onclick="pendingRowClick(event,'+p.id+')" ondblclick="navigateToTransaction('+p.id+')">'
+          +'<label class="pending-row-check" onclick="event.stopPropagation()"><input type="checkbox" class="pending-cb" data-id="'+p.id+'" data-reimb="'+reimb+'"></label>'
+          +'<div class="pending-row-left">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
             +'<div class="pending-row-meta">'+meta+'</div>'
           +'</div>'
           +'<div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
             +'<div style="display:flex;align-items:center;gap:5px">'
               +'<div class="pending-row-amount">'+fmt(p.amount)+'</div>'
-              +(p.receiptUrl?'<a href="'+p.receiptUrl+'" target="_blank" style="color:var(--hw);display:flex;align-items:center" title="View receipt"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>':'')
+              +(p.receiptUrl?'<a href="'+p.receiptUrl+'" target="_blank" style="color:var(--hw);display:flex;align-items:center" title="View receipt" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>':'')
             +'</div>'
             +(reimb<p.amount?'<div class="pending-row-reimb">'+fmt(reimb)+' reimbursable</div>':'')
-            +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'">Mark received</button>'
+            +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'" onclick="event.stopPropagation()">Mark received</button>'
           +'</div>'
         +'</div>';
       }).join('')
     +'</div>';
   }).join('');
+  const selectBar='<div class="pending-select-bar"><label class="pending-select-all"><input type="checkbox" id="pendingSelectAll"><span>All</span></label><span class="pending-select-count" id="pendingSelectCount">0 selected</span></div>';
   sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
-  body.innerHTML=sections;
-  footer.innerHTML='<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value">'+fmt(grandReimb)+'</span></div>';
+  body.innerHTML=selectBar+sections;
+  footer.innerHTML='<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
 document.getElementById('pendingOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+function pendingRowClick(e,id){
+  if(e.target.closest('.pending-mark-rcv-btn')||e.target.closest('a')||e.target.closest('.pending-row-check'))return;
+  const cb=e.currentTarget.querySelector('.pending-cb');
+  if(!cb)return;
+  cb.checked=!cb.checked;
+  cb.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function updatePendingTotal(){
+  let total=0,count=0;
+  document.querySelectorAll('.pending-cb:checked').forEach(cb=>{total+=parseFloat(cb.dataset.reimb)||0;count++;});
+  const totalVal=document.getElementById('pendingTotalValue');
+  if(totalVal)totalVal.textContent=fmt(total);
+  const countEl=document.getElementById('pendingSelectCount');
+  if(countEl)countEl.textContent=count+' selected';
+  const btn=document.getElementById('pendingBatchBtn');
+  if(btn){btn.disabled=count===0;btn.textContent=count?'Mark '+count+' received':'Mark selected received';}
+}
+function batchMarkReceived(){
+  const ids=[...document.querySelectorAll('.pending-cb:checked')].map(cb=>parseInt(cb.dataset.id));
+  if(!ids.length)return;
+  const purchases=ids.map(id=>data.purchases.find(p=>p.id===id&&p.status==='submitted')).filter(Boolean);
+  if(!purchases.length)return;
+  const defaultDate=purchases.map(p=>p.expectedDate).filter(Boolean).sort()[0]||null;
+  openDatePicker('Date received',date=>{
+    snapshot();
+    const toSave=[];
+    purchases.forEach(p=>{
+      p.status='received';p.receivedDate=date;toSave.push(p);
+      const ancestors=rolloverAncestors(p);
+      if(ancestors.length>0){
+        const rootId=ancestors[ancestors.length-1];
+        const allInChain=rolloverChain(data.purchases.find(x=>x.id===rootId)||p);
+        const allDoneExceptAncestors=allInChain.filter(c=>!ancestors.includes(c.id)).every(c=>c.status==='received'||c.status==='oop');
+        if(allDoneExceptAncestors){
+          ancestors.forEach(aid=>{
+            const a=data.purchases.find(x=>x.id===aid);
+            if(a&&a.status!=='received'&&a.status!=='oop'){a.status='received';a.receivedDate=date;toSave.push(a);}
+          });
+        }
+      }
+    });
+    Promise.all(toSave.map(x=>savePurchase(x)));render();
+    purchases.forEach(p=>{if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));});
+    openPendingSheet();
+  },defaultDate);
+}
+document.getElementById('pendingBody').addEventListener('change',function(e){
+  if(e.target.id==='pendingSelectAll'){
+    const checked=e.target.checked;
+    document.querySelectorAll('.pending-cb').forEach(cb=>{cb.checked=checked;cb.closest('.pending-row').classList.toggle('deselected',!checked);});
+    updatePendingTotal();
+  } else if(e.target.classList.contains('pending-cb')){
+    e.target.closest('.pending-row').classList.toggle('deselected',!e.target.checked);
+    const allCbs=[...document.querySelectorAll('.pending-cb')];
+    const selectAll=document.getElementById('pendingSelectAll');
+    if(selectAll)selectAll.checked=allCbs.every(cb=>cb.checked);
+    updatePendingTotal();
+  }
+});
 document.getElementById('pendingBody').addEventListener('click',function(e){
   const btn=e.target.closest('.pending-mark-rcv-btn');
   if(!btn)return;
