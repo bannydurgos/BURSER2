@@ -163,6 +163,8 @@ main{max-width:960px;margin:0 auto;padding:24px 20px 100px}
 .metric-popup-meta{font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0;text-align:right;line-height:1.5}
 @keyframes rowPulse{0%,20%{background:var(--blue-bg)}100%{background:transparent}}
 .row-highlight td{animation:rowPulse 2s ease-out!important}
+@keyframes rowBlink{0%{background:transparent}10%{background:var(--blue-bg)}30%{background:transparent}50%{background:var(--blue-bg)}70%{background:transparent}85%{background:var(--blue-bg)}100%{background:transparent}}
+.receipt-row.row-highlight{animation:rowBlink 1.6s ease-out!important}
 
 /* BUDGET */
 .panel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
