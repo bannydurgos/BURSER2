@@ -2180,7 +2180,7 @@ function renderHistory(){
       const mp=data.purchases.filter(p=>getPurchaseMonth(p)===mk);
       const mCol=!!historyCollapsed.months[mk];
       const sections=CATS.filter(cat=>!historyCatFilter||cat.id===historyCatFilter).map(cat=>{
-        const rows=mp.filter(p=>p.cat===cat.id&&(!historyStatusFilter||(p.status||'').toLowerCase()===historyStatusFilter)).sort((a,b)=>b.date.localeCompare(a.date));
+        const rows=mp.filter(p=>p.cat===cat.id&&(!historyStatusFilter||(p.status||'').toLowerCase()===historyStatusFilter)).sort((a,b)=>b.id-a.id);
         if(!rows.length)return'';
         const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
         let chipTxt=cat.hasBudget&&budget>0
@@ -3233,7 +3233,7 @@ function renderReceipts() {
       const mp = byYear[yr][mk];
       const catsHtml = CATS.filter(cat=>!receiptsCatFilter||cat.id===receiptsCatFilter).map(cat => {
         const rows = mp.filter(p=>p.cat===cat.id&&(!receiptsStatusFilter||(p.status||'').toLowerCase()===receiptsStatusFilter)&&(!receiptsMissingFilter||!p.receiptUrl))
-          .sort((a,b)=>b.date.localeCompare(a.date));
+          .sort((a,b)=>b.id-a.id);
         if (!rows.length) return '';
         const ck = mk+':'+cat.id;
         const catCol = !!receiptsCollapsed.cats[ck];
