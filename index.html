@@ -1220,7 +1220,7 @@ function monthLabelFull(k){const{year,month}=parseMonthKey(k);return MF[month]+'
 function currentMonthKey(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
 function nextMonthKey(mk){const{year,month}=parseMonthKey(mk);const d=new Date(year,month+1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function daysBetween(d1,d2){if(!d1||!d2)return null;return Math.round((new Date(d2)-new Date(d1))/(864e5));}
-function todayStr(){return new Date().toISOString().slice(0,10);}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function fmtDate(d){if(!d)return'';const p=d.split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0].slice(2):d;}
 
 function getMonthRange(){
@@ -1398,7 +1398,7 @@ function openMetricPopup(items,title,anchor){
   const popup=document.getElementById('metricPopup');
   const backdrop=document.getElementById('metricPopupBackdrop');
   document.getElementById('metricPopupTitle').textContent=title;
-  document.getElementById('metricPopupBody').innerHTML=items.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
+  document.getElementById('metricPopupBody').innerHTML=items.sort((a,b)=>b.id-a.id).map(p=>{
     const badge=p.status==='received'?'Received':p.status==='submitted'?'Submitted':p.status==='oop'?'OOP':'Pending';
     return '<button class="metric-popup-row" data-pid="'+p.id+'">'
       +'<div class="metric-popup-desc">'+(p.desc||'—')+'</div>'
@@ -1476,11 +1476,11 @@ function renderInfoBody(){
   let received;
   let rangeLabel;
   if(_infoFilterMode==='ytd'){
-    const todayStr=new Date().toISOString().slice(0,10);
+    const today=todayStr();
     const janFirst=new Date().getFullYear()+'-01-01';
     received=data.purchases.filter(p=>
       p.status==='received'&&p.submittedDate&&p.receivedDate&&
-      p.receivedDate>=janFirst&&p.receivedDate<=todayStr
+      p.receivedDate>=janFirst&&p.receivedDate<=today
     );
     rangeLabel='YTD '+new Date().getFullYear();
   } else if(_infoFilterMode==='year'){
@@ -1880,7 +1880,7 @@ function renderBudgetPanel(cat){
   const spent=mp.filter(p=>p.status!=='oop').reduce((s,p)=>s+p.amount,0);
   const rem=budget-spent;const over=rem<0;
   const pct=budget>0?Math.min((spent/budget)*100,100):0;
-  const rows=[...mp].sort((a,b)=>b.date.localeCompare(a.date));
+  const rows=[...mp].sort((a,b)=>b.id-a.id);
   const ml=monthLabel(activeLogMonth);
 
   const checkTh=batchMode?'<th class="check-cell"><input type="checkbox" class="select-all-check" title="Select all" style="width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)"></th>':'';
@@ -1909,7 +1909,7 @@ function renderBudgetPanel(cat){
 }
 
 function renderTravelPanel(cat){
-  const mp=data.purchases.filter(p=>p.cat===cat.id&&getPurchaseMonth(p)===activeLogMonth).sort((a,b)=>b.date.localeCompare(a.date));
+  const mp=data.purchases.filter(p=>p.cat===cat.id&&getPurchaseMonth(p)===activeLogMonth).sort((a,b)=>b.id-a.id);
   const checkTh=batchMode?'<th class="check-cell"><input type="checkbox" class="select-all-check" title="Select all" style="width:14px;height:14px;cursor:pointer;accent-color:var(--blue-text)"></th>':'';
   return '<div class="panel-top">'
     +'<div style="display:flex;gap:6px">'
@@ -2690,7 +2690,7 @@ function openPendingSheet(){
     grandTotal+=catTotal;grandReimb+=catReimb;
     return'<div class="pending-cat-block">'
       +'<div class="pending-cat-label"><span class="cat-dot dot-'+cat.id+'"></span>'+cat.label+'</div>'
-      +rows.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>{
+      +rows.sort((a,b)=>b.id-a.id).map(p=>{
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
         const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · <span class="pending-exp-date">Exp: '+fmtDate(p.expectedDate)+'</span>':'');
