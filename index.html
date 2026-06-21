@@ -2608,7 +2608,7 @@ function saveEdit(){
   if(!date){err.textContent='Please enter a date of purchase.';return;}
   if(!desc){err.textContent='Please enter a description.';return;}
   if(isNaN(amount)||amount<=0){err.textContent='Please enter a valid amount.';return;}
-  const oldCat=p.cat;const oldMk=getMonthKey(p.date);
+  const oldCat=p.cat;const oldMk=getMonthKey(p.date);const oldAmount=p.amount;
   // Rollover entries keep their original serviceDate
   const receiptUrl=document.getElementById('ef-receipt').value.trim()||null;
   const vendor=document.getElementById('ef-vendor').value.trim()||null;
@@ -2639,6 +2639,7 @@ function saveEdit(){
     if (c.id !== p.id) { c.receiptUrl=receiptUrl; if(!chainToSave.includes(c))chainToSave.push(c); }
   });
   chainToSave.forEach(c=>savePurchase(c));
+  if(p.rolledOver&&amount!==oldAmount)recalculateRolloverChain(p);
   closeEdit();render();
   scheduleRolloverCheck(oldCat,oldMk);
   if(getMonthKey(date)!==oldMk||p.cat!==oldCat)scheduleRolloverCheck(p.cat,getMonthKey(date));
@@ -2811,6 +2812,36 @@ let answeredIds=new Set(data.answeredRollovers||[]);
 function scheduleRolloverCheck(catId,mk){
   const cat=CAT_MAP[catId];if(!cat||!cat.hasBudget)return;
   buildRolloverQueue(catId,mk);
+}
+function recalculateRolloverChain(p){
+  const child=data.purchases.find(x=>x.rolloverSourceId===p.id);
+  if(!child){p.rolledOver=false;savePurchase(p);return;}
+  const mk=getPurchaseMonth(p);
+  const budget=getBudget(p.cat,mk);
+  let newOverage=0;
+  if(budget>0){
+    const sorted=data.purchases.filter(x=>x.cat===p.cat&&getPurchaseMonth(x)===mk).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+    let running=0;
+    for(const t of sorted){
+      const before=running;running+=t.amount;
+      if(t.id===p.id&&running>budget){
+        newOverage=Math.round((Math.min(running,t.amount)-Math.max(0,budget-before))*100)/100;
+        break;
+      }
+    }
+  }
+  if(newOverage<=0){
+    rolloverDeleteSet(child).forEach(c=>{
+      const idx=data.purchases.indexOf(c);if(idx!==-1)data.purchases.splice(idx,1);
+      deletePurchaseFromDb(c.id);
+    });
+    p.rolledOver=false;answeredIds.delete(p.id);data.answeredRollovers=[...answeredIds];
+    savePurchase(p);
+  }else if(newOverage!==child.amount){
+    child.amount=newOverage;savePurchase(child);
+    if(child.rolledOver)recalculateRolloverChain(child);
+    else scheduleRolloverCheck(child.cat,getPurchaseMonth(child));
+  }
 }
 function buildRolloverQueue(catId,mk){
   const budget=getBudget(catId,mk);if(!budget)return;
