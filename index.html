@@ -363,6 +363,10 @@ td.col-subrcv{min-width:150px}
 .pending-row.deselected .pending-row-meta{color:var(--text3)}
 .pending-row.deselected .pending-exp-date{color:var(--text2)}
 .pending-sheet-footer{flex-shrink:0;padding:12px 20px 20px;border-top:2px solid var(--text);background:var(--bg2)}
+.pending-cat-breakdown{margin-bottom:10px;display:flex;flex-direction:column;gap:4px}
+.pending-cat-breakdown-row{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px}
+.pending-cat-breakdown-label{flex:1;color:var(--text2)}
+.pending-cat-breakdown-amt{color:var(--text);font-weight:600}
 .pending-total-row{display:flex;justify-content:space-between;align-items:center}
 .pending-batch-btn{width:100%;margin-top:12px;background:var(--text);color:var(--bg2);border:none;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
 .pending-batch-btn:disabled{opacity:.3;cursor:default}
@@ -2731,7 +2735,7 @@ function openPendingSheet(){
         const mk=getMonthKey(p.date);
         const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · <span class="pending-exp-date">Exp: '+fmtDate(p.expectedDate)+'</span>':'');
         return'<div class="pending-row deselected" data-id="'+p.id+'" data-reimb="'+reimb+'" style="cursor:pointer" onclick="pendingRowClick(event,'+p.id+')" ondblclick="navigateToTransaction('+p.id+')">'
-          +'<label class="pending-row-check" onclick="event.stopPropagation()"><input type="checkbox" class="pending-cb" data-id="'+p.id+'" data-reimb="'+reimb+'"></label>'
+          +'<label class="pending-row-check" onclick="event.stopPropagation()"><input type="checkbox" class="pending-cb" data-id="'+p.id+'" data-reimb="'+reimb+'" data-cat="'+p.cat+'"></label>'
           +'<div class="pending-row-left">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
             +'<div class="pending-row-meta">'+meta+'</div>'
@@ -2751,7 +2755,7 @@ function openPendingSheet(){
   const selectBar='<div class="pending-select-bar"><label class="pending-select-all"><input type="checkbox" id="pendingSelectAll"><span>All</span></label><span class="pending-select-count" id="pendingSelectCount">0 selected</span></div>';
   sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
   body.innerHTML=selectBar+sections;
-  footer.innerHTML='<div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button>';
+  footer.innerHTML='<div id="pendingCatBreakdown"></div><div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
@@ -2765,13 +2769,28 @@ function pendingRowClick(e,id){
 }
 function updatePendingTotal(){
   let total=0,count=0;
-  document.querySelectorAll('.pending-cb:checked').forEach(cb=>{total+=parseFloat(cb.dataset.reimb)||0;count++;});
+  const catTotals={};
+  document.querySelectorAll('.pending-cb:checked').forEach(cb=>{
+    const reimb=parseFloat(cb.dataset.reimb)||0;
+    total+=reimb;count++;
+    const cat=cb.dataset.cat||'';
+    catTotals[cat]=(catTotals[cat]||0)+reimb;
+  });
   const totalVal=document.getElementById('pendingTotalValue');
   if(totalVal)totalVal.textContent=fmt(total);
   const countEl=document.getElementById('pendingSelectCount');
   if(countEl)countEl.textContent=count+' selected';
   const btn=document.getElementById('pendingBatchBtn');
   if(btn){btn.disabled=count===0;btn.textContent=count?'Mark '+count+' received':'Mark selected received';}
+  const breakdown=document.getElementById('pendingCatBreakdown');
+  if(breakdown){
+    const activeCats=Object.keys(catTotals);
+    if(activeCats.length>1){
+      breakdown.innerHTML='<div class="pending-cat-breakdown">'+CATS.filter(c=>catTotals[c.id]).map(c=>'<div class="pending-cat-breakdown-row"><span class="cat-dot dot-'+c.id+'"></span><span class="pending-cat-breakdown-label">'+c.label+'</span><span class="pending-cat-breakdown-amt">'+fmt(catTotals[c.id])+'</span></div>').join('')+'</div>';
+    } else {
+      breakdown.innerHTML='';
+    }
+  }
 }
 function batchMarkReceived(){
   const ids=[...document.querySelectorAll('.pending-cb:checked')].map(cb=>parseInt(cb.dataset.id));
