@@ -2955,6 +2955,7 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
   // Rollover entries carry the original purchase date for display,
   // but are bucketed into the next month via a separate parentDate field
   const rolloverDisplayDate=srcP?(srcP.serviceDate||srcP.date):nextMk+'-01';
+  const inheritSubmitted=srcP&&srcP.status==='submitted';
   const newRollover={
     id:data.nextId++,
     date:rolloverDisplayDate,
@@ -2962,8 +2963,8 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
     desc:'Rollover: '+baseDesc,
     rolloverBaseDesc:baseDesc,
     serviceDate:srcP?(srcP.serviceDate||srcP.date):null,
-    cat:item.catId,amount:item.overage,status:'pending',
-    submittedDate:null,expectedDate:null,receivedDate:null,
+    cat:item.catId,amount:item.overage,status:inheritSubmitted?'submitted':'pending',
+    submittedDate:inheritSubmitted?srcP.submittedDate:null,expectedDate:inheritSubmitted?srcP.expectedDate:null,receivedDate:null,
     receiptUrl:srcP?srcP.receiptUrl||null:null,
     isRollover:true,rolloverFrom:item.mk,rolloverSourceId:item.purchaseId
   };
