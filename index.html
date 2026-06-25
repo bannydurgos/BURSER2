@@ -243,6 +243,8 @@ th.check-cell{width:36px;padding:9px 4px 9px 12px}
 .date-sub{display:block;font-family:var(--mono);font-size:10px;color:var(--red-text);margin-top:2px;letter-spacing:.02em;white-space:nowrap}
 .date-rcv{display:block;font-family:var(--mono);font-size:11px;margin-top:1px;white-space:nowrap;color:var(--green-text)}
 td.col-subrcv{min-width:150px}
+.col-desc{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.col-desc>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .reimb-hint{font-family:var(--mono);font-size:10px;color:var(--hw);display:block;margin-top:2px}
 .rollover-desc{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em}
 .rollover-desc-link{font-family:var(--mono);font-style:normal;color:var(--text2);font-size:11px;letter-spacing:.01em;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-align:left}
@@ -371,6 +373,14 @@ td.col-subrcv{min-width:150px}
 .pending-batch-btn{width:100%;margin-top:12px;background:var(--text);color:var(--bg2);border:none;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
 .pending-batch-btn:disabled{opacity:.3;cursor:default}
 .pending-batch-btn:not(:disabled):hover{opacity:.85}
+.pending-partial-btn{background:none;border:1px solid var(--amber-text);color:var(--amber-text)}
+.pending-partial-btn:not(:disabled):hover{background:var(--amber-text);color:var(--bg2);opacity:1}
+.pp-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.pp-table th{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:4px 8px;border-bottom:1px solid var(--border2);text-align:left}
+.pp-table th:last-child,.pp-table td:last-child{text-align:right}
+.pp-table td{padding:5px 6px;font-size:12px;border-bottom:1px solid var(--border)}
+.pp-table tr:last-child td{border-bottom:none}
+.pp-assign{width:72px;text-align:right;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:12px;padding:4px 6px;font-family:var(--mono);outline:none}
 .pending-total-label{font-family:var(--mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .pending-total-value{font-family:var(--mono);font-size:20px;font-weight:600}
 .pending-empty{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
@@ -702,6 +712,37 @@ td.col-subrcv{min-width:150px}
     </div>
     <div class="pending-sheet-body" id="pendingBody"></div>
     <div class="pending-sheet-footer" id="pendingFooter"></div>
+  </div>
+</div>
+
+<!-- PARTIAL PAYMENT MODAL -->
+<div class="edit-overlay" id="partialPayOverlay">
+  <div class="edit-modal" style="width:440px;max-height:none;overflow-y:visible">
+    <h3 style="margin-bottom:14px">Partial payment received</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px">Total received ($)</label>
+        <input type="number" id="ppTotalInput" min="0" step="0.01" placeholder="0.00" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:13px;padding:8px 10px;outline:none;font-family:var(--mono);box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px">Date received</label>
+        <input type="date" id="ppDateInput" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:13px;padding:8px 10px;outline:none;font-family:var(--mono);box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-bottom:12px;border:1px solid var(--border2)">
+      <table class="pp-table">
+        <colgroup><col style="width:72px"><col><col style="width:60px"><col style="width:80px"></colgroup>
+        <thead><tr><th>Date</th><th>Description</th><th>Owed</th><th>Assign</th></tr></thead>
+        <tbody id="ppTableBody"></tbody>
+      </table>
+    </div>
+    <div id="ppZeroNote" style="display:none;font-size:11px;color:var(--text2);margin-bottom:10px;padding:6px 8px;background:var(--bg3);border:1px solid var(--border2)"></div>
+    <div id="ppStatus" style="font-size:12px;font-family:var(--mono);min-height:18px;margin-bottom:8px"></div>
+    <p id="ppError" style="font-size:12px;color:var(--red-text);min-height:16px;margin-bottom:10px"></p>
+    <div class="popout-actions">
+      <button class="btn-cancel" id="ppCancel">Cancel</button>
+      <button class="btn-save" id="ppConfirm">Apply</button>
+    </div>
   </div>
 </div>
 
@@ -1700,7 +1741,7 @@ function makeRows(rows,emptyMsg,showReimb){
     return '<tr id="prow-'+p.id+'">'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
-      +'<td><div style="display:flex;flex-direction:column">'
+      +'<td class="col-desc" title="'+(p.desc||'')+'"><div style="display:flex;flex-direction:column">'
         +desc+reimbHint
         +'<span class="mob-info">'+mobInfo+'</span>'
         +mobMarkBtn
@@ -1767,7 +1808,7 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     return '<tr id="prow-'+p.id+'">'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
-      +'<td><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span>'+mobMarkBtn+'</div></td>'
+      +'<td class="col-desc" title="'+(p.desc||'')+'"><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span>'+mobMarkBtn+'</div></td>'
       +'<td style="font-weight:600">'+fmt(p.amount)+'</td>'
       +reimbCell
       +'<td class="col-subrcv" style="font-size:12px;color:var(--text2)">'+dateCellContent+'</td>'
@@ -2768,7 +2809,7 @@ function openPendingSheet(){
   const selectBar='<div class="pending-select-bar"><label class="pending-select-all"><input type="checkbox" id="pendingSelectAll"><span>All</span></label><span class="pending-select-count" id="pendingSelectCount">0 selected</span></div>';
   sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
   body.innerHTML=selectBar+sections;
-  footer.innerHTML='<div id="pendingCatBreakdown"></div><div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button>';
+  footer.innerHTML='<div id="pendingCatBreakdown"></div><div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button><button class="pending-batch-btn pending-partial-btn" id="pendingPartialBtn" disabled onclick="openPartialPaymentModal()">Partial payment</button>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
@@ -2795,6 +2836,8 @@ function updatePendingTotal(){
   if(countEl)countEl.textContent=count+' selected';
   const btn=document.getElementById('pendingBatchBtn');
   if(btn){btn.disabled=count===0;btn.textContent=count?'Mark '+count+' received':'Mark selected received';}
+  const partialBtn=document.getElementById('pendingPartialBtn');
+  if(partialBtn)partialBtn.disabled=count===0;
   const breakdown=document.getElementById('pendingCatBreakdown');
   if(breakdown){
     const activeCats=Object.keys(catTotals);
@@ -2834,6 +2877,127 @@ function batchMarkReceived(){
     openPendingSheet();
   },defaultDate);
 }
+// ── PARTIAL PAYMENT ───────────────────────────────────────
+let _ppZeroIds=[];
+function openPartialPaymentModal() {
+  const ids=[...document.querySelectorAll('.pending-cb:checked')].map(cb=>parseInt(cb.dataset.id));
+  const all=ids.map(id=>data.purchases.find(p=>p.id===id&&p.status==='submitted')).filter(Boolean);
+  if(!all.length)return;
+  const eligible=all.filter(p=>reimbursableAmount(p)>0);
+  const zeroReimb=all.filter(p=>reimbursableAmount(p)<=0);
+  _ppZeroIds=zeroReimb.map(p=>p.id);
+  eligible.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  document.getElementById('ppTableBody').innerHTML=eligible.map(p=>{
+    const owed=p.amount;
+    return '<tr>'
+      +'<td style="color:var(--text2);white-space:nowrap">'+fmtDate(p.date)+'</td>'
+      +'<td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">'+(p.desc||'')+'</td>'
+      +'<td style="text-align:right;color:var(--text2)">'+fmt(owed)+'</td>'
+      +'<td style="text-align:right"><input type="number" class="pp-assign" data-id="'+p.id+'" data-reimb="'+owed+'" min="0" max="'+owed+'" step="0.01" value="0"></td>'
+      +'</tr>';
+  }).join('');
+  const noteEl=document.getElementById('ppZeroNote');
+  if(zeroReimb.length){
+    noteEl.textContent=zeroReimb.length+' transaction'+(zeroReimb.length>1?'s':'')+' with $0 reimbursable will be marked received automatically.';
+    noteEl.style.display='';
+  }else{noteEl.style.display='none';}
+  document.getElementById('ppDateInput').value=todayStr();
+  document.getElementById('ppTotalInput').value='';
+  document.getElementById('ppError').textContent='';
+  document.getElementById('ppStatus').textContent='';
+  document.getElementById('partialPayOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('ppTotalInput').focus(),100);
+}
+function ppGreedyFill(total){
+  let rem=Math.round(total*100)/100;
+  document.querySelectorAll('.pp-assign').forEach(inp=>{
+    const reimb=parseFloat(inp.dataset.reimb)||0;
+    const assign=Math.round(Math.min(reimb,Math.max(0,rem))*100)/100;
+    inp.value=assign.toFixed(2);
+    rem=Math.round((rem-assign)*100)/100;
+  });
+  ppUpdateStatus();
+}
+function ppUpdateStatus(){
+  const inputs=[...document.querySelectorAll('.pp-assign')];
+  const assigned=Math.round(inputs.reduce((s,i)=>s+(parseFloat(i.value)||0),0)*100)/100;
+  const received=Math.round((parseFloat(document.getElementById('ppTotalInput').value)||0)*100)/100;
+  const diff=Math.round((received-assigned)*100)/100;
+  const el=document.getElementById('ppStatus');
+  if(received<=0){el.textContent='';return;}
+  if(Math.abs(diff)<0.01){el.textContent='✓ Fully assigned';el.style.color='var(--green-text)';}
+  else if(diff>0){el.textContent=fmt(diff)+' unassigned';el.style.color='var(--amber-text)';}
+  else{el.textContent='Over-assigned by '+fmt(Math.abs(diff));el.style.color='var(--red-text)';}
+}
+document.getElementById('ppTotalInput').addEventListener('input',()=>ppGreedyFill(parseFloat(document.getElementById('ppTotalInput').value)||0));
+document.getElementById('ppTableBody').addEventListener('input',e=>{if(e.target.classList.contains('pp-assign'))ppUpdateStatus();});
+document.getElementById('ppCancel').addEventListener('click',()=>document.getElementById('partialPayOverlay').classList.remove('open'));
+document.getElementById('partialPayOverlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+document.getElementById('ppConfirm').addEventListener('click',()=>{
+  const date=document.getElementById('ppDateInput').value;
+  const received=Math.round((parseFloat(document.getElementById('ppTotalInput').value)||0)*100)/100;
+  const errEl=document.getElementById('ppError');
+  if(!date){errEl.textContent='Please enter a date.';return;}
+  if(received<=0){errEl.textContent='Please enter the total amount received.';return;}
+  const inputs=[...document.querySelectorAll('.pp-assign')];
+  const assigned=Math.round(inputs.reduce((s,i)=>s+(parseFloat(i.value)||0),0)*100)/100;
+  if(Math.abs(assigned-received)>=0.01){errEl.textContent='Assigned amounts must add up to the total received.';return;}
+  for(const inp of inputs){
+    const assign=parseFloat(inp.value)||0;
+    const reimb=parseFloat(inp.dataset.reimb)||0;
+    if(assign>reimb+0.005){errEl.textContent='An assigned amount exceeds the reimbursable amount for that transaction.';return;}
+  }
+  snapshot();
+  const toSave=[];
+  // Apply distributed amounts to eligible transactions
+  inputs.forEach(inp=>{
+    const assign=Math.round((parseFloat(inp.value)||0)*100)/100;
+    if(assign<=0)return;
+    const p=data.purchases.find(x=>x.id===parseInt(inp.dataset.id));
+    if(!p)return;
+    const reimb=parseFloat(inp.dataset.reimb)||0;
+    p.status='received';p.receivedDate=date;
+    if(!p.submittedDate)p.submittedDate=date;
+    if(assign<reimb-0.005){
+      // Partial: record what was received, create a remainder transaction for the rest
+      p.reimbursableOverride=assign;
+      // Erase existing rollover descendants — the new remainder will rebuild the chain
+      const rolloverDesc=rolloverDeleteSet(p).filter(d=>d.id!==p.id);
+      if(rolloverDesc.length){
+        rolloverDesc.forEach(d=>{const idx=data.purchases.indexOf(d);if(idx!==-1)data.purchases.splice(idx,1);deletePurchaseFromDb(d.id);});
+        p.rolledOver=false;answeredIds.add(p.id);data.answeredRollovers=[...answeredIds];
+      }
+      const remainder={
+        id:data.nextId++,date:getPurchaseMonth(p)+'-01',serviceDate:p.serviceDate||null,
+        desc:'Remaining: '+p.desc,vendor:p.vendor||null,paymentMethod:p.paymentMethod||null,
+        cat:p.cat,amount:Math.round((p.amount-assign)*100)/100,reimbursableOverride:null,
+        status:'submitted',submittedDate:p.submittedDate||null,expectedDate:p.expectedDate||null,
+        receivedDate:null,receiptUrl:p.receiptUrl||null,
+        isRollover:false,rolloverSourceId:null,rolloverBaseDesc:null,rolloverMonth:null,
+        rolledOver:false,declinedRollover:false,isRecurring:false,recurringSourceId:null,
+      };
+      data.purchases.push(remainder);
+      toSave.push(remainder);
+    }
+    toSave.push(p);
+  });
+  // Auto-mark $0-reimbursable transactions as received
+  _ppZeroIds.forEach(id=>{
+    const p=data.purchases.find(x=>x.id===id);
+    if(!p)return;
+    p.status='received';p.receivedDate=date;
+    if(!p.submittedDate)p.submittedDate=date;
+    toSave.push(p);
+  });
+  Promise.all(toSave.map(p=>savePurchase(p)));render();
+  document.getElementById('partialPayOverlay').classList.remove('open');
+  openPendingSheet();
+  // Deduplicate rollover checks to one per cat+month, run after pending sheet refresh
+  const rolloverKeys=new Set();
+  toSave.forEach(p=>{if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)rolloverKeys.add(p.cat+'|'+getPurchaseMonth(p));});
+  rolloverKeys.forEach(key=>{const[cat,mk]=key.split('|');scheduleRolloverCheck(cat,mk);});
+});
+
 document.getElementById('pendingBody').addEventListener('change',function(e){
   if(e.target.id==='pendingSelectAll'){
     const checked=e.target.checked;
@@ -2913,9 +3077,10 @@ function recalculateRolloverChain(p){
     const sorted=data.purchases.filter(x=>x.cat===p.cat&&getPurchaseMonth(x)===mk).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
     let running=0;
     for(const t of sorted){
-      const before=running;running+=t.amount;
+      const tEff=t.reimbursableOverride!=null?t.reimbursableOverride:t.amount;
+      const before=running;running+=tEff;
       if(t.id===p.id&&running>budget){
-        newOverage=Math.round((Math.min(running,t.amount)-Math.max(0,budget-before))*100)/100;
+        newOverage=Math.round((Math.min(running,tEff)-Math.max(0,budget-before))*100)/100;
         break;
       }
     }
@@ -2938,9 +3103,10 @@ function buildRolloverQueue(catId,mk){
   const sorted=data.purchases.filter(p=>p.cat===catId&&getPurchaseMonth(p)===mk).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
   let running=0;
   sorted.forEach(p=>{
-    const before=running;running+=p.amount;
+    const pEff=p.reimbursableOverride!=null?p.reimbursableOverride:p.amount;
+    const before=running;running+=pEff;
     if(running>budget){
-      const overage=Math.round((Math.min(running,p.amount)-Math.max(0,budget-before))*100)/100;
+      const overage=Math.round((Math.min(running,pEff)-Math.max(0,budget-before))*100)/100;
       const alreadyQueued=rolloverQueue.some(q=>q.purchaseId===p.id);
       if(!answeredIds.has(p.id)&&!alreadyQueued&&!p.rolledOver&&!p.declinedRollover)
         rolloverQueue.push({purchaseId:p.id,catId,mk,purchaseDesc:p.rolloverBaseDesc||p.desc,purchaseAmount:p.amount,overage});
