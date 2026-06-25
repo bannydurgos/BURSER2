@@ -680,6 +680,10 @@ td.col-subrcv{min-width:150px}
       <label>Receipt link (Google Drive)</label>
       <input type="url" id="ef-receipt" placeholder="https://drive.google.com/...">
     </div>
+    <div class="form-row">
+      <label>Reimbursable override ($) <span style="font-weight:400;color:var(--text-muted);font-size:0.85em;">— leave blank to use calculated</span></label>
+      <input type="number" id="ef-reimb-override" min="0" step="0.01" placeholder="e.g. 150.00">
+    </div>
     <div class="error-msg" id="editErrorMsg"></div>
     <div class="popout-actions">
       <button class="btn-cancel" id="btnCloseEdit">Cancel</button>
@@ -840,6 +844,10 @@ td.col-subrcv{min-width:150px}
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <button class="btn-save" id="datePickerToday" style="flex:none;padding:10px 16px;font-size:11px">Today</button>
       <input type="date" id="datePickerInput" style="flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:13px;padding:8px 10px;outline:none;font-family:var(--mono)">
+    </div>
+    <div id="datePickerOverrideRow" style="display:none;margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px">Reimbursable override ($) — leave blank to use calculated</label>
+      <input type="number" id="datePickerOverrideInput" min="0" step="0.01" placeholder="e.g. 150.00" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-size:13px;padding:8px 10px;outline:none;font-family:var(--mono);box-sizing:border-box">
     </div>
     <div class="popout-actions">
       <button class="btn-cancel" id="datePickerCancel">Cancel</button>
@@ -1242,6 +1250,7 @@ function getPurchaseMonth(p){return p.isRollover&&p.rolloverMonth?p.rolloverMont
 
 function reimbursableAmount(p){
   if(p.status==='oop') return 0;
+  if(p.reimbursableOverride!=null) return p.reimbursableOverride;
   // Rollover entries are subject to the budget of the month they land in
   const mk=getPurchaseMonth(p);const budget=getBudget(p.cat,mk);
   if(!budget)return p.amount;
@@ -1254,7 +1263,7 @@ function reimbursableAmount(p){
       return a.date.localeCompare(b.date)||a.id-b.id;
     });
   let running=0;
-  for(const x of sorted){const before=running;running+=x.amount;if(x.id===p.id)return Math.min(p.amount,Math.max(0,budget-before));}
+  for(const x of sorted){const before=running;running+=(x.reimbursableOverride!=null?x.reimbursableOverride:x.amount);if(x.id===p.id)return Math.min(p.amount,Math.max(0,budget-before));}
   return p.amount;
 }
 
@@ -1876,7 +1885,7 @@ function renderPanels(){
 function renderBudgetPanel(cat){
   const budget=getBudget(cat.id,activeLogMonth);
   const mp=data.purchases.filter(p=>p.cat===cat.id&&getPurchaseMonth(p)===activeLogMonth);
-  const spent=mp.filter(p=>p.status!=='oop').reduce((s,p)=>s+p.amount,0);
+  const spent=mp.filter(p=>p.status!=='oop').reduce((s,p)=>s+(p.reimbursableOverride!=null?p.reimbursableOverride:p.amount),0);
   const rem=budget-spent;const over=rem<0;
   const pct=budget>0?Math.min((spent/budget)*100,100):0;
   const rows=[...mp].sort((a,b)=>b.id-a.id);
@@ -2221,7 +2230,7 @@ function renderHistory(){
       const sections=CATS.filter(cat=>!historyCatFilter||cat.id===historyCatFilter).map(cat=>{
         const rows=mp.filter(p=>p.cat===cat.id&&(!historyStatusFilter||(p.status||'').toLowerCase()===historyStatusFilter)).sort((a,b)=>b.id-a.id);
         if(!rows.length)return'';
-        const budget=getBudget(cat.id,mk);const spent=rows.reduce((s,p)=>s+p.amount,0);
+        const budget=getBudget(cat.id,mk);const spent=rows.filter(p=>p.status!=='oop').reduce((s,p)=>s+(p.reimbursableOverride!=null?p.reimbursableOverride:p.amount),0);
         let chipTxt=cat.hasBudget&&budget>0
           ?fmt(spent)+' of '+fmt(budget)+(spent>budget?' <span style="color:var(--red-text);font-size:10px">('+fmt(spent-budget)+' over)</span>':' <span style="color:var(--green-text);font-size:10px">('+fmt(budget-spent)+' left)</span>')
           :fmt(spent);
@@ -2630,6 +2639,7 @@ function openEdit(id){
   document.getElementById('ef-receipt').value=p.receiptUrl||'';
   document.getElementById('ef-expected').value=p.expectedDate||'';
   document.getElementById('ef-received').value=p.receivedDate||'';
+  document.getElementById('ef-reimb-override').value=p.reimbursableOverride!=null?p.reimbursableOverride:'';
   document.getElementById('editErrorMsg').textContent='';
   updateEditFields();
   document.getElementById('editOverlay').classList.add('open');
@@ -2654,9 +2664,12 @@ function saveEdit(){
   const receiptUrl=document.getElementById('ef-receipt').value.trim()||null;
   const vendor=document.getElementById('ef-vendor').value.trim()||null;
   const paymentMethod=document.getElementById('ef-payment').value||null;
+  const overrideRaw=document.getElementById('ef-reimb-override').value;
+  const reimbursableOverride=overrideRaw!==''?Math.max(0,parseFloat(overrideRaw)):null;
   snapshot();
   if(!p.isRollover)p.serviceDate=serviceDate;
   p.date=date;p.desc=desc;p.vendor=vendor;p.paymentMethod=paymentMethod;p.amount=amount;p.status=status;
+  p.reimbursableOverride=reimbursableOverride;
   p.receiptUrl=receiptUrl;
   p.submittedDate=status==='oop'?null:(submittedDate||p.submittedDate||null);
   p.expectedDate=status==='oop'?null:(expectedDate||null);
@@ -2746,7 +2759,7 @@ function openPendingSheet(){
               +(p.receiptUrl?'<a href="'+p.receiptUrl+'" target="_blank" style="color:var(--hw);display:flex;align-items:center" title="View receipt" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></a>':'')
             +'</div>'
             +(reimb<p.amount?'<div class="pending-row-reimb">'+fmt(reimb)+' reimbursable</div>':'')
-            +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'" onclick="event.stopPropagation()">Mark received</button>'
+            +'<button class="mark-btn pending-mark-rcv-btn" data-id="'+p.id+'">Mark received</button>'
           +'</div>'
         +'</div>';
       }).join('')
@@ -2841,10 +2854,31 @@ document.getElementById('pendingBody').addEventListener('click',function(e){
   const id=parseInt(btn.dataset.id);
   const p=data.purchases.find(x=>x.id===id);
   if(!p||p.status!=='submitted')return;
-  openDatePicker('Date received',date=>{
+  openDatePicker('Date received',(date,override)=>{
     snapshot();p.status='received';p.receivedDate=date;
-    const ancestors=rolloverAncestors(p);
+    if(override!=null)p.reimbursableOverride=override;
     const toSave=[p];
+    // If a partial override is set, cancel/delete all rollover descendants
+    if(override!=null){
+      const descendants=rolloverDeleteSet(p).filter(d=>d.id!==p.id);
+      if(descendants.length){
+        descendants.forEach(d=>{
+          const idx=data.purchases.indexOf(d);
+          if(idx!==-1)data.purchases.splice(idx,1);
+          deletePurchaseFromDb(d.id);
+        });
+        p.rolledOver=false;
+        answeredIds.add(p.id);
+        data.answeredRollovers=[...answeredIds];
+      }
+      // If p is itself a rollover child, clear rolledOver on its parent too
+      if(p.rolloverSourceId){
+        const parent=data.purchases.find(x=>x.id===p.rolloverSourceId);
+        if(parent){parent.rolledOver=false;toSave.push(parent);}
+      }
+    }
+    // Auto-mark ancestors if all non-ancestor items in the chain are now done
+    const ancestors=rolloverAncestors(p);
     if(ancestors.length>0){
       const rootId=ancestors[ancestors.length-1];
       const allInChain=rolloverChain(data.purchases.find(x=>x.id===rootId)||p);
@@ -2859,7 +2893,7 @@ document.getElementById('pendingBody').addEventListener('click',function(e){
     Promise.all(toSave.map(x=>savePurchase(x)));render();
     if(CAT_MAP[p.cat]&&CAT_MAP[p.cat].hasBudget)scheduleRolloverCheck(p.cat,getPurchaseMonth(p));
     openPendingSheet();
-  },p.expectedDate);
+  },p.expectedDate,true);
 });
 
 // ── ROLLOVER ──────────────────────────────────────────────
@@ -3107,10 +3141,14 @@ document.getElementById('batchEditOverlay').addEventListener('click', function(e
 // ── DATE PICKER ───────────────────────────────────────────
 let datePickerCallback = null;
 
-function openDatePicker(title, callback, defaultDate) {
+function openDatePicker(title, callback, defaultDate, showOverride) {
   datePickerCallback = callback;
   document.getElementById('datePickerTitle').textContent = title;
   document.getElementById('datePickerInput').value = defaultDate || (activeView==='log'&&activeLogMonth ? activeLogMonth+'-01' : todayStr());
+  const overrideRow = document.getElementById('datePickerOverrideRow');
+  const overrideInput = document.getElementById('datePickerOverrideInput');
+  overrideRow.style.display = showOverride ? '' : 'none';
+  overrideInput.value = '';
   document.getElementById('datePickerOverlay').classList.add('open');
 }
 
@@ -3120,14 +3158,18 @@ function closeDatePicker() {
 }
 
 document.getElementById('datePickerToday').addEventListener('click', () => {
-  if (datePickerCallback) datePickerCallback(todayStr());
+  const overrideRaw = document.getElementById('datePickerOverrideInput').value;
+  const override = overrideRaw !== '' ? Math.max(0, parseFloat(overrideRaw)) : null;
+  if (datePickerCallback) datePickerCallback(todayStr(), override);
   closeDatePicker();
 });
 
 document.getElementById('datePickerConfirm').addEventListener('click', () => {
   const date = document.getElementById('datePickerInput').value;
   if (!date) return;
-  if (datePickerCallback) datePickerCallback(date);
+  const overrideRaw = document.getElementById('datePickerOverrideInput').value;
+  const override = overrideRaw !== '' ? Math.max(0, parseFloat(overrideRaw)) : null;
+  if (datePickerCallback) datePickerCallback(date, override);
   closeDatePicker();
 });
 
