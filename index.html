@@ -222,6 +222,8 @@ tr:hover td{background:var(--bg3)}
 .receipt-row{cursor:pointer}
 .receipt-row:hover{background:var(--bg3)}
 .receipt-row.chain-hover{background:var(--bg3)}
+tr.chain-hover td{background:var(--bg3)}
+.pending-row.chain-hover{background:var(--bg3)}
 .receipt-row .badge{min-width:90px;text-align:center;box-sizing:border-box}
 .receipt-link-area{width:130px;justify-content:flex-end}
 .empty-row{text-align:center;padding:32px;color:var(--text3);font-family:var(--mono);font-size:12px}
@@ -1322,6 +1324,17 @@ function reimbursableAmount(p){
   return p.amount;
 }
 
+function chainRootId(p) {
+  if (!p.isRollover && !data.purchases.some(x => x.rolloverSourceId === p.id)) return null;
+  let root = p, safety = 0;
+  while (root.rolloverSourceId && safety++ < 10) {
+    const par = data.purchases.find(x => x.id === root.rolloverSourceId);
+    if (!par) break;
+    root = par;
+  }
+  return root.id;
+}
+
 function rolloverAncestors(p){
   const ids=[];let cur=p;
   while(cur&&cur.rolloverSourceId){
@@ -1751,8 +1764,9 @@ function makeRows(rows,emptyMsg,showReimb){
     const mobMarkBtn=ns2?'<span class="mob-action"><button class="mark-btn" data-id="'+p.id+'">'+nsLabel2[ns2]+'</button></span>':'';
 
     const checkCell=batchMode?'<td class="check-cell"><input type="checkbox" class="row-check" data-id="'+p.id+'"'+(batchSelected.has(p.id)?' checked':'')+'/></td>':'';
+    const _crid=chainRootId(p);
 
-    return '<tr id="prow-'+p.id+'">'
+    return '<tr id="prow-'+p.id+'"'+(_crid!==null?' data-chain-root="'+_crid+'"':'')+' >'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
       +'<td class="col-desc" title="'+(p.desc||'')+'"><div style="display:flex;flex-direction:column">'
@@ -1818,8 +1832,9 @@ function makeRowsFull(rows,emptyMsg,showReimb){
     const mobMarkBtn=ns2?'<span class="mob-action"><button class="mark-btn" data-id="'+p.id+'">'+nsLabel2[ns2]+'</button></span>':'';
 
     const checkCell=batchMode?'<td class="check-cell"><input type="checkbox" class="row-check" data-id="'+p.id+'"'+(batchSelected.has(p.id)?' checked':'')+'/></td>':'';
+    const _crid=chainRootId(p);
 
-    return '<tr id="prow-'+p.id+'">'
+    return '<tr id="prow-'+p.id+'"'+(_crid!==null?' data-chain-root="'+_crid+'"':'')+' >'
       +checkCell
       +'<td class="col-date" style="color:var(--text2)">'+fmtDate(p.date)+'</td>'
       +'<td class="col-desc" title="'+(p.desc||'')+'"><div style="display:flex;flex-direction:column">'+desc+reimbHint+'<span class="mob-info">'+mobInfo+'</span>'+mobMarkBtn+'</div></td>'
@@ -2302,7 +2317,8 @@ function renderHistory(){
                 +(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')
                 +(!p.receivedDate&&p.expectedDate?' · <span style="color:var(--blue-text)">Exp: '+fmtDate(p.expectedDate)+'</span>':'')
                 +(p.receivedDate?' · <span style="color:var(--green-text)">Rcv: '+fmtDate(p.receivedDate)+'</span>'+daysStr:'');
-              return'<div class="receipt-row" data-id="'+p.id+'" style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer">'
+              const _crid=chainRootId(p);
+              return'<div class="receipt-row" data-id="'+p.id+'"'+(_crid!==null?' data-chain-root="'+_crid+'"':'')+' style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer">'
                 +'<div style="flex:1;min-width:0">'
                   +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+desc+'</div>'
                   +'<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">'+meta+'</div>'
@@ -2802,7 +2818,8 @@ function openPendingSheet(){
         const reimb=reimbursableAmount(p);
         const mk=getMonthKey(p.date);
         const meta=monthLabel(mk)+' · '+fmtDate(p.date)+(p.submittedDate?' · <span style="color:var(--red-text)">Sub: '+fmtDate(p.submittedDate)+'</span>':'')+(p.expectedDate?' · <span class="pending-exp-date">Exp: '+fmtDate(p.expectedDate)+'</span>':'');
-        return'<div class="pending-row deselected" data-id="'+p.id+'" data-reimb="'+reimb+'" style="cursor:pointer" onclick="pendingRowClick(event,'+p.id+')" ondblclick="navigateToTransaction('+p.id+')">'
+        const _crid=chainRootId(p);
+        return'<div class="pending-row deselected" data-id="'+p.id+'" data-reimb="'+reimb+'"'+(_crid!==null?' data-chain-root="'+_crid+'"':'')+' style="cursor:pointer" onclick="pendingRowClick(event,'+p.id+')" ondblclick="navigateToTransaction('+p.id+')">'
           +'<label class="pending-row-check" onclick="event.stopPropagation()"><input type="checkbox" class="pending-cb" data-id="'+p.id+'" data-reimb="'+reimb+'" data-cat="'+p.cat+'"></label>'
           +'<div class="pending-row-left">'
             +'<div class="pending-row-desc">'+(p.isRollover?rolloverLabel(p):p.desc)+'</div>'
@@ -3809,18 +3826,8 @@ function receiptRow(p) {
   const rolloverChild = data.purchases.find(r => r.isRollover && r.rolloverSourceId === p.id);
   const displayAmount = rolloverChild ? p.amount - rolloverChild.amount : p.amount;
 
-  // Determine chain root id for hover-linking
-  let chainRootId = null;
-  if (rolloverChild || p.isRollover) {
-    let root = p, safety = 0;
-    while (root.rolloverSourceId && safety++ < 10) {
-      const par = data.purchases.find(x => x.id === root.rolloverSourceId);
-      if (!par) break;
-      root = par;
-    }
-    chainRootId = root.id;
-  }
-  const chainAttr = chainRootId !== null ? ` data-chain-root="${chainRootId}"` : '';
+  const _crid = chainRootId(p);
+  const chainAttr = _crid !== null ? ` data-chain-root="${_crid}"` : '';
 
   return `<div class="receipt-row" data-id="${p.id}"${chainAttr} style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap">
     <div style="flex:1;min-width:0">
@@ -3880,14 +3887,6 @@ function _updateReceiptLinkArea(row, id, url, p) {
 }
 
 function wireReceiptRows() {
-  // Hover-link chained (rollover) rows
-  document.querySelectorAll('.receipt-row[data-chain-root]').forEach(row => {
-    const root = row.dataset.chainRoot;
-    const siblings = () => document.querySelectorAll(`.receipt-row[data-chain-root="${root}"]`);
-    row.addEventListener('mouseenter', () => siblings().forEach(r => r.classList.add('chain-hover')));
-    row.addEventListener('mouseleave', () => siblings().forEach(r => r.classList.remove('chain-hover')));
-  });
-
   // Toggle edit area open
   document.querySelectorAll('.receipt-edit-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -4133,6 +4132,19 @@ document.getElementById('budgetMgrFill').addEventListener('click',()=>{
 
 // ── RENDER ────────────────────────────────────────────────
 function render(){renderMonthBar();renderSummary();renderTabs();renderPanels();renderBatchBar();_ssSet('activeLogMonth',activeLogMonth);_ssSet('activeTab',activeTab);}
+
+// ── GLOBAL CHAIN HOVER ────────────────────────────────────
+document.addEventListener('mouseover', e => {
+  const row = e.target.closest('[data-chain-root]');
+  if (!row) return;
+  document.querySelectorAll(`[data-chain-root="${row.dataset.chainRoot}"]`).forEach(r => r.classList.add('chain-hover'));
+});
+document.addEventListener('mouseout', e => {
+  const row = e.target.closest('[data-chain-root]');
+  if (!row || row.contains(e.relatedTarget)) return;
+  document.querySelectorAll(`[data-chain-root="${row.dataset.chainRoot}"]`).forEach(r => r.classList.remove('chain-hover'));
+});
+
 initAuth();
 </script>
 </body>
