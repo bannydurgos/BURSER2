@@ -373,7 +373,7 @@ td.col-subrcv{min-width:150px}
 .pending-cat-breakdown-label{flex:1;color:var(--text2)}
 .pending-cat-breakdown-amt{color:var(--text);font-weight:600}
 .pending-total-row{display:flex;justify-content:space-between;align-items:center}
-.pending-batch-btn{width:100%;margin-top:12px;background:var(--text);color:var(--bg2);border:none;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
+.pending-batch-btn{flex:1;background:var(--text);color:var(--bg2);border:none;padding:10px;font-family:var(--mono);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.05em}
 .pending-batch-btn:disabled{opacity:.3;cursor:default}
 .pending-batch-btn:not(:disabled):hover{opacity:.85}
 .pending-partial-btn{background:none;border:1px solid var(--amber-text);color:var(--amber-text)}
@@ -2840,7 +2840,7 @@ function openPendingSheet(){
   const selectBar='<div class="pending-select-bar"><label class="pending-select-all"><input type="checkbox" id="pendingSelectAll"><span>All</span></label><span class="pending-select-count" id="pendingSelectCount">0 selected</span></div>';
   sub.textContent=submitted.length+' submitted · '+fmt(grandReimb)+' awaiting';
   body.innerHTML=selectBar+sections;
-  footer.innerHTML='<div id="pendingCatBreakdown"></div><div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button><button class="pending-batch-btn pending-partial-btn" id="pendingPartialBtn" disabled onclick="openPartialPaymentModal()">Partial payment</button>';
+  footer.innerHTML='<div id="pendingCatBreakdown"></div><div class="pending-total-row"><span class="pending-total-label">Total awaiting</span><span class="pending-total-value" id="pendingTotalValue">'+fmt(0)+'</span></div><div style="display:flex;gap:8px;margin-top:12px"><button class="pending-batch-btn" id="pendingBatchBtn" disabled onclick="batchMarkReceived()">Mark selected received</button><button class="pending-batch-btn pending-partial-btn" id="pendingPartialBtn" disabled onclick="openPartialPaymentModal()">Partial payment</button></div>';
   document.getElementById('pendingOverlay').classList.add('open');
 }
 document.getElementById('btnViewReceivables').addEventListener('click',openPendingSheet);
