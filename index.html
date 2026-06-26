@@ -1051,6 +1051,18 @@ async function loadFromFirebase(){
   }
 }
 
+// Fix existing "Remaining: Rollover: ..." descs to just "Remaining: ..."
+async function fixRemainingRolloverDescs() {
+  const toSave = [];
+  data.purchases.forEach(p => {
+    if (/^Remaining:\s+Rollover:\s+/i.test(p.desc)) {
+      p.desc = p.desc.replace(/^(Remaining:\s+)Rollover:\s+/i, '$1');
+      toSave.push(p);
+    }
+  });
+  if (toSave.length) await Promise.all(toSave.map(p => savePurchase(p)));
+}
+
 // Backfill receipt URLs from parent transactions to rollover children that are missing them
 async function backfillRolloverReceipts() {
   const toSave = [];
@@ -1158,6 +1170,7 @@ function initAuth(){
         else document.getElementById('userAvatar').style.display='none';
         if(isNewSignIn){
           await loadFromFirebase();
+          await fixRemainingRolloverDescs();
           await backfillRolloverReceipts();
           const dn=await loadDisplayName();
           document.getElementById('userEmail').textContent=dn||user.email;
@@ -2969,7 +2982,7 @@ document.getElementById('ppConfirm').addEventListener('click',()=>{
       }
       const remainder={
         id:data.nextId++,date:getPurchaseMonth(p)+'-01',serviceDate:p.serviceDate||null,
-        desc:'Remaining: '+p.desc,vendor:p.vendor||null,paymentMethod:p.paymentMethod||null,
+        desc:'Remaining: '+(p.desc||'').replace(/^Rollover:\s*/i,'').trim(),vendor:p.vendor||null,paymentMethod:p.paymentMethod||null,
         cat:p.cat,amount:Math.round((p.amount-assign)*100)/100,reimbursableOverride:null,
         status:'submitted',submittedDate:p.submittedDate||null,expectedDate:p.expectedDate||null,
         receivedDate:null,receiptUrl:p.receiptUrl||null,
