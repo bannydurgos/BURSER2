@@ -1313,12 +1313,7 @@ function reimbursableAmount(p){
   if(!budget)return p.amount;
   // Sort all purchases in this cat+month by date, putting rollovers first (they're oldest)
   const sorted=data.purchases.filter(x=>x.cat===p.cat&&getPurchaseMonth(x)===mk)
-    .sort((a,b)=>{
-      // Rollover entries go first (priority reimbursement — they're oldest debt)
-      if(a.isRollover&&!b.isRollover)return -1;
-      if(!a.isRollover&&b.isRollover)return 1;
-      return a.date.localeCompare(b.date)||a.id-b.id;
-    });
+    .sort((a,b)=>a.id-b.id);
   let running=0;
   for(const x of sorted){const before=running;running+=(x.reimbursableOverride!=null?x.reimbursableOverride:x.amount);if(x.id===p.id)return Math.min(p.amount,Math.max(0,budget-before));}
   return p.amount;
@@ -3006,6 +3001,7 @@ document.getElementById('ppConfirm').addEventListener('click',()=>{
         receivedDate:null,receiptUrl:p.receiptUrl||null,
         isRollover:false,rolloverSourceId:null,rolloverBaseDesc:null,rolloverMonth:null,
         rolledOver:false,declinedRollover:false,isRecurring:false,recurringSourceId:null,
+        remainderSourceId:p.id,
       };
       data.purchases.push(remainder);
       toSave.push(remainder);
@@ -3105,7 +3101,7 @@ function recalculateRolloverChain(p){
   const budget=getBudget(p.cat,mk);
   let newOverage=0;
   if(budget>0){
-    const sorted=data.purchases.filter(x=>x.cat===p.cat&&getPurchaseMonth(x)===mk).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+    const sorted=data.purchases.filter(x=>x.cat===p.cat&&getPurchaseMonth(x)===mk).sort((a,b)=>a.id-b.id);
     let running=0;
     for(const t of sorted){
       const tEff=t.reimbursableOverride!=null?t.reimbursableOverride:t.amount;
@@ -3131,7 +3127,7 @@ function recalculateRolloverChain(p){
 }
 function buildRolloverQueue(catId,mk){
   const budget=getBudget(catId,mk);if(!budget)return;
-  const sorted=data.purchases.filter(p=>p.cat===catId&&getPurchaseMonth(p)===mk).sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  const sorted=data.purchases.filter(p=>p.cat===catId&&getPurchaseMonth(p)===mk).sort((a,b)=>a.id-b.id);
   let running=0;
   sorted.forEach(p=>{
     const pEff=p.reimbursableOverride!=null?p.reimbursableOverride:p.amount;
@@ -3185,7 +3181,7 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
   const srcP=data.purchases.find(x=>x.id===item.purchaseId);
   // Rollover entries carry the original purchase date for display,
   // but are bucketed into the next month via a separate parentDate field
-  const rolloverDisplayDate=srcP?(srcP.serviceDate||srcP.date):nextMk+'-01';
+  const rolloverDisplayDate=srcP?srcP.date:nextMk+'-01';
   const inheritSubmitted=srcP&&srcP.status==='submitted';
   const newRollover={
     id:data.nextId++,
@@ -3193,7 +3189,7 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
     rolloverMonth:nextMk,
     desc:'Rollover: '+baseDesc,
     rolloverBaseDesc:baseDesc,
-    serviceDate:srcP?(srcP.serviceDate||srcP.date):null,
+    serviceDate:srcP?srcP.serviceDate||null:null,
     cat:item.catId,amount:item.overage,status:inheritSubmitted?'submitted':'pending',
     submittedDate:inheritSubmitted?srcP.submittedDate:null,expectedDate:inheritSubmitted?srcP.expectedDate:null,receivedDate:null,
     receiptUrl:srcP?srcP.receiptUrl||null:null,
@@ -4063,6 +4059,7 @@ document.getElementById('btnConfirmDelete').addEventListener('click', async () =
   if (!p) { document.getElementById('deleteConfirmOverlay').classList.remove('open'); pendingDeleteId=null; return; }
   const cascade = rolloverDeleteSet(p);
   const cascadeIds = new Set(cascade.map(x => x.id));
+  data.purchases.filter(x=>x.remainderSourceId!=null&&cascadeIds.has(x.remainderSourceId)).forEach(x=>{cascade.push(x);cascadeIds.add(x.id);});
   snapshot();
   // If deleting a rollover child, reset its parent's rolled-over state so it can be re-prompted
   if (p.isRollover && p.rolloverSourceId) {
