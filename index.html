@@ -1374,6 +1374,18 @@ function rolloverDeleteSet(p) {
   collect(p.id);
   return result;
 }
+// Returns all descendants of p through both rollover and remainder links, not including p itself.
+function allTransactionDescendants(p) {
+  const seen = new Set([p.id]);
+  const result = [];
+  function walk(id) {
+    data.purchases.filter(x => (x.rolloverSourceId === id || x.remainderSourceId === id) && !seen.has(x.id)).forEach(c => {
+      seen.add(c.id); result.push(c); walk(c.id);
+    });
+  }
+  walk(p.id);
+  return result;
+}
 
 // ── ROLLOVER LABEL ───────────────────────────────────────
 // Returns "↳ [original desc] — [from month]" for any rollover entry.
@@ -2754,10 +2766,8 @@ function saveEdit(){
       }
     });
   }
-  // Propagate receipt URL to all downstream rollover children
-  rolloverDeleteSet(p).forEach(c => {
-    if (c.id !== p.id) { c.receiptUrl=receiptUrl; if(!chainToSave.includes(c))chainToSave.push(c); }
-  });
+  // Propagate receipt URL to all descendants (rollovers + remainders at every level)
+  allTransactionDescendants(p).forEach(c=>{c.receiptUrl=receiptUrl;if(!chainToSave.includes(c))chainToSave.push(c);});
   chainToSave.forEach(c=>savePurchase(c));
   if(p.rolledOver&&amount!==oldAmount)recalculateRolloverChain(p);
   closeEdit();render();
@@ -3801,7 +3811,7 @@ function showReceiptPopover(id, anchorBtn) {
     snapshot();
     p.receiptUrl = url;
     // Propagate receipt URL to all downstream rollover children
-    rolloverDeleteSet(p).forEach(c => { if (c.id !== p.id) { c.receiptUrl = url; savePurchase(c); } });
+    allTransactionDescendants(p).forEach(c=>{c.receiptUrl=url;savePurchase(c);});
     savePurchase(p);
     pop.remove();
     render();
@@ -3921,6 +3931,8 @@ function wireReceiptRows() {
       const row = document.querySelector(`.receipt-row[data-id="${id}"]`);
       const url = row.querySelector('.receipt-url-input').value.trim() || null;
       snapshot(); p.receiptUrl = url;
+      rolloverDeleteSet(p).forEach(c=>{if(c.id!==p.id){c.receiptUrl=url;savePurchase(c);}});
+      allTransactionDescendants(p).forEach(c=>{c.receiptUrl=url;savePurchase(c);});
       savePurchase(p);
       _updateReceiptLinkArea(row, id, url, p);
     });
