@@ -3641,8 +3641,11 @@ function renderReceipts() {
       </div>
     </div></div>
     <div>
+      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;margin-bottom:14px;text-align:center;cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:${receiptsMissingFilter?'var(--blue-text)':'var(--text2)'}">
+        ${withCount} of ${purchases.length} purchases have receipt links${purchases.length-withCount>0?' · '+(purchases.length-withCount)+' missing':''}${receiptsMissingFilter?' [showing missing]':''}.
+      </div>
       ${sections}
-      <div id="receiptsLinkCount" style="font-family:var(--mono);font-size:11px;margin-top:14px;text-align:center;cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:${receiptsMissingFilter?'var(--blue-text)':'var(--text2)'}">
+      <div id="receiptsLinkCountBottom" style="font-family:var(--mono);font-size:11px;margin-top:14px;text-align:center;cursor:pointer;text-decoration:underline;text-underline-offset:3px;color:${receiptsMissingFilter?'var(--blue-text)':'var(--text2)'}">
         ${withCount} of ${purchases.length} purchases have receipt links${purchases.length-withCount>0?' · '+(purchases.length-withCount)+' missing':''}${receiptsMissingFilter?' [showing missing]':''}.
       </div>
     </div>`;
@@ -3690,6 +3693,8 @@ function wireReceiptJump() {
   if (clearBtn) clearBtn.addEventListener('click', clearReceiptsFilters);
   const linkCount = document.getElementById('receiptsLinkCount');
   if (linkCount) linkCount.addEventListener('click', toggleReceiptsMissingFilter);
+  const linkCountBottom = document.getElementById('receiptsLinkCountBottom');
+  if (linkCountBottom) linkCountBottom.addEventListener('click', toggleReceiptsMissingFilter);
 }
 
 function toggleReceiptsMissingFilter() {
@@ -3874,8 +3879,11 @@ function receiptRow(p) {
 
 function _updateReceiptLinkArea(row, id, url, p) {
   const all = data.purchases.filter(x => !x.isRollover);
+  const countText = `${all.filter(x => x.receiptUrl).length} of ${all.length} purchases have receipt links.`;
   const countEl = document.getElementById('receiptsLinkCount');
-  if (countEl) countEl.textContent = `${all.filter(x => x.receiptUrl).length} of ${all.length} purchases have receipt links.`;
+  if (countEl) countEl.textContent = countText;
+  const countElB = document.getElementById('receiptsLinkCountBottom');
+  if (countElB) countElB.textContent = countText;
   const catCountEl = document.getElementById(`receiptsCatCount-${p.cat}`);
   if (catCountEl) {
     const catRows = all.filter(x => x.cat === p.cat);
