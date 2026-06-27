@@ -3203,7 +3203,15 @@ document.getElementById('rolloverYes').addEventListener('click',()=>{
   const toSaveRollover=[newRollover];if(src)toSaveRollover.push(src);
   Promise.all(toSaveRollover.map(p=>savePurchase(p)));render();
   const nextBudget=getBudget(item.catId,nextMk);
-  if(nextBudget>0)buildRolloverQueue(item.catId,nextMk);
+  if(nextBudget>0){
+    const consumed=data.purchases.filter(p=>p.cat===item.catId&&getPurchaseMonth(p)===nextMk&&p.id!==newRollover.id).reduce((s,p)=>s+(p.reimbursableOverride!=null?p.reimbursableOverride:p.amount),0);
+    const room=Math.max(0,nextBudget-consumed);
+    if(room<newRollover.amount){
+      const overage=Math.round((newRollover.amount-room)*100)/100;
+      const alreadyQueued=rolloverQueue.some(q=>q.purchaseId===newRollover.id);
+      if(!alreadyQueued)rolloverQueue.push({purchaseId:newRollover.id,catId:item.catId,mk:nextMk,purchaseDesc:newRollover.rolloverBaseDesc||newRollover.desc,purchaseAmount:newRollover.amount,overage});
+    }
+  }
   if(rolloverQueue.length)processRolloverQueue();
   else{rolloverActive=false;document.getElementById('rolloverToast').classList.remove('open');}
 });
